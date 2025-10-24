@@ -7,7 +7,7 @@ function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -15,7 +15,7 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError(null);
     setLoading(true);
 
     try {
@@ -25,7 +25,7 @@ function Login() {
         // Redirect to Settings page
         navigate('/settings');
       } else {
-        setError(result.error);
+        setError(result.error || 'Login failed. Please try again.');
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -36,6 +36,10 @@ function Login() {
   };
 
   const handleChange = (e) => {
+    // Clear error when user starts typing
+    if (error) {
+      setError(null);
+    }
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
