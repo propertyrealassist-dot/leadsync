@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run init-db:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(dir:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(node src/database/setup-auth.js:*)",
+      "Bash(node:*)",
+      "Bash(npm start)",
+      "Bash(copy:*)",
+      "Bash(for file in README.md SETUP.md PROJECT_SUMMARY.md GHL_INTEGRATION.md CREDENTIALS.md)",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(then node -e \"\nconst fs = require(''fs'');\nconst file = ''$file'';\nlet content = fs.readFileSync(file, ''utf8'');\ncontent = content.replace(/AppointWise/g, ''LeadSync'');\ncontent = content.replace(/appointwise/g, ''leadsync'');\ncontent = content.replace(/Appointwise/g, ''Leadsync'');\nfs.writeFileSync(file, content);\nconsole.log(''Updated $file'');\n\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(for file in \".env\" \"create-sample-strategy.js\" \"src/database/create-test-user.js\" \"src/database/setup-auth.js\")",
+      "Bash(then node -e \"\nconst fs = require(''fs'');\nconst file = ''$file'';\nlet content = fs.readFileSync(file, ''utf8'');\ncontent = content.replace(/AppointWise/g, ''LeadSync'');\ncontent = content.replace(/appointwise/g, ''leadsync'');\ncontent = content.replace(/Appointwise/g, ''Leadsync'');\nfs.writeFileSync(file, content);\nconsole.log(''Updated backend/$file'');\n\")",
+      "Bash(if [ -f \"Auth.js\" ])",
+      "Bash(then node -e \"\nconst fs = require(''fs'');\nconst file = ''Auth.js'';\nlet content = fs.readFileSync(file, ''utf8'');\ncontent = content.replace(/AppointWise/g, ''LeadSync'');\ncontent = content.replace(/appointwise/g, ''leadsync'');\ncontent = content.replace(/Appointwise/g, ''Leadsync'');\nfs.writeFileSync(file, content);\nconsole.log(''Updated frontend/src/components/Auth.js'');\n\")",
+      "Bash(find:*)",
+      "Bash(for file in Login.js Dashboard.js Sidebar.js)",
+      "Bash(then echo \"=== $file ===\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

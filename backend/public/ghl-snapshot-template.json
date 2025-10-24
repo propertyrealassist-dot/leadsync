@@ -1,0 +1,644 @@
+{
+  "name": "LeadSync AI Automation - Complete Package",
+  "version": "2.0.0",
+  "description": "Complete LeadSync AI automation with custom fields, tags, and intelligent workflows for handling inbound messages with AI-powered responses, error handling, and contact management.",
+  "type": "full",
+  "author": "LeadSync",
+  "category": "automation",
+
+  "customFields": [
+    {
+      "id": "cf_leadsync_status",
+      "key": "leadsync_status",
+      "name": "LeadSync_Status",
+      "type": "dropdown",
+      "dataType": "SINGLE_OPTIONS",
+      "position": 1,
+      "placeholder": "Select AI Status",
+      "options": [
+        {
+          "value": "active",
+          "label": "Active"
+        },
+        {
+          "value": "paused",
+          "label": "Paused"
+        },
+        {
+          "value": "completed",
+          "label": "Completed"
+        }
+      ],
+      "defaultValue": "active",
+      "required": false,
+      "description": "Current status of AI automation for this contact"
+    },
+    {
+      "id": "cf_turn_ai_off_on",
+      "key": "turn_ai_off_on",
+      "name": "Turn_AI_OFF_ON",
+      "type": "checkbox",
+      "dataType": "CHECKBOX",
+      "position": 2,
+      "defaultValue": "ON",
+      "required": false,
+      "description": "Toggle to enable/disable AI responses for this contact. When OFF, AI will not respond to messages."
+    },
+    {
+      "id": "cf_ai_error_message",
+      "key": "ai_error_message",
+      "name": "AI_Error_Message",
+      "type": "text",
+      "dataType": "TEXT",
+      "position": 3,
+      "placeholder": "Last error message from AI",
+      "required": false,
+      "description": "Stores the last error message if AI encounters an issue processing this contact"
+    },
+    {
+      "id": "cf_last_ai_response_date",
+      "key": "last_ai_response_date",
+      "name": "Last_AI_Response_Date",
+      "type": "date",
+      "dataType": "DATE",
+      "position": 4,
+      "required": false,
+      "description": "Date and time of the last successful AI response sent to this contact"
+    },
+    {
+      "id": "cf_ai_conversation_count",
+      "key": "ai_conversation_count",
+      "name": "AI_Conversation_Count",
+      "type": "number",
+      "dataType": "NUMERICAL",
+      "position": 5,
+      "defaultValue": 0,
+      "required": false,
+      "description": "Total number of AI interactions with this contact"
+    },
+    {
+      "id": "cf_leadsync_client_id",
+      "key": "leadsync_client_id",
+      "name": "LeadSync_Client_ID",
+      "type": "text",
+      "dataType": "TEXT",
+      "position": 6,
+      "placeholder": "Your LeadSync Client ID",
+      "required": true,
+      "description": "Your unique Client ID from LeadSync (found in Settings)"
+    }
+  ],
+
+  "customValues": [
+    {
+      "id": "cv_api_key",
+      "key": "leadsync_api_key",
+      "name": "LeadSync API Key",
+      "type": "text",
+      "required": true,
+      "description": "Your LeadSync API Key from Settings page (account-level setting)",
+      "placeholder": "ak_live_xxxxxxxxxxxxx"
+    },
+    {
+      "id": "cv_client_id",
+      "key": "leadsync_client_id_global",
+      "name": "LeadSync Client ID",
+      "type": "text",
+      "required": true,
+      "description": "Your LeadSync Client ID (account-level setting)",
+      "placeholder": "client_xxxxxxxxxxxxx"
+    },
+    {
+      "id": "cv_webhook_url",
+      "key": "leadsync_webhook_url",
+      "name": "LeadSync Webhook URL",
+      "type": "text",
+      "required": true,
+      "description": "Your LeadSync webhook endpoint URL",
+      "placeholder": "https://yourdomain.com/api/webhook/ghl",
+      "defaultValue": "https://yourdomain.com/api/webhook/ghl"
+    }
+  ],
+
+  "tags": [
+    {
+      "id": "tag_ai_error",
+      "name": "AI Error Encountered",
+      "color": "#ef4444",
+      "description": "Applied when AI encounters an error processing this contact"
+    },
+    {
+      "id": "tag_ai_active",
+      "name": "AI Active",
+      "color": "#10b981",
+      "description": "Contact is actively being handled by AI"
+    },
+    {
+      "id": "tag_ai_paused",
+      "name": "AI Paused",
+      "color": "#f59e0b",
+      "description": "AI responses are temporarily paused for this contact"
+    },
+    {
+      "id": "tag_booking_requested",
+      "name": "Booking Requested",
+      "color": "#3b82f6",
+      "description": "Contact has requested to book an appointment"
+    },
+    {
+      "id": "tag_ai_connected",
+      "name": "AI Connected",
+      "color": "#8b5cf6",
+      "description": "Contact has been connected to LeadSync AI system"
+    },
+    {
+      "id": "tag_hot_lead",
+      "name": "Hot Lead",
+      "color": "#ec4899",
+      "description": "High-priority lead identified by AI"
+    }
+  ],
+
+  "workflows": [
+    {
+      "id": "wf_folder_leadsync",
+      "type": "folder",
+      "name": "LeadSync / AI Agent",
+      "description": "Main folder containing all LeadSync automation workflows",
+      "color": "#755cb7",
+      "workflows": ["wf_trigger_ai", "wf_connect_to_ai"]
+    },
+    {
+      "id": "wf_trigger_ai",
+      "name": "LeadSync / Trigger AI",
+      "description": "Main workflow that triggers AI responses for inbound messages",
+      "status": "active",
+      "trigger": {
+        "type": "InboundMessage",
+        "name": "Inbound Message Received",
+        "filters": {
+          "messageType": ["SMS", "FB", "GMB", "IG", "Email"],
+          "direction": "inbound"
+        }
+      },
+      "actions": [
+        {
+          "id": "action_check_ai_toggle",
+          "type": "condition",
+          "name": "Check if AI is Enabled",
+          "description": "Verify that Turn_AI_OFF_ON is not set to OFF",
+          "config": {
+            "conditions": [
+              {
+                "field": "{{contact.custom_fields.turn_ai_off_on}}",
+                "operator": "not_equals",
+                "value": "OFF"
+              },
+              {
+                "field": "{{contact.custom_fields.turn_ai_off_on}}",
+                "operator": "not_empty",
+                "value": ""
+              }
+            ],
+            "logic": "OR",
+            "ifTrue": "action_check_status",
+            "ifFalse": "end_workflow"
+          }
+        },
+        {
+          "id": "action_check_status",
+          "type": "condition",
+          "name": "Check LeadSync Status",
+          "description": "Verify contact status is Active",
+          "config": {
+            "conditions": [
+              {
+                "field": "{{contact.custom_fields.leadsync_status}}",
+                "operator": "equals",
+                "value": "active"
+              },
+              {
+                "field": "{{contact.custom_fields.leadsync_status}}",
+                "operator": "is_empty",
+                "value": ""
+              }
+            ],
+            "logic": "OR",
+            "ifTrue": "action_increment_count",
+            "ifFalse": "end_workflow"
+          }
+        },
+        {
+          "id": "action_increment_count",
+          "type": "updateContact",
+          "name": "Increment Conversation Count",
+          "description": "Increase the AI conversation counter",
+          "config": {
+            "customFields": {
+              "ai_conversation_count": "{{contact.custom_fields.ai_conversation_count + 1}}"
+            }
+          },
+          "nextAction": "action_send_webhook"
+        },
+        {
+          "id": "action_send_webhook",
+          "type": "webhook",
+          "name": "Send to LeadSync AI",
+          "description": "Forward message to LeadSync API for AI processing",
+          "config": {
+            "method": "POST",
+            "url": "{{custom_values.leadsync_webhook_url}}",
+            "headers": {
+              "Content-Type": "application/json",
+              "x-client-id": "{{custom_values.leadsync_client_id_global}}",
+              "x-api-key": "{{custom_values.leadsync_api_key}}"
+            },
+            "body": {
+              "type": "InboundMessage",
+              "message": {
+                "id": "{{message.id}}",
+                "body": "{{message.body}}",
+                "direction": "{{message.direction}}",
+                "type": "{{message.type}}",
+                "contactId": "{{contact.id}}",
+                "conversationId": "{{conversation.id}}",
+                "messageType": "{{message.type}}",
+                "createdAt": "{{message.created_at}}"
+              },
+              "contact": {
+                "id": "{{contact.id}}",
+                "name": "{{contact.name}}",
+                "firstName": "{{contact.first_name}}",
+                "lastName": "{{contact.last_name}}",
+                "phone": "{{contact.phone}}",
+                "email": "{{contact.email}}",
+                "tags": "{{contact.tags}}",
+                "customFields": {
+                  "leadsync_status": "{{contact.custom_fields.leadsync_status}}",
+                  "ai_conversation_count": "{{contact.custom_fields.ai_conversation_count}}"
+                }
+              },
+              "location": {
+                "id": "{{location.id}}",
+                "name": "{{location.name}}"
+              },
+              "conversation": {
+                "id": "{{conversation.id}}"
+              }
+            },
+            "saveResponseAs": "ai_response",
+            "timeout": 30000
+          },
+          "nextAction": "action_apply_active_tag",
+          "onError": "action_handle_error"
+        },
+        {
+          "id": "action_apply_active_tag",
+          "type": "addTag",
+          "name": "Apply AI Active Tag",
+          "description": "Mark contact as actively handled by AI",
+          "config": {
+            "tags": ["AI Active"]
+          },
+          "nextAction": "action_update_date"
+        },
+        {
+          "id": "action_update_date",
+          "type": "updateContact",
+          "name": "Update Last Response Date",
+          "description": "Record timestamp of AI interaction",
+          "config": {
+            "customFields": {
+              "last_ai_response_date": "{{now}}"
+            }
+          },
+          "nextAction": "action_check_response"
+        },
+        {
+          "id": "action_check_response",
+          "type": "condition",
+          "name": "Check AI Response Success",
+          "description": "Verify AI returned a valid response",
+          "config": {
+            "conditions": [
+              {
+                "field": "{{ai_response.success}}",
+                "operator": "equals",
+                "value": true
+              },
+              {
+                "field": "{{ai_response.message}}",
+                "operator": "not_empty",
+                "value": ""
+              }
+            ],
+            "logic": "AND",
+            "ifTrue": "action_send_ai_message",
+            "ifFalse": "action_handle_error"
+          }
+        },
+        {
+          "id": "action_send_ai_message",
+          "type": "sendMessage",
+          "name": "Send AI Response",
+          "description": "Send the AI-generated response to contact",
+          "config": {
+            "type": "{{message.type}}",
+            "contactId": "{{contact.id}}",
+            "conversationId": "{{conversation.id}}",
+            "message": "{{ai_response.message}}"
+          },
+          "nextAction": "action_check_booking"
+        },
+        {
+          "id": "action_check_booking",
+          "type": "condition",
+          "name": "Check for Booking Request",
+          "description": "Detect if contact wants to book appointment",
+          "config": {
+            "conditions": [
+              {
+                "field": "{{ai_response.intent}}",
+                "operator": "equals",
+                "value": "book_appointment"
+              },
+              {
+                "field": "{{ai_response.booking_requested}}",
+                "operator": "equals",
+                "value": true
+              }
+            ],
+            "logic": "OR",
+            "ifTrue": "action_apply_booking_tag",
+            "ifFalse": "end_workflow"
+          }
+        },
+        {
+          "id": "action_apply_booking_tag",
+          "type": "addTag",
+          "name": "Apply Booking Requested Tag",
+          "description": "Tag contact as requesting appointment",
+          "config": {
+            "tags": ["Booking Requested"]
+          },
+          "nextAction": "action_notify_team"
+        },
+        {
+          "id": "action_notify_team",
+          "type": "internalNotification",
+          "name": "Notify Team of Booking Request",
+          "description": "Alert team that contact wants to book",
+          "config": {
+            "channel": "email",
+            "recipients": ["team@yourdomain.com"],
+            "subject": "🎯 New Booking Request from {{contact.name}}",
+            "message": "Contact {{contact.name}} ({{contact.phone}}) has requested to book an appointment.\n\nLast message: {{message.body}}\n\nContact Link: {{contact.link}}"
+          },
+          "nextAction": null
+        },
+        {
+          "id": "action_handle_error",
+          "type": "group",
+          "name": "Error Handler",
+          "description": "Handle errors from AI processing",
+          "actions": [
+            {
+              "id": "action_log_error",
+              "type": "updateContact",
+              "name": "Log Error to Custom Field",
+              "config": {
+                "customFields": {
+                  "ai_error_message": "{{ai_response.error || 'Unknown error occurred'}}",
+                  "last_ai_response_date": "{{now}}"
+                }
+              },
+              "nextAction": "action_apply_error_tag"
+            },
+            {
+              "id": "action_apply_error_tag",
+              "type": "addTag",
+              "name": "Apply Error Tag",
+              "config": {
+                "tags": ["AI Error Encountered"]
+              },
+              "nextAction": "action_remove_active_tag"
+            },
+            {
+              "id": "action_remove_active_tag",
+              "type": "removeTag",
+              "name": "Remove Active Tag",
+              "config": {
+                "tags": ["AI Active"]
+              },
+              "nextAction": "action_send_fallback"
+            },
+            {
+              "id": "action_send_fallback",
+              "type": "sendMessage",
+              "name": "Send Fallback Message",
+              "description": "Send human-friendly error message",
+              "config": {
+                "type": "{{message.type}}",
+                "contactId": "{{contact.id}}",
+                "conversationId": "{{conversation.id}}",
+                "message": "Thank you for your message! Our team will get back to you shortly. 😊"
+              },
+              "nextAction": "action_alert_admin"
+            },
+            {
+              "id": "action_alert_admin",
+              "type": "internalNotification",
+              "name": "Alert Admin of Error",
+              "config": {
+                "channel": "email",
+                "recipients": ["admin@yourdomain.com"],
+                "subject": "⚠️ LeadSync AI Error",
+                "message": "AI error for contact {{contact.name}}:\n\nError: {{ai_response.error}}\nContact: {{contact.phone}}\nMessage: {{message.body}}\n\nPlease investigate."
+              },
+              "nextAction": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wf_connect_to_ai",
+      "name": "LeadSync / Connect To AI",
+      "description": "Initialize new contacts for AI automation when specific tag is applied",
+      "status": "active",
+      "trigger": {
+        "type": "ContactTagApplied",
+        "name": "Tag Applied to Contact",
+        "filters": {
+          "tags": ["AI Connected", "New Lead"]
+        }
+      },
+      "actions": [
+        {
+          "id": "action_init_fields",
+          "type": "updateContact",
+          "name": "Initialize Custom Fields",
+          "description": "Set up default values for AI fields",
+          "config": {
+            "customFields": {
+              "turn_ai_off_on": "ON",
+              "leadsync_status": "active",
+              "ai_conversation_count": 0,
+              "last_ai_response_date": "{{now}}",
+              "ai_error_message": ""
+            }
+          },
+          "nextAction": "action_apply_active_tag"
+        },
+        {
+          "id": "action_apply_active_tag",
+          "type": "addTag",
+          "name": "Apply AI Active Tag",
+          "config": {
+            "tags": ["AI Active"]
+          },
+          "nextAction": "action_check_send_welcome"
+        },
+        {
+          "id": "action_check_send_welcome",
+          "type": "condition",
+          "name": "Check if Should Send Welcome",
+          "description": "Only send welcome if contact doesn't have recent messages",
+          "config": {
+            "conditions": [
+              {
+                "field": "{{contact.last_message_date}}",
+                "operator": "older_than",
+                "value": "1 hour"
+              },
+              {
+                "field": "{{contact.last_message_date}}",
+                "operator": "is_empty",
+                "value": ""
+              }
+            ],
+            "logic": "OR",
+            "ifTrue": "action_send_welcome",
+            "ifFalse": "action_wait_trigger"
+          }
+        },
+        {
+          "id": "action_send_welcome",
+          "type": "sendMessage",
+          "name": "Send Welcome Message",
+          "description": "Send initial AI-powered greeting",
+          "config": {
+            "type": "SMS",
+            "contactId": "{{contact.id}}",
+            "message": "👋 Hi {{contact.first_name}}! Thanks for connecting with us. I'm here to help answer any questions you have. What can I assist you with today?"
+          },
+          "nextAction": null
+        },
+        {
+          "id": "action_wait_trigger",
+          "type": "wait",
+          "name": "Wait for Contact Message",
+          "description": "Wait for contact to send first message",
+          "config": {
+            "waitFor": "InboundMessage",
+            "timeout": "7 days"
+          },
+          "nextAction": null
+        }
+      ]
+    }
+  ],
+
+  "setupInstructions": [
+    "=== STEP 1: Import Snapshot ===",
+    "1. Log into your GoHighLevel account",
+    "2. Go to Settings > Snapshots",
+    "3. Click 'Import Snapshot'",
+    "4. Upload this JSON file or paste the URL",
+    "5. Wait for import to complete",
+    "",
+    "=== STEP 2: Get Your LeadSync Credentials ===",
+    "1. Log into your LeadSync account",
+    "2. Go to Settings page",
+    "3. Copy your Client ID and API Key",
+    "",
+    "=== STEP 3: Configure Custom Values (Account Level) ===",
+    "1. Go to Settings > Custom Values",
+    "2. Find 'LeadSync API Key' and paste your API key",
+    "3. Find 'LeadSync Client ID' and paste your client ID",
+    "4. Update 'LeadSync Webhook URL' with your domain (if deployed)",
+    "   Example: https://yourdomain.com/api/webhook/ghl",
+    "",
+    "=== STEP 4: Activate Workflows ===",
+    "1. Go to Automation > Workflows",
+    "2. Find the 'LeadSync / AI Agent' folder",
+    "3. Open 'LeadSync / Trigger AI' workflow",
+    "4. Click 'Activate' in top right",
+    "5. Open 'LeadSync / Connect To AI' workflow",
+    "6. Click 'Activate' in top right",
+    "",
+    "=== STEP 5: Test the Integration ===",
+    "1. Create a test contact or use an existing one",
+    "2. Apply the 'AI Connected' tag to the contact",
+    "3. Send an SMS to your GHL number from that contact",
+    "4. You should receive an AI-powered response within seconds",
+    "",
+    "=== STEP 6: Monitor and Troubleshoot ===",
+    "1. Check contact custom fields for AI status",
+    "2. Look for 'AI Error Encountered' tag on contacts with issues",
+    "3. Review AI_Error_Message custom field for error details",
+    "4. Check workflow execution logs in Automation > Workflows"
+  ],
+
+  "notes": [
+    "🎯 FEATURES:",
+    "- Automatic AI responses to SMS, Facebook, Instagram, GMB messages",
+    "- Individual contact-level AI on/off toggle",
+    "- Comprehensive error handling with fallback messages",
+    "- Conversation count tracking per contact",
+    "- Booking request detection and team notifications",
+    "- Status tracking (Active, Paused, Completed)",
+    "",
+    "⚙️ CUSTOMIZATION:",
+    "- Edit custom field 'Turn_AI_OFF_ON' on any contact to pause AI",
+    "- Change 'LeadSync_Status' to 'paused' or 'completed' to stop automation",
+    "- Modify fallback messages in the error handler",
+    "- Adjust welcome message in 'Connect To AI' workflow",
+    "",
+    "🔧 TROUBLESHOOTING:",
+    "- If AI doesn't respond: Check the 'AI Error Encountered' tag",
+    "- View error details in the 'AI_Error_Message' custom field",
+    "- Verify your API credentials in Custom Values",
+    "- Ensure webhook URL is correct and accessible",
+    "",
+    "📊 MONITORING:",
+    "- Use 'AI_Conversation_Count' to track engagement",
+    "- Filter contacts by 'AI Active' tag to see who's being handled",
+    "- Review 'Last_AI_Response_Date' to see recent activity",
+    "- Tag 'Booking Requested' shows hot leads",
+    "",
+    "⚠️ IMPORTANT:",
+    "- Don't delete the custom fields - they're required for workflows",
+    "- Keep your API credentials secure (Custom Values)",
+    "- Test with a small group before rolling out to all contacts",
+    "- Monitor error tags daily for the first week"
+  ],
+
+  "compatibility": {
+    "ghl_version": "2.0+",
+    "features_required": [
+      "Custom Fields",
+      "Custom Values",
+      "Workflows",
+      "Webhooks",
+      "Tags",
+      "Conditions"
+    ]
+  },
+
+  "support": {
+    "documentation": "https://docs.leadsync.com/ghl-integration",
+    "email": "support@leadsync.com",
+    "website": "https://leadsync.com"
+  }
+}
