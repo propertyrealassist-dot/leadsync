@@ -129,51 +129,187 @@ function AIAgents() {
     setImporting(true);
     try {
       const fileContent = await file.text();
-      let strategyData;
+      let importedData;
 
       try {
-        strategyData = JSON.parse(fileContent);
+        importedData = JSON.parse(fileContent);
       } catch (error) {
         alert('Invalid JSON file. Please check the file format.');
         setImporting(false);
         return;
       }
 
+      console.log('📥 Original imported data:', importedData);
+
       // Validate required fields
-      if (!strategyData.name || !strategyData.tag) {
-        alert('Invalid strategy file. Missing required fields (name, tag).');
+      if (!importedData.name) {
+        alert('Invalid strategy file. Missing required field: name');
         setImporting(false);
         return;
       }
 
+      // Transform imported data to internal format
+      const transformedData = transformImportedStrategy(importedData);
+      console.log('🔄 Transformed data:', transformedData);
+
       // Check for duplicate name
-      const duplicateName = agents.some(a => a.name.toLowerCase() === strategyData.name.toLowerCase());
+      const duplicateName = agents.some(a => a.name.toLowerCase() === transformedData.name.toLowerCase());
       if (duplicateName) {
         const confirmImport = window.confirm(
-          `An agent named "${strategyData.name}" already exists. Import anyway? (It will be renamed)`
+          `An agent named "${transformedData.name}" already exists. Import anyway? (It will be renamed)`
         );
         if (!confirmImport) {
           setImporting(false);
           return;
         }
-        strategyData.name = `${strategyData.name} (Imported)`;
+        transformedData.name = `${transformedData.name} (Imported)`;
       }
 
       // Remove id if present (let backend generate new one)
-      delete strategyData.id;
+      delete transformedData.id;
 
       // Import the strategy
-      await axios.post(`${API_URL}/templates`, strategyData);
-      alert(`✅ Strategy "${strategyData.name}" imported successfully!`);
+      const response = await axios.post(`${API_URL}/templates`, transformedData);
+      console.log('✅ Import API response:', response.data);
+
+      alert(`✅ Strategy "${transformedData.name}" imported successfully!`);
       loadData();
     } catch (error) {
-      console.error('Error importing strategy:', error);
-      alert('Failed to import strategy. Please check the file format and try again.');
+      console.error('❌ Error importing strategy:', error);
+      console.error('Error details:', error.response?.data);
+      alert(`Failed to import strategy: ${error.response?.data?.error || error.message || 'Unknown error'}`);
     } finally {
       setImporting(false);
       // Reset file input
       event.target.value = '';
     }
+  };
+
+  const transformImportedStrategy = (imported) => {
+    const errors = [];
+
+    // Helper function to safely parse JSON strings
+    const safeJsonParse = (jsonString, fieldName, index) => {
+      if (!jsonString) return null;
+      try {
+        return JSON.parse(jsonString);
+      } catch (error) {
+        const errorMsg = `Failed to parse ${fieldName}${index !== undefined ? ` #${index + 1}` : ''}`;
+        console.warn(errorMsg, error);
+        errors.push(errorMsg);
+        return null;
+      }
+    };
+
+    // Parse FAQs
+    const faqs = [];
+    if (Array.isArray(imported.faqs)) {
+      imported.faqs.forEach((faq, index) => {
+        if (faq.Body) {
+          const parsed = safeJsonParse(faq.Body, 'FAQ', index);
+          if (parsed && parsed.question && parsed.answer) {
+            faqs.push({
+              question: parsed.question,
+              answer: parsed.answer
+            });
+          }
+        } else if (faq.question && faq.answer) {
+          // Already in correct format
+          faqs.push({
+            question: faq.question,
+            answer: faq.answer
+          });
+        }
+      });
+    }
+
+    // Parse qualification questions
+    const qualificationQuestions = [];
+    if (Array.isArray(imported.qualificationQuestions)) {
+      imported.qualificationQuestions.forEach((q, index) => {
+        if (q.Body) {
+          const parsed = safeJsonParse(q.Body, 'Question', index);
+          if (parsed && parsed.text) {
+            qualificationQuestions.push({
+              text: parsed.text,
+              conditions: parsed.conditions || []
+            });
+          }
+        } else if (q.text) {
+          // Already in correct format
+          qualificationQuestions.push({
+            text: q.text,
+            conditions: q.conditions || []
+          });
+        }
+      });
+    }
+
+    // Parse follow-ups
+    const followUps = [];
+    if (Array.isArray(imported.followUps)) {
+      imported.followUps.forEach((followUp, index) => {
+        if (followUp.Body) {
+          followUps.push({
+            message: followUp.Body,
+            delay: followUp.Delay || 3600000 // Default 1 hour
+          });
+        } else if (followUp.message) {
+          // Already in correct format
+          followUps.push({
+            message: followUp.message,
+            delay: followUp.delay || 3600000
+          });
+        }
+      });
+    }
+
+    // Parse custom actions
+    const customActions = [];
+    if (imported.customActions && typeof imported.customActions === 'object') {
+      Object.keys(imported.customActions).forEach((actionType) => {
+        const action = imported.customActions[actionType];
+        if (action && typeof action === 'object') {
+          customActions.push({
+            type: actionType,
+            enabled: action.enabled !== false,
+            config: action.config || action
+          });
+        }
+      });
+    } else if (Array.isArray(imported.customActions)) {
+      // Already in array format
+      customActions.push(...imported.customActions);
+    }
+
+    // Build transformed strategy
+    const transformed = {
+      name: imported.name,
+      tag: imported.tag || imported.name.toLowerCase().replace(/\s+/g, '-'),
+      tone: imported.tone || 'Friendly and Professional',
+      goal: imported.objective || imported.goal || 'Engage and qualify leads',
+      context: imported.companyInformation || imported.context || '',
+      instructions: imported.brief || imported.instructions || '',
+      faqs: faqs,
+      qualification_questions: qualificationQuestions,
+      follow_ups: followUps,
+      custom_actions: customActions,
+      settings: {
+        booking_enabled: imported.settings?.booking_enabled || false,
+        booking_url: imported.settings?.booking_url || imported.cta || '',
+        message_delay: imported.messageDelayStandard || imported.settings?.message_delay || 2000,
+        max_messages: imported.settings?.max_messages || 50,
+        initial_message: imported.initialMessage || imported.settings?.initial_message || ''
+      }
+    };
+
+    // Log any parsing errors
+    if (errors.length > 0) {
+      console.warn('⚠️ Some fields could not be parsed:', errors);
+      alert(`Import succeeded with ${errors.length} warning(s). Check console for details.`);
+    }
+
+    return transformed;
   };
 
   const handleExportAgent = async (agent) => {
