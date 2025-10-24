@@ -1,43 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 function Dashboard() {
-  const [conversations, setConversations] = useState([]);
-  const [templates, setTemplates] = useState([]);
+  const [stats, setStats] = useState({
+    totalConversations: 0,
+    activeLeads: 0,
+    appointmentsBooked: 0,
+    completed: 0
+  });
+  const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadData();
+    loadDashboardData();
   }, []);
 
-  const loadData = async () => {
+  const loadDashboardData = async () => {
     try {
-      const [convRes, tempRes] = await Promise.all([
-        axios.get(`${API_URL}/conversations`),
-        axios.get(`${API_URL}/templates`)
-      ]);
-      setConversations(convRes.data);
-      setTemplates(tempRes.data);
+      // Fetch conversations for stats
+      const conversationsRes = await axios.get(`${API_URL}/conversations`);
+      const conversations = conversationsRes.data;
+
+      // Calculate stats
+      const totalConversations = conversations.length;
+      const activeLeads = conversations.filter(c => c.status === 'active').length;
+      const appointmentsBooked = conversations.filter(c => c.status === 'booked').length;
+      const completed = conversations.filter(c => c.status === 'completed').length;
+
+      setStats({
+        totalConversations,
+        activeLeads,
+        appointmentsBooked,
+        completed
+      });
+
+      // Fetch AI agents/strategies
+      const templatesRes = await axios.get(`${API_URL}/templates`);
+      setAgents(templatesRes.data);
+
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStats = () => {
-    const active = conversations.filter(c => c.status === 'active').length;
-    const booked = conversations.filter(c => c.status === 'booked').length;
-    const completed = conversations.filter(c => c.status === 'completed').length;
-    
-    return { total: conversations.length, active, booked, completed };
+  const handleStatCardClick = (path) => {
+    navigate(path);
   };
 
-  const stats = getStats();
+  const handleAgentClick = (agentId) => {
+    navigate(`/strategy/edit/${agentId}`);
+  };
+
+  const handleCreateAgent = () => {
+    navigate('/strategies');
+  };
 
   if (loading) {
     return <div className="loading">Loading dashboard...</div>;
@@ -52,30 +75,58 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Stats Grid */}
       <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">💬</div>
+        <div
+          className="stat-card"
+          onClick={() => handleStatCardClick('/test')}
+          title="View all conversations"
+        >
+          <div className="stat-icon-wrapper conversations">
+            💬
+          </div>
           <div className="stat-content">
-            <div className="stat-value">{stats.total}</div>
+            <div className="stat-value">{stats.totalConversations}</div>
             <div className="stat-label">Total Conversations</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon">⚡</div>
+
+        <div
+          className="stat-card"
+          onClick={() => handleStatCardClick('/test')}
+          title="View active leads"
+        >
+          <div className="stat-icon-wrapper leads">
+            ⚡
+          </div>
           <div className="stat-content">
-            <div className="stat-value">{stats.active}</div>
+            <div className="stat-value">{stats.activeLeads}</div>
             <div className="stat-label">Active Leads</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon">📅</div>
+
+        <div
+          className="stat-card"
+          onClick={() => handleStatCardClick('/appointments')}
+          title="View appointments"
+        >
+          <div className="stat-icon-wrapper appointments">
+            📅
+          </div>
           <div className="stat-content">
-            <div className="stat-value">{stats.booked}</div>
+            <div className="stat-value">{stats.appointmentsBooked}</div>
             <div className="stat-label">Appointments Booked</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon">✓</div>
+
+        <div
+          className="stat-card"
+          onClick={() => handleStatCardClick('/test')}
+          title="View completed"
+        >
+          <div className="stat-icon-wrapper completed">
+            ✓
+          </div>
           <div className="stat-content">
             <div className="stat-value">{stats.completed}</div>
             <div className="stat-label">Completed</div>
@@ -83,95 +134,73 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">Recent Conversations</h2>
+      {/* AI Agents Section */}
+      <div className="agents-section">
+        <div className="section-header">
+          <h2 className="section-title">
+            🤖 Your AI Agents
+          </h2>
+          <button
+            className="btn-primary"
+            onClick={handleCreateAgent}
+          >
+            ✨ Create New Agent
+          </button>
         </div>
-        {conversations.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">💬</div>
-            <h3>No conversations yet</h3>
-            <p>Start a test conversation to see it here</p>
-            <button className="btn btn-primary" onClick={() => navigate('/test')}>
-              Start Test Conversation
-            </button>
-          </div>
-        ) : (
-          <ul className="list">
-            {conversations.slice(0, 10).map(conv => (
-              <li
-                key={conv.id}
-                className="list-item"
-                onClick={() => navigate(`/conversation/${conv.id}`)}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <strong style={{ color: 'var(--text-primary)', fontSize: '0.9375rem' }}>
-                      {conv.contact_name || 'Unknown'}
-                    </strong>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                      Template: {conv.template_name}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span className={`badge badge-${conv.status === 'active' ? 'primary' : conv.status === 'booked' ? 'success' : 'secondary'}`}>
-                      {conv.status}
-                    </span>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                      {new Date(conv.last_message_at).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
 
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">AI Agents</h2>
-        </div>
-        {templates.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">🤖</div>
-            <h3>No AI agents yet</h3>
-            <p>Create your first AI agent to get started</p>
-            <button className="btn btn-primary" onClick={() => navigate('/strategies')}>
-              Create AI Agent
-            </button>
+        {agents.length === 0 ? (
+          <div className="create-agent-card" onClick={handleCreateAgent}>
+            <div className="create-agent-icon">🤖</div>
+            <div className="create-agent-text">Create Your First AI Agent</div>
+            <div className="create-agent-subtext">
+              Set up an intelligent assistant to handle conversations automatically
+            </div>
           </div>
         ) : (
-          <ul className="list">
-            {templates.map(template => (
-              <li key={template.id} className="list-item">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--primary-gradient)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: '700',
-                    color: 'white'
-                  }}>
-                    A
+          <div className="agents-grid">
+            {agents.map((agent) => (
+              <div
+                key={agent.id}
+                className="agent-card"
+                onClick={() => handleAgentClick(agent.id)}
+              >
+                <div className="agent-card-header">
+                  <div className="agent-icon">
+                    {agent.name.charAt(0).toUpperCase()}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <strong style={{ color: 'var(--text-primary)', fontSize: '0.9375rem' }}>
-                      {template.name}
-                    </strong>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                      Tag: {template.tag} | Tone: {template.tone}
-                    </div>
+                  <div className="agent-info">
+                    <h3 className="agent-name">{agent.name}</h3>
+                    <span className="agent-tag">{agent.tag}</span>
                   </div>
-                  <span className="badge badge-primary">{template.tag}</span>
                 </div>
-              </li>
+                <div className="agent-meta">
+                  <div className="agent-meta-item">
+                    <span>🎭</span>
+                    <span><strong>Tone:</strong> {agent.tone}</span>
+                  </div>
+                  <div className="agent-meta-item">
+                    <span>🎯</span>
+                    <span><strong>Goal:</strong> {agent.goal || 'Book appointments'}</span>
+                  </div>
+                  {agent.context && (
+                    <div className="agent-meta-item">
+                      <span>💡</span>
+                      <span><strong>Context:</strong> {agent.context.substring(0, 50)}...</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             ))}
-          </ul>
+
+            {/* Create New Agent Card */}
+            <div className="create-agent-card" onClick={handleCreateAgent}>
+              <div className="create-agent-icon">➕</div>
+              <div className="create-agent-text">Create New Agent</div>
+              <div className="create-agent-subtext">
+                Add another AI assistant
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
