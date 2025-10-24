@@ -330,25 +330,25 @@ function Settings() {
                 <input
                   type="text"
                   className="url-input"
-                  value={`${API_URL}/public/ghl-snapshot-template.json`}
+                  value="https://api.realassistagents.com/public/ghl-snapshot-template.json"
                   readOnly
                   onClick={(e) => e.target.select()}
                 />
                 <button
                   className="btn-copy"
-                  onClick={() => copyToClipboard(`${API_URL}/public/ghl-snapshot-template.json`, 'url')}
+                  onClick={() => copyToClipboard('https://api.realassistagents.com/public/ghl-snapshot-template.json', 'url')}
                   title="Copy URL"
                 >
                   {copiedUrl ? '✅ Copied!' : '📋 Copy URL'}
                 </button>
               </div>
 
-              <div className="warning-box">
-                ⚠️ <strong>Local URL:</strong> This URL works on your local machine. Deploy to production for public access.
+              <div className="info-box">
+                ℹ️ This URL points to the production LeadSync API and is publicly accessible for GHL snapshot imports.
               </div>
 
               <p className="help-text" style={{ marginTop: '12px' }}>
-                <strong>Alternative:</strong> Use the download button above if URL import doesn't work
+                <strong>Alternative:</strong> Use the download button above to get the snapshot file directly
               </p>
             </div>
           </div>

@@ -64,16 +64,14 @@ If snapshot import is not available in your GHL plan:
 
 1. **Open the imported workflow:** "LeadSync AI Chat"
 2. **Find Action 1:** "Send to LeadSync AI"
-3. **Update the webhook URL:**
+3. **Verify the webhook URL is set to:**
    ```
-   https://YOUR-DOMAIN.com/api/webhook/ghl
+   https://api.realassistagents.com/api/webhook/ghl
    ```
-   Replace `YOUR-DOMAIN.com` with your actual LeadSync backend URL
 
-   Examples:
-   - `https://api.leadsync.com/api/webhook/ghl`
-   - `https://your-app.herokuapp.com/api/webhook/ghl`
-   - `https://leadsync.yourdomain.com/api/webhook/ghl`
+   This should be pre-configured in the snapshot template. If you need to change it:
+   - Go to Settings → Custom Values
+   - Update "LeadSync Webhook URL"
 
 ### Step 5: Add Your Client ID
 
@@ -167,8 +165,8 @@ Send AI Response to Contact ← Workflow Action 3 ← Success?
 
 **Action 1: Send to LeadSync AI**
 - Type: Webhook POST
-- URL: `https://yourdomain.com/api/webhook/ghl`
-- Headers: Client ID for authentication
+- URL: `https://api.realassistagents.com/api/webhook/ghl`
+- Headers: Client ID and API Key for authentication
 - Body: Contact info, message, tags
 - Response: Saved as `ai_response`
 
@@ -451,9 +449,9 @@ First week:
 ### Need Help?
 
 **LeadSync Support:**
-- 📧 Email: support@leadsync.com
-- 📖 Docs: https://docs.leadsync.com
-- 💬 Discord: https://discord.gg/leadsync
+- 📧 Email: support@realassistagents.com
+- 📖 Docs: https://api.realassistagents.com/public/SNAPSHOT_IMPORT_GUIDE.md
+- 🌐 Website: https://realassistagents.com
 
 **GHL Support:**
 - 📖 GHL Docs: https://help.gohighlevel.com
@@ -466,8 +464,8 @@ First week:
 After importing and configuring, verify:
 
 - [ ] Snapshot imported successfully
-- [ ] Webhook URL updated with your domain
-- [ ] Client ID configured (header or custom field)
+- [ ] Webhook URL set to production (https://api.realassistagents.com/api/webhook/ghl)
+- [ ] Client ID and API Key configured in Custom Values
 - [ ] Trigger set to Inbound Message
 - [ ] All message types selected (SMS, FB, etc)
 - [ ] Workflow is ACTIVE

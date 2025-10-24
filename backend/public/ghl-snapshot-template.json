@@ -115,8 +115,8 @@
       "type": "text",
       "required": true,
       "description": "Your LeadSync webhook endpoint URL",
-      "placeholder": "https://yourdomain.com/api/webhook/ghl",
-      "defaultValue": "https://yourdomain.com/api/webhook/ghl"
+      "placeholder": "https://api.realassistagents.com/api/webhook/ghl",
+      "defaultValue": "https://api.realassistagents.com/api/webhook/ghl"
     }
   ],
 
@@ -390,7 +390,7 @@
           "description": "Alert team that contact wants to book",
           "config": {
             "channel": "email",
-            "recipients": ["team@yourdomain.com"],
+            "recipients": ["team@realassistagents.com"],
             "subject": "🎯 New Booking Request from {{contact.name}}",
             "message": "Contact {{contact.name}} ({{contact.phone}}) has requested to book an appointment.\n\nLast message: {{message.body}}\n\nContact Link: {{contact.link}}"
           },
@@ -451,7 +451,7 @@
               "name": "Alert Admin of Error",
               "config": {
                 "channel": "email",
-                "recipients": ["admin@yourdomain.com"],
+                "recipients": ["admin@realassistagents.com"],
                 "subject": "⚠️ LeadSync AI Error",
                 "message": "AI error for contact {{contact.name}}:\n\nError: {{ai_response.error}}\nContact: {{contact.phone}}\nMessage: {{message.body}}\n\nPlease investigate."
               },
@@ -566,8 +566,8 @@
     "1. Go to Settings > Custom Values",
     "2. Find 'LeadSync API Key' and paste your API key",
     "3. Find 'LeadSync Client ID' and paste your client ID",
-    "4. Update 'LeadSync Webhook URL' with your domain (if deployed)",
-    "   Example: https://yourdomain.com/api/webhook/ghl",
+    "4. Verify 'LeadSync Webhook URL' is set to production endpoint",
+    "   Default: https://api.realassistagents.com/api/webhook/ghl",
     "",
     "=== STEP 4: Activate Workflows ===",
     "1. Go to Automation > Workflows",
@@ -637,8 +637,8 @@
   },
 
   "support": {
-    "documentation": "https://docs.leadsync.com/ghl-integration",
-    "email": "support@leadsync.com",
-    "website": "https://leadsync.com"
+    "documentation": "https://api.realassistagents.com/public/SNAPSHOT_IMPORT_GUIDE.md",
+    "email": "support@realassistagents.com",
+    "website": "https://realassistagents.com"
   }
 }

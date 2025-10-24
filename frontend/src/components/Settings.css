@@ -280,6 +280,20 @@
   font-weight: 600;
 }
 
+.info-box {
+  padding: var(--spacing-md);
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius-md);
+  color: #60a5fa;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.info-box strong {
+  font-weight: 600;
+}
+
 /* No Credentials Message */
 .no-credentials-message {
   text-align: center;
@@ -616,6 +630,10 @@
   }
 
   .warning-box {
+    font-size: 0.75rem;
+  }
+
+  .info-box {
     font-size: 0.75rem;
   }
 }
