@@ -55,7 +55,7 @@ function Dashboard() {
   };
 
   const handleAgentClick = (agentId) => {
-    navigate(`/strategy/edit/${agentId}`);
+    navigate(`/ai-agents/edit/${agentId}`);
   };
 
   const handleCreateAgent = () => {
@@ -79,7 +79,7 @@ function Dashboard() {
       <div className="stats-grid">
         <div
           className="stat-card"
-          onClick={() => handleStatCardClick('/test')}
+          onClick={() => handleStatCardClick('/conversations')}
           title="View all conversations"
         >
           <div className="stat-icon-wrapper conversations">
@@ -93,7 +93,7 @@ function Dashboard() {
 
         <div
           className="stat-card"
-          onClick={() => handleStatCardClick('/test')}
+          onClick={() => handleStatCardClick('/conversations?status=active')}
           title="View active leads"
         >
           <div className="stat-icon-wrapper leads">
@@ -121,7 +121,7 @@ function Dashboard() {
 
         <div
           className="stat-card"
-          onClick={() => handleStatCardClick('/test')}
+          onClick={() => handleStatCardClick('/conversations?status=completed')}
           title="View completed"
         >
           <div className="stat-icon-wrapper completed">

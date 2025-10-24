@@ -6,7 +6,9 @@ import AIAgents from './components/AIAgents';
 import StrategyEditor from './components/StrategyEditor';
 import ConversationViewer from './components/ConversationViewer';
 import ConversationTest from './components/ConversationTest';
+import Conversations from './components/Conversations';
 import Appointments from './components/Appointments';
+import Integrations from './components/Integrations';
 import Settings from './components/Settings';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -135,6 +137,13 @@ function AppContent() {
               <div className="sidebar-section">
                 <span className="sidebar-label">SETTINGS</span>
                 <Link
+                  to="/integrations"
+                  className={`sidebar-item ${isActive('/integrations') ? 'active' : ''}`}
+                >
+                  <span className="sidebar-icon">🔗</span>
+                  <span>Integrations</span>
+                </Link>
+                <Link
                   to="/settings"
                   className={`sidebar-item ${isActive('/settings') ? 'active' : ''}`}
                 >
@@ -155,12 +164,22 @@ function AppContent() {
 
             {/* Protected Routes */}
             <Route path="/" element={<Dashboard />} />
+            <Route path="/conversations" element={<Conversations />} />
             <Route path="/strategies" element={<AIAgents />} />
             <Route path="/strategy/new" element={<StrategyEditor />} />
             <Route path="/strategy/edit/:id" element={<StrategyEditor />} />
+            <Route path="/ai-agents/edit/:id" element={<StrategyEditor />} />
             <Route path="/conversation/:id" element={<ConversationViewer />} />
             <Route path="/test" element={<ConversationTest />} />
             <Route path="/appointments" element={<Appointments />} />
+            <Route
+              path="/integrations"
+              element={
+                <ProtectedRoute>
+                  <Integrations />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/settings"
               element={

@@ -6,12 +6,7 @@ import './Settings.css';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function Settings() {
-  const { user, updateUser, token } = useAuth();
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [copiedApiKey, setCopiedApiKey] = useState(false);
-  const [copiedClientId, setCopiedClientId] = useState(false);
-  const [copiedUrl, setCopiedUrl] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
+  const { user } = useAuth();
   const [ghlStatus, setGhlStatus] = useState({ connected: false, locationId: null });
   const [calendars, setCalendars] = useState([]);
   const [settings, setSettings] = useState({
@@ -120,71 +115,6 @@ function Settings() {
     }
   };
 
-  const copyToClipboard = async (text, type) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      if (type === 'apiKey') {
-        setCopiedApiKey(true);
-        setTimeout(() => setCopiedApiKey(false), 2000);
-      } else if (type === 'clientId') {
-        setCopiedClientId(true);
-        setTimeout(() => setCopiedClientId(false), 2000);
-      } else if (type === 'url') {
-        setCopiedUrl(true);
-        setTimeout(() => setCopiedUrl(false), 2000);
-      }
-    } catch (error) {
-      console.error('Failed to copy:', error);
-      alert('Failed to copy to clipboard');
-    }
-  };
-
-  const handleRegenerateApiKey = async () => {
-    if (!window.confirm('Are you sure you want to regenerate your API key? This will invalidate the old key and you will need to update your integrations.')) {
-      return;
-    }
-
-    try {
-      setRegenerating(true);
-      const response = await axios.post(
-        `${API_URL}/api/auth/regenerate-api-key`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data.success) {
-        // Update user in context
-        updateUser({ apiKey: response.data.data.apiKey });
-        alert('API key regenerated successfully!');
-      }
-    } catch (error) {
-      console.error('Error regenerating API key:', error);
-      alert('Failed to regenerate API key');
-    } finally {
-      setRegenerating(false);
-    }
-  };
-
-  const maskApiKey = (key) => {
-    if (!key) return '';
-    return '•'.repeat(40);
-  };
-
-  const handleDownloadSnapshot = () => {
-    // Download the GHL snapshot template using the download endpoint
-    // This forces download instead of opening in browser
-    window.location.href = `${API_URL}/api/download/ghl-snapshot`;
-  };
-
-  const handleDownloadGuide = () => {
-    // Download the import guide
-    window.location.href = `${API_URL}/api/download/import-guide`;
-  };
-
-  const handleViewGuide = () => {
-    // Open the import guide in a new tab
-    window.open(`${API_URL}/public/SNAPSHOT_IMPORT_GUIDE.md`, '_blank');
-  };
 
   if (loading) {
     return (
@@ -198,163 +128,10 @@ function Settings() {
     <div className="settings-container">
       <div className="page-header">
         <div>
-          <h1>Settings</h1>
-          <p className="page-subtitle">Configure your LeadSync settings and integrations</p>
+          <h1>⚙️ Settings</h1>
+          <p className="page-subtitle">Configure your preferences and account settings</p>
         </div>
       </div>
-
-      {/* API Credentials Section */}
-      {user && (
-        <div className="settings-section">
-          <div className="section-header">
-            <h2>API Credentials</h2>
-            <p>Your unique credentials for integrating LeadSync with external platforms</p>
-          </div>
-
-          <div className="settings-card">
-            {/* Connection Status */}
-            <div className="credentials-status">
-              <div className="connection-status">
-                <div className="status-indicator status-connected"></div>
-                <div>
-                  <h3>Connected</h3>
-                  <p>{user.email} {user.companyName && `• ${user.companyName}`}</p>
-                </div>
-              </div>
-              <div className="plan-badge">
-                {user.planType?.toUpperCase() || 'FREE'} PLAN
-              </div>
-            </div>
-
-            {/* API Key */}
-            <div className="credential-item">
-              <div className="credential-header">
-                <label>API Key</label>
-                <button
-                  className="btn-text btn-regenerate"
-                  onClick={handleRegenerateApiKey}
-                  disabled={regenerating}
-                >
-                  {regenerating ? 'Regenerating...' : '🔄 Regenerate'}
-                </button>
-              </div>
-              <div className="credential-input-group">
-                <div className="credential-value">
-                  {showApiKey ? user.apiKey : maskApiKey(user.apiKey)}
-                </div>
-                <button
-                  className="btn-icon"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  title={showApiKey ? 'Hide API Key' : 'Show API Key'}
-                >
-                  {showApiKey ? '👁️' : '👁️‍🗨️'}
-                </button>
-                <button
-                  className="btn-icon"
-                  onClick={() => copyToClipboard(user.apiKey, 'apiKey')}
-                  title="Copy API Key"
-                >
-                  {copiedApiKey ? '✅' : '📋'}
-                </button>
-              </div>
-              <span className="help-text">
-                Use this API key to authenticate webhook requests from GoHighLevel
-              </span>
-            </div>
-
-            {/* Client ID */}
-            <div className="credential-item">
-              <label>Client ID</label>
-              <div className="credential-input-group">
-                <div className="credential-value">{user.clientId}</div>
-                <button
-                  className="btn-icon"
-                  onClick={() => copyToClipboard(user.clientId, 'clientId')}
-                  title="Copy Client ID"
-                >
-                  {copiedClientId ? '✅' : '📋'}
-                </button>
-              </div>
-              <span className="help-text">
-                Your unique client identifier for webhook routing
-              </span>
-            </div>
-
-            {/* Setup Instructions */}
-            <div className="setup-instructions">
-              <h4>📚 GoHighLevel Integration Setup</h4>
-              <ol>
-                <li>
-                  <strong>Download Snapshot:</strong> Download our pre-configured GoHighLevel workflow template
-                </li>
-                <li>
-                  <strong>Import to GHL:</strong> In GoHighLevel, go to Settings → Snapshots → Import
-                </li>
-                <li>
-                  <strong>Configure Webhook URL:</strong> Update the webhook URL to:
-                  <code className="code-block">
-                    {window.location.origin}/api/webhook/ghl
-                  </code>
-                </li>
-                <li>
-                  <strong>Add Your Client ID:</strong> Copy your Client ID above and paste it in the workflow configuration
-                </li>
-                <li>
-                  <strong>Activate Workflow:</strong> Enable the workflow in GHL to start receiving AI responses
-                </li>
-                <li>
-                  <strong>Test:</strong> Send a test SMS to verify your integration is working
-                </li>
-              </ol>
-              <div className="setup-actions">
-                <button onClick={handleDownloadSnapshot} className="btn-primary btn-small">
-                  📥 Download GHL Snapshot
-                </button>
-                <button onClick={handleViewGuide} className="btn-secondary btn-small">
-                  📖 View Complete Guide
-                </button>
-              </div>
-              <p className="help-text" style={{ marginTop: '12px' }}>
-                Need help? Check out the complete import guide for step-by-step instructions.
-              </p>
-            </div>
-
-            {/* Import from URL Section */}
-            <div className="import-url-section">
-              <h4>🔗 Import to GoHighLevel</h4>
-              <p className="help-text" style={{ marginBottom: '12px' }}>
-                Copy this URL and paste it into GHL's "Import Snapshot from URL" field
-              </p>
-
-              <div className="url-input-group">
-                <input
-                  type="text"
-                  className="url-input"
-                  value="https://api.realassistagents.com/public/ghl-snapshot-template.json"
-                  readOnly
-                  onClick={(e) => e.target.select()}
-                />
-                <button
-                  className="btn-copy"
-                  onClick={() => copyToClipboard('https://api.realassistagents.com/public/ghl-snapshot-template.json', 'url')}
-                  title="Copy URL"
-                >
-                  {copiedUrl ? '✅ Copied!' : '📋 Copy URL'}
-                </button>
-              </div>
-
-              <div className="info-box">
-                ℹ️ This URL points to the production LeadSync API and is publicly accessible for GHL snapshot imports.
-              </div>
-
-              <p className="help-text" style={{ marginTop: '12px' }}>
-                <strong>Alternative:</strong> Use the download button above to get the snapshot file directly
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
 
       {/* GoHighLevel Integration */}
       <div className="settings-section">
