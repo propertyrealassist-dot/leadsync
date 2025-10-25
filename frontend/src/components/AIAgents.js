@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import './AIAgents.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function AIAgents() {
+  const { token } = useAuth();
   const [agents, setAgents] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,8 +26,8 @@ function AIAgents() {
   const loadData = async () => {
     try {
       const [agentsRes, conversationsRes] = await Promise.all([
-        axios.get(`${API_URL}/templates`),
-        axios.get(`${API_URL}/conversations`)
+        axios.get(`${API_URL}/api/templates`),
+        axios.get(`${API_URL}/api/conversations`)
       ]);
 
       setAgents(agentsRes.data);
@@ -82,7 +84,7 @@ function AIAgents() {
         tag: `${agent.tag}-copy`
       };
 
-      await axios.post(`${API_URL}/templates`, duplicatedAgent);
+      await axios.post(`${API_URL}/api/templates`, duplicatedAgent);
       alert('Agent duplicated successfully!');
       loadData();
     } catch (error) {
@@ -98,7 +100,7 @@ function AIAgents() {
     }
 
     try {
-      await axios.delete(`${API_URL}/templates/${agentId}`);
+      await axios.delete(`${API_URL}/api/templates/${agentId}`);
       alert('Agent deleted successfully!');
       loadData();
     } catch (error) {
@@ -168,16 +170,32 @@ function AIAgents() {
       // Remove id if present (let backend generate new one)
       delete transformedData.id;
 
+      console.log('🚀 IMPORT - About to send request');
+      console.log('🔗 URL:', `${API_URL}/api/templates`);
+      console.log('📦 Data being sent:', JSON.stringify(transformedData, null, 2));
+      console.log('🔑 Token:', token ? 'Present' : 'Missing');
+
       // Import the strategy
-      const response = await axios.post(`${API_URL}/templates`, transformedData);
+      const response = await axios.post(`${API_URL}/api/templates`, transformedData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       console.log('✅ Import API response:', response.data);
 
       alert(`✅ Strategy "${transformedData.name}" imported successfully!`);
       loadData();
     } catch (error) {
       console.error('❌ Error importing strategy:', error);
-      console.error('Error details:', error.response?.data);
-      alert(`Failed to import strategy: ${error.response?.data?.error || error.message || 'Unknown error'}`);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error response status:', error.response?.status);
+      console.error('❌ Error response data:', error.response?.data);
+      console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+      console.error('❌ Request URL was:', `${API_URL}/api/templates`);
+
+      const errorMsg = error.response?.status === 404
+        ? `Endpoint not found. Server returned 404 for ${API_URL}/api/templates`
+        : error.response?.data?.error || error.message || 'Unknown error';
+
+      alert(`Failed to import strategy: ${errorMsg}`);
     } finally {
       setImporting(false);
       // Reset file input
@@ -317,7 +335,7 @@ function AIAgents() {
       setExporting(true);
 
       // Fetch full agent data with all nested resources
-      const response = await axios.get(`${API_URL}/templates/${agent.id}`);
+      const response = await axios.get(`${API_URL}/api/templates/${agent.id}`);
       const agentData = response.data;
 
       // Format the export data

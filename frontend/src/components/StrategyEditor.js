@@ -1,14 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useNavigation } from '../context/NavigationContext';
 import PromptBuilder from './PromptBuilder';
+import Modal from './Modal';
 import './StrategyEditor.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function StrategyEditor() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const {
+    setHasUnsavedChanges: setGlobalUnsavedChanges,
+    setOnSaveCallback,
+    showUnsavedModal,
+    saveAndProceed,
+    proceedWithNavigation,
+    cancelNavigation,
+    routerNavigate
+  } = useNavigation();
   const [activeStep, setActiveStep] = useState(1);
   const [showPromptBuilder, setShowPromptBuilder] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,44 +43,74 @@ function StrategyEditor() {
     ghlContactId: ''
   });
 
-  const [qualificationQuestions, setQualificationQuestions] = useState([]);
-  const [followUps, setFollowUps] = useState([]);
-  const [faqs, setFaqs] = useState([]);
+  const [qualificationQuestions, setQualificationQuestionsRaw] = useState([]);
+  const [followUps, setFollowUpsRaw] = useState([]);
+  const [faqs, setFaqsRaw] = useState([]);
+
+  // Wrapped setters with logging to track state changes
+  const setQualificationQuestions = (value) => {
+    console.log('🔄 setQualificationQuestions called with:', value?.length || 0, 'items');
+    console.trace('Stack trace:');
+    setQualificationQuestionsRaw(value);
+  };
+
+  const setFollowUps = (value) => {
+    console.log('🔄 setFollowUps called with:', value?.length || 0, 'items');
+    console.trace('Stack trace:');
+    setFollowUpsRaw(value);
+  };
+
+  const setFaqs = (value) => {
+    console.log('🔄 setFaqs called with:', value?.length || 0, 'items');
+    console.trace('Stack trace:');
+    setFaqsRaw(value);
+  };
   const [qualificationEnabled, setQualificationEnabled] = useState(true);
+
+  // Track unsaved changes locally
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [originalFormData, setOriginalFormData] = useState(null);
+
+  // Modal state
+  const [modal, setModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    onCancel: null,
+    onThird: null,
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    thirdText: null
+  });
 
   const isNewAgent = id === 'new';
 
-  useEffect(() => {
-    if (!isNewAgent) {
-      loadAgent();
-    }
-  }, [id]);
-
-  const loadAgent = async () => {
+  // Define handleSave with useCallback to capture current state
+  const handleSave = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/templates/${id}`);
-      setFormData(res.data);
-    } catch (error) {
-      console.error('Error loading agent:', error);
-    }
-  };
+      console.log('💾 Saving agent...', id);
+      console.log('🔍 Current state at save time:');
+      console.log('  faqs:', faqs.length);
+      console.log('  qualificationQuestions:', qualificationQuestions.length);
+      console.log('  followUps:', followUps.length);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+      // Ensure required fields have defaults
+      const dataToSave = {
+        ...formData,
+        initialMessage: formData.initialMessage || "Hey! Thanks for reaching out. Can you confirm this is {{contact.first_name}}?",
+        brief: formData.brief || '',
+        objective: formData.objective || 'Engage and qualify leads'
+      };
 
-  const handleSave = async () => {
-    try {
       if (isNewAgent) {
-        await axios.post(`${API_URL}/templates`, {
-          ...formData,
-          qualificationQuestions: [
+        await axios.post(`${API_URL}/api/templates`, {
+          ...dataToSave,
+          faqs: faqs.length > 0 ? faqs : [],
+          qualificationQuestions: qualificationQuestions.length > 0 ? qualificationQuestions : [
             { Body: JSON.stringify({ text: "What are you looking for today?" }), Delay: 1 }
           ],
-          followUps: [
+          followUps: followUps.length > 0 ? followUps : [
             { Body: "Just checking in - still interested?", Delay: 180 }
           ],
           customActions: {
@@ -84,62 +124,270 @@ function StrategyEditor() {
             }]
           }
         });
-        alert('AI Agent created successfully!');
+
+        setHasUnsavedChanges(false);
+        setModal({
+          isOpen: true,
+          title: 'Success',
+          message: 'AI Agent created successfully!',
+          onConfirm: () => {
+            setModal(prev => ({ ...prev, isOpen: false }));
+            routerNavigate('/strategies');
+          },
+          confirmText: 'OK',
+          onCancel: null
+        });
       } else {
-        await axios.put(`${API_URL}/templates/${id}`, formData);
-        alert('AI Agent updated successfully!');
+        console.log('  Updating with nested data:', {
+          faqs: faqs.length,
+          questions: qualificationQuestions.length,
+          followUps: followUps.length
+        });
+        console.log('📤 Sending data to backend:');
+        console.log('  FAQs:', JSON.stringify(faqs, null, 2));
+        console.log('  Questions:', JSON.stringify(qualificationQuestions, null, 2));
+        console.log('  FollowUps:', JSON.stringify(followUps, null, 2));
+
+        await axios.put(`${API_URL}/api/templates/${id}`, {
+          ...dataToSave,
+          faqs: faqs,
+          qualificationQuestions: qualificationQuestions,
+          followUps: followUps
+        });
+
+        setHasUnsavedChanges(false);
+        setOriginalFormData(JSON.stringify({
+          formData: dataToSave,
+          faqs: faqs,
+          qualificationQuestions: qualificationQuestions,
+          followUps: followUps
+        }));
+
+        setModal({
+          isOpen: true,
+          title: 'Success',
+          message: 'AI Agent updated successfully!',
+          onConfirm: () => {
+            setModal(prev => ({ ...prev, isOpen: false }));
+            routerNavigate('/strategies');
+          },
+          confirmText: 'OK',
+          onCancel: null
+        });
       }
-      navigate('/strategies');
     } catch (error) {
-      console.error('Error saving agent:', error);
-      alert('Error saving agent');
+      console.error('❌ Error saving agent:', error);
+      console.error('Error details:', error.response?.data);
+
+      setModal({
+        isOpen: true,
+        title: 'Error',
+        message: `Failed to save agent: ${error.response?.data?.error || error.message}`,
+        onConfirm: () => setModal(prev => ({ ...prev, isOpen: false })),
+        confirmText: 'OK',
+        onCancel: null
+      });
     }
+  }, [id, formData, faqs, qualificationQuestions, followUps, isNewAgent, routerNavigate]);
+
+  // Sync local unsaved changes with global context
+  useEffect(() => {
+    setGlobalUnsavedChanges(hasUnsavedChanges);
+  }, [hasUnsavedChanges, setGlobalUnsavedChanges]);
+
+  // Register save callback with navigation context
+  useEffect(() => {
+    setOnSaveCallback(() => handleSave);
+  }, [setOnSaveCallback, handleSave]);
+
+  // Show modal when navigation is blocked by context
+  useEffect(() => {
+    if (showUnsavedModal) {
+      setModal({
+        isOpen: true,
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes to this AI Agent. Do you want to save before leaving?',
+        onConfirm: saveAndProceed,
+        onCancel: proceedWithNavigation,
+        onThird: cancelNavigation,
+        confirmText: 'Save & Continue',
+        cancelText: 'Discard Changes',
+        thirdText: 'Cancel'
+      });
+    } else {
+      // Close modal if showUnsavedModal is false
+      if (modal.isOpen && modal.title === 'Unsaved Changes') {
+        setModal({ ...modal, isOpen: false });
+      }
+    }
+  }, [showUnsavedModal, saveAndProceed, proceedWithNavigation, cancelNavigation]);
+
+  useEffect(() => {
+    if (!isNewAgent) {
+      loadAgent();
+    }
+  }, [id]);
+
+  // Browser close/refresh warning
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'Changes you made may not be saved';
+        return 'Changes you made may not be saved';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  const loadAgent = async () => {
+    try {
+      console.log('📥 Loading agent:', id);
+      const res = await axios.get(`${API_URL}/api/templates/${id}`);
+      console.log('✅ Agent data loaded:', res.data);
+      console.log('  Received FAQs:', res.data.faqs?.length || 0);
+      console.log('  Received Questions:', res.data.qualificationQuestions?.length || 0);
+      console.log('  Received Follow-ups:', res.data.followUps?.length || 0);
+
+      // Set main form data
+      console.log('🔧 Setting formData...');
+      setFormData(res.data);
+
+      // Save original data for comparison
+      setOriginalFormData(JSON.stringify({
+        formData: res.data,
+        faqs: res.data.faqs || [],
+        qualificationQuestions: res.data.qualificationQuestions || [],
+        followUps: res.data.followUps || []
+      }));
+
+      // Set nested data arrays
+      if (res.data.faqs && res.data.faqs.length > 0) {
+        console.log('  Setting', res.data.faqs.length, 'FAQs');
+        console.log('  FAQs data:', JSON.stringify(res.data.faqs, null, 2));
+        setFaqs(res.data.faqs);
+      } else {
+        console.log('  ⚠️ No FAQs to set (received:', res.data.faqs, ')');
+      }
+
+      if (res.data.qualificationQuestions && res.data.qualificationQuestions.length > 0) {
+        console.log('  Setting', res.data.qualificationQuestions.length, 'qualification questions');
+        console.log('  Questions data:', JSON.stringify(res.data.qualificationQuestions, null, 2));
+        setQualificationQuestions(res.data.qualificationQuestions);
+      } else {
+        console.log('  ⚠️ No questions to set (received:', res.data.qualificationQuestions, ')');
+      }
+
+      if (res.data.followUps && res.data.followUps.length > 0) {
+        console.log('  Setting', res.data.followUps.length, 'follow-ups');
+        console.log('  Follow-ups data:', JSON.stringify(res.data.followUps, null, 2));
+        setFollowUps(res.data.followUps);
+      } else {
+        console.log('  ⚠️ No follow-ups to set (received:', res.data.followUps, ')');
+      }
+
+      console.log('✅ Load complete - state should now have data');
+      // Reset unsaved changes flag
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('❌ Error loading agent:', error);
+      console.error('Error details:', error.response?.data);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setHasUnsavedChanges(true);
   };
 
   const handlePromptSave = (generatedPrompt) => {
     setFormData({ ...formData, brief: generatedPrompt });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleNavigation = (path) => {
+    if (hasUnsavedChanges) {
+      setModal({
+        isOpen: true,
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes to this AI Agent. Do you want to save before leaving?',
+        onConfirm: async () => {
+          setModal({ ...modal, isOpen: false });
+          await handleSave();
+          setHasUnsavedChanges(false);
+          routerNavigate(path);
+        },
+        onCancel: () => {
+          setModal({ ...modal, isOpen: false });
+          setHasUnsavedChanges(false);
+          routerNavigate(path);
+        },
+        onThird: () => {
+          setModal({ ...modal, isOpen: false });
+        },
+        confirmText: 'Save & Continue',
+        cancelText: 'Discard Changes',
+        thirdText: 'Cancel'
+      });
+    } else {
+      routerNavigate(path);
+    }
   };
 
   const addQualificationQuestion = () => {
     setQualificationQuestions([...qualificationQuestions, { id: Date.now(), text: '', conditions: [] }]);
+    setHasUnsavedChanges(true);
   };
 
   const removeQualificationQuestion = (id) => {
     setQualificationQuestions(qualificationQuestions.filter(q => q.id !== id));
+    setHasUnsavedChanges(true);
   };
 
   const updateQualificationQuestion = (id, text) => {
     setQualificationQuestions(qualificationQuestions.map(q =>
       q.id === id ? { ...q, text } : q
     ));
+    setHasUnsavedChanges(true);
   };
 
   const addFollowUp = () => {
     setFollowUps([...followUps, { id: Date.now(), text: '', delay: 180 }]);
+    setHasUnsavedChanges(true);
   };
 
   const removeFollowUp = (id) => {
     setFollowUps(followUps.filter(f => f.id !== id));
+    setHasUnsavedChanges(true);
   };
 
   const updateFollowUp = (id, field, value) => {
     setFollowUps(followUps.map(f =>
       f.id === id ? { ...f, [field]: value } : f
     ));
+    setHasUnsavedChanges(true);
   };
 
   const addFaq = () => {
     setFaqs([...faqs, { id: Date.now(), question: '', answer: '', expanded: true }]);
+    setHasUnsavedChanges(true);
   };
 
   const removeFaq = (id) => {
     setFaqs(faqs.filter(f => f.id !== id));
+    setHasUnsavedChanges(true);
   };
 
   const updateFaq = (id, field, value) => {
     setFaqs(faqs.map(f =>
       f.id === id ? { ...f, [field]: value } : f
     ));
+    setHasUnsavedChanges(true);
   };
 
   const toggleFaq = (id) => {
@@ -160,11 +408,11 @@ function StrategyEditor() {
     <div className="strategy-editor">
       <div className="editor-header">
         <div className="editor-title">
-          <button className="btn-back" onClick={() => navigate('/strategies')}>←</button>
+          <button className="btn-back" onClick={() => handleNavigation('/strategies')}>←</button>
           <h1>📝 {isNewAgent ? 'Create New Agent' : 'Edit Strategy'}</h1>
         </div>
         <div className="editor-actions">
-          <button className="btn btn-secondary" onClick={() => navigate('/strategies')}>Cancel</button>
+          <button className="btn btn-secondary" onClick={() => handleNavigation('/strategies')}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSave}>Save Strategy</button>
         </div>
       </div>
@@ -645,6 +893,17 @@ function StrategyEditor() {
         onClose={() => setShowPromptBuilder(false)}
         onSave={handlePromptSave}
         initialBrief={formData.brief}
+      />
+
+      {/* Modal for alerts/confirms */}
+      <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        onConfirm={modal.onConfirm}
+        onCancel={modal.onCancel}
+        confirmText={modal.confirmText}
+        cancelText={modal.cancelText}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import Dashboard from './components/Dashboard';
 import AIAgents from './components/AIAgents';
 import StrategyEditor from './components/StrategyEditor';
@@ -17,8 +18,9 @@ import './App.css';
 
 function AppContent() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const routerNavigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
+  const { navigate } = useNavigation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -29,7 +31,7 @@ function AppContent() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    routerNavigate('/login');
     setShowUserMenu(false);
   };
 
@@ -100,56 +102,62 @@ function AppContent() {
             <div className="sidebar-content">
               <div className="sidebar-section">
                 <span className="sidebar-label">MENU</span>
-                <Link
-                  to="/"
+                <a
+                  onClick={(e) => { e.preventDefault(); navigate('/'); }}
                   className={`sidebar-item ${isActive('/') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
                 >
                   <span className="sidebar-icon">📊</span>
                   <span>Dashboard</span>
-                </Link>
-                <Link
-                  to="/strategies"
+                </a>
+                <a
+                  onClick={(e) => { e.preventDefault(); navigate('/strategies'); }}
                   className={`sidebar-item ${isActive('/strategies') || location.pathname.includes('/strategy') || location.pathname.includes('/agents') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
                 >
                   <span className="sidebar-icon">🎯</span>
                   <span>Strategies</span>
-                </Link>
-                <Link
-                  to="/test"
+                </a>
+                <a
+                  onClick={(e) => { e.preventDefault(); navigate('/test'); }}
                   className={`sidebar-item ${isActive('/test') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
                 >
                   <span className="sidebar-icon">✨</span>
                   <span>Test AI</span>
-                </Link>
+                </a>
               </div>
 
               <div className="sidebar-section">
                 <span className="sidebar-label">APPOINTMENTS</span>
-                <Link
-                  to="/appointments"
+                <a
+                  onClick={(e) => { e.preventDefault(); navigate('/appointments'); }}
                   className={`sidebar-item ${isActive('/appointments') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
                 >
                   <span className="sidebar-icon">📅</span>
                   <span>Appointments</span>
-                </Link>
+                </a>
               </div>
 
               <div className="sidebar-section">
                 <span className="sidebar-label">SETTINGS</span>
-                <Link
-                  to="/integrations"
+                <a
+                  onClick={(e) => { e.preventDefault(); navigate('/integrations'); }}
                   className={`sidebar-item ${isActive('/integrations') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
                 >
                   <span className="sidebar-icon">🔗</span>
                   <span>Integrations</span>
-                </Link>
-                <Link
-                  to="/settings"
+                </a>
+                <a
+                  onClick={(e) => { e.preventDefault(); navigate('/settings'); }}
                   className={`sidebar-item ${isActive('/settings') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
                 >
                   <span className="sidebar-icon">⚙️</span>
                   <span>Settings</span>
-                </Link>
+                </a>
               </div>
             </div>
           </aside>
@@ -199,7 +207,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppContent />
+        <NavigationProvider>
+          <AppContent />
+        </NavigationProvider>
       </AuthProvider>
     </Router>
   );
