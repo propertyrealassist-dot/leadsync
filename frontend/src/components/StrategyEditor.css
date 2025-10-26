@@ -685,11 +685,31 @@
   cursor: pointer;
   transition: all var(--transition-base);
   box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-gradient-sm::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transition: left 1.2s ease;
+  z-index: 2;
 }
 
 .btn-gradient-sm:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.btn-gradient-sm:hover::before {
+  left: 100%;
 }
 
 /* Secondary Small Button */
@@ -1142,37 +1162,128 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .strategy-editor {
     padding: 0;
   }
 
+  /* Sticky header on mobile */
   .editor-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--spacing-md);
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+
+  .editor-title {
+    font-size: 1.25rem;
+  }
+
+  .editor-subtitle {
+    font-size: 0.8125rem;
   }
 
   .editor-actions {
     width: 100%;
+    display: flex;
+    gap: var(--spacing-sm);
   }
 
   .editor-actions button {
     flex: 1;
+    min-height: 44px;
+    font-size: 0.875rem;
   }
 
+  /* Steps navigation - horizontal scroll on mobile */
+  .editor-steps {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--spacing-sm);
+  }
+
+  .step-item {
+    min-width: 120px;
+  }
+
+  /* Step content */
   .step-content {
     padding: var(--spacing-md);
   }
 
+  /* All form rows stack vertically */
   .form-row {
     grid-template-columns: 1fr;
+    gap: var(--spacing-md);
   }
 
   .config-row {
     grid-template-columns: 1fr;
   }
 
+  /* Touch-friendly inputs */
+  .dark-input,
+  .dark-textarea,
+  .dark-select {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem 1rem;
+  }
+
+  .dark-textarea {
+    min-height: 120px;
+  }
+
+  /* Form labels larger for readability */
+  .form-label {
+    font-size: 0.875rem;
+  }
+
+  /* FAQ, Questions, Follow-ups - collapsible sections */
+  .faq-item,
+  .question-item,
+  .followup-item {
+    padding: var(--spacing-md);
+  }
+
+  .faq-header,
+  .question-header,
+  .followup-header {
+    gap: var(--spacing-sm);
+  }
+
+  .faq-content,
+  .question-content,
+  .followup-content {
+    gap: var(--spacing-sm);
+  }
+
+  /* Buttons */
+  .btn-add-faq,
+  .btn-add-question,
+  .btn-add-followup {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .btn-gradient-sm,
+  .btn-secondary-sm {
+    min-height: 38px;
+    padding: 0.625rem 0.875rem;
+  }
+
+  .btn-icon-sm {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* Prompt section */
   .prompt-section-header {
     flex-direction: column;
     align-items: flex-start;
@@ -1182,5 +1293,74 @@
   .btn-build-prompt {
     width: 100%;
     justify-content: center;
+    min-height: 44px;
+  }
+
+  /* Sliders */
+  .slider-container {
+    margin-top: var(--spacing-sm);
+  }
+
+  /* Step 1 layout */
+  .step-1-layout {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .adjustments-sidebar {
+    order: 1; /* Move to bottom on mobile */
+  }
+
+  .toggles-panel {
+    padding: var(--spacing-md);
+  }
+
+  /* Step 5 layout */
+  .step-5-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Custom actions grid */
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Compact spacing */
+  .section-spacer {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  /* Character counters */
+  .char-counter {
+    font-size: 0.75rem;
+  }
+
+  /* Info boxes */
+  .info-box,
+  .cta-highlight-card {
+    padding: var(--spacing-md);
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .editor-title {
+    font-size: 1.125rem;
+  }
+
+  .step-item {
+    min-width: 100px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .step-number {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+
+  .btn-gradient-sm,
+  .btn-secondary-sm {
+    font-size: 0.8125rem;
   }
 }

@@ -35,6 +35,14 @@ function AppContent() {
     setShowUserMenu(false);
   };
 
+  // Close sidebar on mobile after navigation
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
   // Get user initials for badge
   const getUserInitials = () => {
     if (user?.firstName && user?.lastName) {
@@ -52,9 +60,17 @@ function AppContent() {
       {!isAuthPage && (
         <nav className="navbar">
           <div className="nav-container">
+            <button
+              className="hamburger-menu"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle menu"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
             <h1 className="logo">
-              <span style={{ color: '#755cb7' }}>Lead</span>
-              <span style={{ color: '#d567d4' }}>Sync</span>
+              <img src="/logo.png" alt="LeadSync" className="logo-image" />
             </h1>
             <div className="nav-right">
               {isAuthenticated() ? (
@@ -76,7 +92,7 @@ function AppContent() {
                         <div className="user-email">{user?.email}</div>
                       </div>
                       <div className="dropdown-divider"></div>
-                      <button className="dropdown-item" onClick={() => { navigate('/settings'); setShowUserMenu(false); }}>
+                      <button className="dropdown-item" onClick={() => { handleNavigation('/settings'); setShowUserMenu(false); }}>
                         ⚙️ Settings
                       </button>
                       <button className="dropdown-item" onClick={handleLogout}>
@@ -96,6 +112,11 @@ function AppContent() {
       )}
 
       <div className="app-layout">
+        {/* Mobile overlay */}
+        {!isAuthPage && sidebarOpen && (
+          <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}></div>
+        )}
+
         {/* Sidebar - Hidden on auth pages */}
         {!isAuthPage && (
           <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
@@ -103,7 +124,7 @@ function AppContent() {
               <div className="sidebar-section">
                 <span className="sidebar-label">MENU</span>
                 <a
-                  onClick={(e) => { e.preventDefault(); navigate('/'); }}
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/'); }}
                   className={`sidebar-item ${isActive('/') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
@@ -111,7 +132,7 @@ function AppContent() {
                   <span>Dashboard</span>
                 </a>
                 <a
-                  onClick={(e) => { e.preventDefault(); navigate('/strategies'); }}
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/strategies'); }}
                   className={`sidebar-item ${isActive('/strategies') || location.pathname.includes('/strategy') || location.pathname.includes('/agents') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
@@ -119,7 +140,7 @@ function AppContent() {
                   <span>Strategies</span>
                 </a>
                 <a
-                  onClick={(e) => { e.preventDefault(); navigate('/test'); }}
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/test'); }}
                   className={`sidebar-item ${isActive('/test') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
@@ -131,7 +152,7 @@ function AppContent() {
               <div className="sidebar-section">
                 <span className="sidebar-label">APPOINTMENTS</span>
                 <a
-                  onClick={(e) => { e.preventDefault(); navigate('/appointments'); }}
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/appointments'); }}
                   className={`sidebar-item ${isActive('/appointments') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
@@ -143,7 +164,7 @@ function AppContent() {
               <div className="sidebar-section">
                 <span className="sidebar-label">SETTINGS</span>
                 <a
-                  onClick={(e) => { e.preventDefault(); navigate('/integrations'); }}
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/integrations'); }}
                   className={`sidebar-item ${isActive('/integrations') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
@@ -151,7 +172,7 @@ function AppContent() {
                   <span>Integrations</span>
                 </a>
                 <a
-                  onClick={(e) => { e.preventDefault(); navigate('/settings'); }}
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/settings'); }}
                   className={`sidebar-item ${isActive('/settings') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >

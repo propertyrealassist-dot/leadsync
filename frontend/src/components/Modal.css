@@ -182,3 +182,70 @@
   background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
   box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }
+
+/* Mobile Responsive */
+@media (max-width: 767px) {
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    width: 100%;
+    max-height: 95vh;
+    border-radius: 16px 16px 0 0;
+    animation: slideUpMobile 0.3s ease-out;
+  }
+
+  @keyframes slideUpMobile {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .modal-header {
+    padding: 20px 20px;
+  }
+
+  .modal-header h2 {
+    font-size: 20px;
+  }
+
+  .modal-close {
+    width: 40px;
+    height: 40px;
+    font-size: 28px;
+  }
+
+  .modal-body {
+    padding: 20px;
+    font-size: 15px;
+    max-height: calc(95vh - 150px);
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    padding: 16px 20px;
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .modal-btn {
+    width: 100%;
+    min-height: 44px;
+    padding: 14px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    font-size: 14px;
+  }
+}

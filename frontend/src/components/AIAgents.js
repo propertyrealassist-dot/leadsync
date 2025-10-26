@@ -509,20 +509,20 @@ function AIAgents() {
                         onChange={() => handleSelectAgent(agent.id)}
                       />
                     </td>
-                    <td className="strategy-name">
+                    <td className="strategy-name" data-label="Strategy Name">
                       <div className="strategy-name-content">
                         <span className="status-dot active"></span>
                         <span className="name-text">{agent.name}</span>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="GHL Tag">
                       <span className="tag-badge">{agent.tag}</span>
                     </td>
-                    <td className="stat-cell">{stats.totalLeads}</td>
-                    <td className="stat-cell active">{stats.activeLeads}</td>
-                    <td className="stat-cell won">{stats.leadsWon}</td>
-                    <td className="stat-cell opt-out">{stats.optOut}</td>
-                    <td className="stat-cell">
+                    <td className="stat-cell" data-label="Total Leads">{stats.totalLeads}</td>
+                    <td className="stat-cell active" data-label="Active Leads">{stats.activeLeads}</td>
+                    <td className="stat-cell won" data-label="Leads Won">{stats.leadsWon}</td>
+                    <td className="stat-cell opt-out" data-label="Opt-Out">{stats.optOut}</td>
+                    <td className="stat-cell" data-label="Response Rate">
                       <span className={`response-rate ${stats.responseRate >= 70 ? 'good' : stats.responseRate >= 40 ? 'medium' : 'low'}`}>
                         {stats.responseRate}%
                       </span>
