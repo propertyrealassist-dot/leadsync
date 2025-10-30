@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
+import Home from './components/Home';
 import Dashboard from './components/Dashboard';
 import AIAgents from './components/AIAgents';
 import StrategyEditor from './components/StrategyEditor';
@@ -9,6 +10,8 @@ import ConversationViewer from './components/ConversationViewer';
 import ConversationTest from './components/ConversationTest';
 import Conversations from './components/Conversations';
 import Appointments from './components/Appointments';
+import Analytics from './components/Analytics';
+import CoPilot from './components/CoPilot';
 import Integrations from './components/Integrations';
 import Settings from './components/Settings';
 import Login from './components/Login';
@@ -23,6 +26,46 @@ function AppContent() {
   const { navigate } = useNavigation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Create animated stars and particles background
+  useEffect(() => {
+    // Create stars container
+    const starsContainer = document.createElement('div');
+    starsContainer.className = 'stars-container';
+    document.body.insertBefore(starsContainer, document.body.firstChild);
+
+    // Generate 100 stars
+    for (let i = 0; i < 100; i++) {
+      const star = document.createElement('div');
+      const size = Math.random();
+
+      star.className = size < 0.6 ? 'star star-small' :
+                       size < 0.9 ? 'star star-medium' :
+                       'star star-large';
+
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.top = `${Math.random() * 100}%`;
+      star.style.animationDelay = `${Math.random() * 5}s`;
+
+      starsContainer.appendChild(star);
+    }
+
+    // Generate 20 floating particles
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+      particle.style.animationDelay = `${Math.random() * 15}s`;
+      starsContainer.appendChild(particle);
+    }
+
+    return () => {
+      if (starsContainer.parentNode) {
+        starsContainer.parentNode.removeChild(starsContainer);
+      }
+    };
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
@@ -69,8 +112,34 @@ function AppContent() {
               <span></span>
               <span></span>
             </button>
-            <h1 className="logo">
-              <img src="/logo.png" alt="LeadSync" className="logo-image" />
+            <h1 className="logo" onClick={() => handleNavigation('/')} style={{ cursor: 'pointer', margin: 0 }}>
+              <img
+                src={`${process.env.PUBLIC_URL}/logo.png`}
+                alt="LeadSync"
+                className="logo-image"
+                style={{
+                  height: '50px',
+                  width: 'auto',
+                  transition: 'filter 0.3s ease, transform 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.filter = 'drop-shadow(0 0 12px rgba(139, 92, 246, 0.8))';
+                  e.target.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.filter = 'none';
+                  e.target.style.transform = 'scale(1)';
+                }}
+                onError={(e) => {
+                  console.error('❌ Logo failed to load from:', e.target.src);
+                  // Fallback to text if image fails
+                  e.target.style.display = 'none';
+                  const fallback = document.createElement('span');
+                  fallback.textContent = 'LeadSync';
+                  fallback.style.cssText = 'color: #EC4899; font-size: 24px; font-weight: bold; cursor: pointer;';
+                  e.target.parentElement.appendChild(fallback);
+                }}
+              />
             </h1>
             <div className="nav-right">
               {isAuthenticated() ? (
@@ -124,12 +193,12 @@ function AppContent() {
               <div className="sidebar-section">
                 <span className="sidebar-label">MENU</span>
                 <a
-                  onClick={(e) => { e.preventDefault(); handleNavigation('/'); }}
-                  className={`sidebar-item ${isActive('/') ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/home'); }}
+                  className={`sidebar-item ${isActive('/home') || isActive('/') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">📊</span>
-                  <span>Dashboard</span>
+                  <span className="sidebar-icon">🏠</span>
+                  <span>Home</span>
                 </a>
                 <a
                   onClick={(e) => { e.preventDefault(); handleNavigation('/strategies'); }}
@@ -140,6 +209,14 @@ function AppContent() {
                   <span>Strategies</span>
                 </a>
                 <a
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/copilot'); }}
+                  className={`sidebar-item ${isActive('/copilot') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <span className="sidebar-icon">🤖</span>
+                  <span>Co-Pilot</span>
+                </a>
+                <a
                   onClick={(e) => { e.preventDefault(); handleNavigation('/test'); }}
                   className={`sidebar-item ${isActive('/test') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
@@ -147,22 +224,14 @@ function AppContent() {
                   <span className="sidebar-icon">✨</span>
                   <span>Test AI</span>
                 </a>
-              </div>
-
-              <div className="sidebar-section">
-                <span className="sidebar-label">APPOINTMENTS</span>
                 <a
-                  onClick={(e) => { e.preventDefault(); handleNavigation('/appointments'); }}
-                  className={`sidebar-item ${isActive('/appointments') ? 'active' : ''}`}
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/analytics'); }}
+                  className={`sidebar-item ${isActive('/analytics') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">📅</span>
-                  <span>Appointments</span>
+                  <span className="sidebar-icon">📊</span>
+                  <span>Analytics</span>
                 </a>
-              </div>
-
-              <div className="sidebar-section">
-                <span className="sidebar-label">SETTINGS</span>
                 <a
                   onClick={(e) => { e.preventDefault(); handleNavigation('/integrations'); }}
                   className={`sidebar-item ${isActive('/integrations') ? 'active' : ''}`}
@@ -170,14 +239,6 @@ function AppContent() {
                 >
                   <span className="sidebar-icon">🔗</span>
                   <span>Integrations</span>
-                </a>
-                <a
-                  onClick={(e) => { e.preventDefault(); handleNavigation('/settings'); }}
-                  className={`sidebar-item ${isActive('/settings') ? 'active' : ''}`}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="sidebar-icon">⚙️</span>
-                  <span>Settings</span>
                 </a>
               </div>
             </div>
@@ -192,14 +253,18 @@ function AppContent() {
             <Route path="/register" element={<Register />} />
 
             {/* Protected Routes */}
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/strategies" element={<AIAgents />} />
             <Route path="/strategy/new" element={<StrategyEditor />} />
             <Route path="/strategy/edit/:id" element={<StrategyEditor />} />
             <Route path="/ai-agents/edit/:id" element={<StrategyEditor />} />
             <Route path="/conversation/:id" element={<ConversationViewer />} />
+            <Route path="/copilot" element={<CoPilot />} />
             <Route path="/test" element={<ConversationTest />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route
               path="/integrations"

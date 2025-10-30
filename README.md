@@ -1,378 +1,331 @@
-# LeadSync - AI-Powered Appointment Scheduling with GoHighLevel Integration
+# LeadSync
 
-LeadSync is a comprehensive appointment scheduling system with AI-powered conversational booking and seamless GoHighLevel (GHL) integration. Built with React, Node.js, Express, and Claude AI.
+**AI-Powered Lead Management & Automation Platform**
 
-## Features
-
-### Core Features
-- ✅ **AI-Powered Scheduling** - Conversational appointment booking using Claude AI
-- ✅ **GoHighLevel Integration** - Two-way sync with GHL calendars and contacts
-- ✅ **Appointment Management** - Full CRUD operations for appointments
-- ✅ **Calendar View** - Beautiful appointment dashboard with upcoming appointments
-- ✅ **Contact Management** - Automatic contact sync with GHL
-- ✅ **Real-time Webhooks** - Instant sync when appointments change in GHL
-- ✅ **Reminder System** - SMS and email reminders (infrastructure ready)
-- ✅ **Business Hours** - Configure availability and timezone
-- ✅ **Multiple Calendars** - Support for multiple GHL calendars
-
-### AI Capabilities
-- Natural language understanding for appointment booking
-- Automatic date and time extraction
-- Contact information collection
-- Appointment type identification
-- Intelligent time slot suggestions
-- Booking confirmation
-
-## Tech Stack
-
-### Backend
-- **Node.js** with Express
-- **Better-SQLite3** for data storage
-- **Anthropic Claude AI** for conversational scheduling
-- **Axios** for API requests
-- **GoHighLevel API** v2021-07-28
-
-### Frontend
-- **React 18** with React Router
-- **Axios** for API calls
-- **Modern CSS** with responsive design
-- Clean, professional UI
-
-## Project Structure
-
-```
-leadsync-clone/
-├── backend/
-│   ├── src/
-│   │   ├── database/
-│   │   │   ├── init.js           # Database initialization
-│   │   │   └── db.js             # Database connection
-│   │   ├── routes/
-│   │   │   ├── appointments.js    # Appointment CRUD API
-│   │   │   ├── ghl.js            # GoHighLevel OAuth & API
-│   │   │   ├── webhooks.js       # GHL webhook handlers
-│   │   │   ├── conversations.js  # AI conversation API
-│   │   │   └── templates.js      # Template management
-│   │   ├── services/
-│   │   │   ├── ghlService.js     # GHL API service layer
-│   │   │   ├── appointmentAI.js  # AI scheduling engine
-│   │   │   └── mockAI.js         # Mock AI for testing
-│   │   └── server.js             # Express server
-│   ├── data/                     # SQLite database
-│   ├── .env                      # Environment variables
-│   └── package.json
-│
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── Appointments.js    # Appointment dashboard
-    │   │   ├── Appointments.css
-    │   │   ├── Settings.js        # Settings & integrations
-    │   │   ├── Settings.css
-    │   │   ├── Dashboard.js       # Main dashboard
-    │   │   └── [other components]
-    │   ├── App.js                 # Main app component
-    │   ├── App.css
-    │   └── index.js
-    ├── public/
-    └── package.json
-```
-
-## Setup Instructions
-
-### Prerequisites
-- Node.js 16+ and npm
-- GoHighLevel account with API access
-- Anthropic Claude API key
-- (Optional) Twilio account for SMS reminders
-
-### 1. Clone and Install
-
-```bash
-# Navigate to project directory
-cd leadsync-clone
-
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
-npm install
-```
-
-### 2. Configure Environment Variables
-
-Edit `backend/.env`:
-
-```env
-# Server Configuration
-PORT=3001
-NODE_ENV=development
-DB_PATH=./data/leadsync.db
-
-# AI Configuration
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-USE_MOCK_AI=false
-
-# GoHighLevel OAuth Configuration
-GHL_CLIENT_ID=your_ghl_client_id_here
-GHL_CLIENT_SECRET=your_ghl_client_secret_here
-GHL_REDIRECT_URI=http://localhost:3001/api/ghl/auth/callback
-
-# Frontend URL
-FRONTEND_URL=http://localhost:3000
-
-# Optional: Twilio for SMS reminders
-TWILIO_ACCOUNT_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_token
-TWILIO_PHONE_NUMBER=your_twilio_phone
-```
-
-### 3. Set Up GoHighLevel OAuth App
-
-1. Log in to your GHL account
-2. Go to **Settings > Integrations > Custom Apps**
-3. Create a new OAuth app with these settings:
-   - **App Name:** LeadSync
-   - **Redirect URI:** `http://localhost:3001/api/ghl/auth/callback`
-   - **Scopes:**
-     - `calendars.readonly`
-     - `calendars.write`
-     - `contacts.readonly`
-     - `contacts.write`
-     - `opportunities.readonly`
-     - `opportunities.write`
-4. Copy the **Client ID** and **Client Secret** to your `.env` file
-
-### 4. Initialize Database
-
-```bash
-cd backend
-npm run init-db
-```
-
-This creates the SQLite database with all required tables.
-
-### 5. Start the Application
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-npm run dev
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm start
-```
-
-The application will open at `http://localhost:3000`
-
-## Usage Guide
-
-### 1. Connect GoHighLevel
-
-1. Navigate to **Settings** in the sidebar
-2. Click **Connect to GoHighLevel**
-3. Log in to your GHL account and authorize the app
-4. Select your location
-5. You'll be redirected back to LeadSync with a success message
-
-### 2. Configure Calendar Settings
-
-In **Settings**:
-- Select your default GHL calendar
-- Set business hours (9 AM - 5 PM by default)
-- Choose your timezone
-- Enable appointment reminders
-- Configure auto-sync interval
-
-### 3. Create Appointments
-
-In **Appointments**:
-- Click **+ New Appointment**
-- Fill in appointment details:
-  - Contact name (required)
-  - Contact phone/email
-  - Appointment title
-  - Start and end time
-  - Location/notes
-- Enable "Sync to GoHighLevel" to create the appointment in GHL
-- Select which GHL calendar to use
-
-### 4. Manage Appointments
-
-- View all appointments in the appointments page
-- See upcoming appointments in a separate section
-- Edit or delete appointments
-- Sync appointments from GHL with "Sync from GHL" button
-- Appointments sync automatically via webhooks
-
-### 5. AI-Powered Booking (Coming from existing flow)
-
-The AI conversation engine can:
-- Extract appointment details from natural language
-- Suggest available time slots
-- Collect contact information
-- Book appointments automatically
-- Sync to GHL when ready
-
-### 6. Set Up Webhooks (Optional)
-
-For real-time sync from GHL to LeadSync:
-
-1. In GHL, go to **Settings > Webhooks**
-2. Add webhook endpoints:
-   - **Calendar Events:** `https://your-domain.com/api/webhooks/ghl/calendar`
-   - **Contacts:** `https://your-domain.com/api/webhooks/ghl/contact`
-3. Select events to receive:
-   - `CalendarEvent.create`
-   - `CalendarEvent.update`
-   - `CalendarEvent.delete`
-   - `Contact.create`
-   - `Contact.update`
-
-**Note:** Webhooks require a public URL. For local development, use ngrok:
-```bash
-ngrok http 3001
-```
-
-## API Endpoints
-
-### Appointments
-- `GET /api/appointments` - Get all appointments
-- `GET /api/appointments/:id` - Get single appointment
-- `POST /api/appointments` - Create appointment
-- `PUT /api/appointments/:id` - Update appointment
-- `DELETE /api/appointments/:id` - Delete appointment
-- `GET /api/appointments/filter/upcoming` - Get upcoming appointments
-- `POST /api/appointments/sync` - Sync appointments from GHL
-
-### GoHighLevel
-- `GET /api/ghl/auth/start` - Start OAuth flow
-- `GET /api/ghl/auth/callback` - OAuth callback
-- `GET /api/ghl/status` - Get connection status
-- `POST /api/ghl/disconnect` - Disconnect account
-- `GET /api/ghl/calendars` - Get calendars
-- `GET /api/ghl/calendars/:id/events` - Get calendar events
-- `GET /api/ghl/contacts/search` - Search contacts
-
-### Webhooks
-- `POST /api/webhooks/ghl/calendar` - Calendar event webhook
-- `POST /api/webhooks/ghl/contact` - Contact webhook
-- `GET /api/webhooks/test` - Test webhook endpoint
-
-## Database Schema
-
-### Main Tables
-- **appointments** - Appointment records with GHL sync data
-- **clients** - Contact/client information
-- **ghl_credentials** - GHL OAuth tokens and credentials
-- **calendar_settings** - User calendar preferences
-- **appointment_reminders** - Scheduled reminders
-- **sync_logs** - Sync activity logs
-
-## Features in Detail
-
-### Two-Way Sync
-- **LeadSync → GHL:** Appointments created in LeadSync are automatically created in GHL calendars
-- **GHL → LeadSync:** Changes in GHL trigger webhooks that update LeadSync in real-time
-- Sync status visible on each appointment
-
-### AI Scheduling
-- Powered by Anthropic Claude 3.5 Sonnet
-- Understands natural language date/time expressions
-- Extracts contact information from conversation
-- Suggests available time slots based on business hours
-- Books appointments when all information is collected
-
-### Reminder System
-- Infrastructure ready for SMS and email reminders
-- Configurable reminder timing (hours before appointment)
-- Linked to appointment records
-- Can be enabled/disabled per notification type
-
-## Troubleshooting
-
-### GHL Connection Issues
-- Verify Client ID and Secret are correct
-- Check that redirect URI matches exactly
-- Ensure all required scopes are enabled
-- Try disconnecting and reconnecting
-
-### Appointments Not Syncing
-- Check GHL connection status in Settings
-- Verify calendar is selected
-- Check sync logs in database
-- Ensure webhook URLs are accessible (if using webhooks)
-
-### Database Issues
-```bash
-# Reinitialize database
-cd backend
-rm data/leadsync.db
-npm run init-db
-```
-
-## Development
-
-### Run Tests
-```bash
-cd backend
-npm test
-```
-
-### Build for Production
-```bash
-# Frontend
-cd frontend
-npm run build
-
-# Backend
-cd backend
-npm start
-```
-
-## Future Enhancements
-
-- [ ] Calendar view with monthly/weekly display
-- [ ] Recurring appointments
-- [ ] Multiple user support
-- [ ] Email templates for reminders
-- [ ] SMS reminders via Twilio
-- [ ] Advanced availability rules
-- [ ] Appointment types with different durations
-- [ ] Client portal for self-booking
-- [ ] Analytics and reporting
-- [ ] Mobile app
-
-## Contributing
-
-This is a demonstration project. Feel free to fork and customize for your needs.
-
-## License
-
-MIT License
-
-## Support
-
-For issues or questions:
-1. Check the troubleshooting section
-2. Review GHL API documentation
-3. Check Anthropic Claude documentation
-
-## Credits
-
-Built with:
-- [React](https://reactjs.org/)
-- [Node.js](https://nodejs.org/)
-- [Express](https://expressjs.com/)
-- [Anthropic Claude AI](https://www.anthropic.com/)
-- [GoHighLevel API](https://highlevel.stoplight.io/)
-- [Better-SQLite3](https://github.com/WiseLibs/better-sqlite3)
+LeadSync is a cutting-edge SaaS platform that leverages artificial intelligence to automate lead conversations, qualify prospects, and book appointments automatically. Built with React and Node.js, it integrates seamlessly with GoHighLevel to provide intelligent conversation management.
 
 ---
 
-**LeadSync** - Simplifying appointment scheduling with AI and automation.
+## ✨ Features
+
+- 🤖 **AI Conversation Agents** - Build intelligent AI agents that handle lead conversations automatically
+- 📊 **Advanced Analytics** - Track performance metrics, conversion rates, and agent effectiveness
+- ✨ **Test AI Interface** - Real-time testing environment to simulate conversations
+- 🤖 **Co-Pilot Strategy Builder** - Guided wizard to create sophisticated conversation strategies (coming soon)
+- 🔗 **GoHighLevel Integration** - Seamless integration with GHL for workflow automation
+- 💬 **Multi-Step Conversations** - FAQs, qualification questions, follow-ups, and custom actions
+- 📈 **Performance Tracking** - Monitor leads won, opt-outs, and response rates
+- 🎯 **Strategy Management** - Import/export AI strategies, duplicate and customize agents
+- 📅 **Appointment Booking** - Automated appointment scheduling with calendar integration
+
+---
+
+## 🎨 Design Highlights
+
+- **Animated Space Theme** - Premium glassmorphism design with flowing gradients
+- **100 Twinkling Stars** - Dynamic star field with floating particles
+- **Responsive Design** - Mobile-first approach with adaptive layouts
+- **Modern UI/UX** - Hover effects, smooth transitions, and professional aesthetics
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **React 18.2** - Modern React with hooks and functional components
+- **React Router DOM 6.20** - Client-side routing
+- **Axios** - HTTP client for API requests
+- **CSS3** - Custom animations and glassmorphism effects
+
+### Backend
+- **Node.js** - JavaScript runtime
+- **Express 4.18** - Web application framework
+- **Better-SQLite3** - Embedded SQL database
+- **JWT** - Authentication and authorization
+- **Anthropic AI SDK** - Claude AI integration for conversation intelligence
+
+### AI Integration
+- **Claude 3** - Anthropic's language model for intelligent conversations
+- **GoHighLevel API** - CRM and workflow automation
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ installed
+- npm or yarn package manager
+- GoHighLevel account (for integrations)
+- Anthropic API key (for AI features)
+
+### Installation
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/leadsync.git
+cd leadsync
+```
+
+#### 2. Frontend Setup
+```bash
+cd frontend
+npm install
+```
+
+Create `frontend/.env`:
+```env
+REACT_APP_API_URL=http://localhost:3001
+```
+
+Start frontend development server:
+```bash
+npm start
+```
+Frontend will run on http://localhost:3000
+
+#### 3. Backend Setup
+```bash
+cd backend
+npm install
+```
+
+Create `backend/.env`:
+```env
+PORT=3001
+DATABASE_PATH=./data/leadsync.db
+JWT_SECRET=your-super-secret-jwt-key-change-this
+JWT_EXPIRES_IN=30d
+ANTHROPIC_API_KEY=your-anthropic-api-key
+```
+
+Initialize database:
+```bash
+npm run init-db
+```
+
+Start backend server:
+```bash
+npm start
+```
+Backend will run on http://localhost:3001
+
+---
+
+## 📁 Project Structure
+
+```
+leadsync/
+├── frontend/                 # React frontend application
+│   ├── public/              # Static files
+│   │   ├── logo.png        # LeadSync logo
+│   │   ├── index.html      # HTML template
+│   │   └── manifest.json   # PWA manifest
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   │   ├── Home.js           # Landing page
+│   │   │   ├── AIAgents.js       # Strategy management
+│   │   │   ├── StrategyEditor.js # Agent creation/editing
+│   │   │   ├── Analytics.js      # Performance tracking
+│   │   │   ├── CoPilot.js        # Strategy builder (coming soon)
+│   │   │   ├── ConversationTest.js # AI testing interface
+│   │   │   └── ...
+│   │   ├── context/        # React context providers
+│   │   │   ├── AuthContext.js    # Authentication state
+│   │   │   └── NavigationContext.js # Navigation management
+│   │   ├── App.js          # Main app component
+│   │   ├── App.css         # Global styles
+│   │   └── index.css       # Animated background styles
+│   └── package.json
+│
+├── backend/                 # Node.js backend API
+│   ├── src/
+│   │   ├── routes/         # API endpoints
+│   │   │   ├── auth.js           # Authentication routes
+│   │   │   ├── templates.js      # AI agent CRUD
+│   │   │   ├── conversations.js  # Conversation management
+│   │   │   └── ...
+│   │   ├── middleware/     # Express middleware
+│   │   │   └── auth.js           # JWT authentication
+│   │   ├── database/       # Database setup
+│   │   │   └── init.js           # Schema initialization
+│   │   └── server.js       # Express app entry point
+│   ├── data/               # SQLite database storage
+│   └── package.json
+│
+└── README.md               # This file
+```
+
+---
+
+## 📖 Usage Guide
+
+### Creating Your First AI Agent
+
+1. **Navigate to Strategies**
+   - Click "Strategies" in the sidebar
+   - Click "Create New Agent"
+
+2. **Configure Agent Settings** (5-Step Process)
+   - **Step 1:** Basic Info (name, tag, tone, company info)
+   - **Step 2:** FAQs (common questions and answers)
+   - **Step 3:** Qualification Questions (collect lead information)
+   - **Step 4:** Follow-ups (automated follow-up messages)
+   - **Step 5:** Custom Actions (triggers and chains)
+
+3. **Test Your Agent**
+   - Go to "Test AI" page
+   - Select your agent
+   - Start a conversation to see how it performs
+
+4. **Deploy & Monitor**
+   - Integrate with GoHighLevel
+   - Monitor performance in Analytics
+   - Optimize based on conversion metrics
+
+### Testing Conversations
+
+- Navigate to "Test AI" page
+- Select an AI agent from dropdown
+- Type messages as a lead would
+- Watch the AI respond in real-time
+- Review conversation flow and optimize
+
+### Viewing Analytics
+
+- Navigate to "Analytics" page
+- View overview stats (total conversations, active leads, appointments, conversion rate)
+- Filter by status (All, Active, Appointments, Completed)
+- Click "View" on any conversation to see detailed history
+
+---
+
+## 🔗 API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Create new user account
+- `POST /api/auth/login` - Login and receive JWT token
+- `GET /api/auth/me` - Get current user profile
+
+### AI Agents (Templates)
+- `GET /api/templates` - List all AI agents
+- `GET /api/templates/:id` - Get specific agent with nested data
+- `POST /api/templates` - Create new AI agent
+- `PUT /api/templates/:id` - Update AI agent
+- `DELETE /api/templates/:id` - Delete AI agent
+
+### Conversations
+- `GET /api/conversations` - List all conversations
+- `GET /api/conversations/:id` - Get conversation details
+- `POST /api/conversations` - Create new conversation
+- `POST /api/conversations/:id/messages` - Add message to conversation
+
+---
+
+## 🎯 Environment Variables
+
+### Frontend (.env)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REACT_APP_API_URL` | Backend API URL | `http://localhost:3001` |
+
+### Backend (.env)
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `PORT` | Server port | No (default: 3001) |
+| `DATABASE_PATH` | SQLite database path | No (default: ./data/leadsync.db) |
+| `JWT_SECRET` | Secret key for JWT tokens | Yes |
+| `JWT_EXPIRES_IN` | Token expiration time | No (default: 30d) |
+| `ANTHROPIC_API_KEY` | Claude AI API key | Yes |
+| `GHL_API_KEY` | GoHighLevel API key | Optional |
+
+---
+
+## 🚢 Deployment
+
+### Frontend (Vercel)
+1. Connect your GitHub repository to Vercel
+2. Set build command: `cd frontend && npm run build`
+3. Set output directory: `frontend/build`
+4. Add environment variable: `REACT_APP_API_URL=https://your-backend-url.com`
+5. Deploy
+
+### Backend (Render)
+1. Create new Web Service on Render
+2. Connect your GitHub repository
+3. Set build command: `cd backend && npm install`
+4. Set start command: `cd backend && npm start`
+5. Add environment variables (see Backend .env section)
+6. Deploy
+
+---
+
+## 🧪 Testing
+
+### Manual Testing
+1. Start both frontend and backend servers
+2. Register a new user account
+3. Create an AI agent with sample data
+4. Test conversation flow in "Test AI" page
+5. Verify analytics data updates correctly
+
+### Testing Checklist
+- [ ] User registration and login works
+- [ ] JWT tokens persist for 30 days
+- [ ] AI agents can be created, edited, duplicated, deleted
+- [ ] All 5 steps save data correctly
+- [ ] Export includes all fields
+- [ ] Import handles validation
+- [ ] Test AI interface works
+- [ ] Analytics shows correct metrics
+- [ ] Modals replace all browser alerts
+- [ ] Logo displays and is clickable
+- [ ] Animated background renders
+- [ ] Responsive on mobile devices
+
+---
+
+## 🐛 Known Issues
+
+- Co-Pilot feature is coming soon (placeholder page implemented)
+- Settings page has minimal functionality
+
+---
+
+## 🤝 Contributing
+
+This is a proprietary project. For internal development:
+
+1. Create feature branch: `git checkout -b feature/your-feature-name`
+2. Make changes and test thoroughly
+3. Commit with descriptive message: `git commit -m "Add: your feature description"`
+4. Push to branch: `git push origin feature/your-feature-name`
+5. Create Pull Request for review
+
+---
+
+## 📄 License
+
+**Proprietary - All Rights Reserved**
+
+Copyright © 2024 LeadSync. This software and associated documentation files are proprietary and confidential. Unauthorized copying, modification, distribution, or use of this software is strictly prohibited.
+
+---
+
+## 📞 Support
+
+For support, feature requests, or bug reports:
+- Email: support@leadsync.com
+- Documentation: https://docs.leadsync.com
+
+---
+
+## 🎉 Acknowledgments
+
+- Anthropic Claude AI for conversation intelligence
+- GoHighLevel for CRM integration
+- React team for the excellent framework
+- Open source community for invaluable tools
+
+---
+
+**Built with ❤️ for efficient lead management**

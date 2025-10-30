@@ -79,7 +79,10 @@ function Dashboard() {
       <div className="stats-grid">
         <div
           className="stat-card"
-          onClick={() => handleStatCardClick('/conversations')}
+          onClick={() => {
+            console.log('📊 Navigating to: All conversations');
+            handleStatCardClick('/conversations');
+          }}
           title="View all conversations"
         >
           <div className="stat-icon-wrapper conversations">
@@ -93,7 +96,10 @@ function Dashboard() {
 
         <div
           className="stat-card"
-          onClick={() => handleStatCardClick('/conversations?status=active')}
+          onClick={() => {
+            console.log('📊 Navigating to: Active leads');
+            handleStatCardClick('/conversations?filter=active');
+          }}
           title="View active leads"
         >
           <div className="stat-icon-wrapper leads">
@@ -107,7 +113,10 @@ function Dashboard() {
 
         <div
           className="stat-card"
-          onClick={() => handleStatCardClick('/appointments')}
+          onClick={() => {
+            console.log('📊 Navigating to: Appointments');
+            handleStatCardClick('/conversations?filter=appointments');
+          }}
           title="View appointments"
         >
           <div className="stat-icon-wrapper appointments">
@@ -121,7 +130,10 @@ function Dashboard() {
 
         <div
           className="stat-card"
-          onClick={() => handleStatCardClick('/conversations?status=completed')}
+          onClick={() => {
+            console.log('📊 Navigating to: Completed');
+            handleStatCardClick('/conversations?filter=completed');
+          }}
           title="View completed"
         >
           <div className="stat-icon-wrapper completed">

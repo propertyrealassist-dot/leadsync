@@ -16,15 +16,35 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(localStorage.getItem('leadsync_token'));
 
-  // Load user data on mount if token exists
+  // Check token expiry on mount and periodically
   useEffect(() => {
-    if (token) {
+    const checkTokenExpiry = () => {
+      const expiryTime = localStorage.getItem('leadsync_token_expiry');
+      if (expiryTime && Date.now() > parseInt(expiryTime)) {
+        console.log('⚠️ Token expired, logging out');
+        logout();
+        return false;
+      }
+      return true;
+    };
+
+    // Check immediately
+    if (token && checkTokenExpiry()) {
       loadUser();
     } else {
       setLoading(false);
     }
+
+    // Check every minute
+    const interval = setInterval(() => {
+      if (token) {
+        checkTokenExpiry();
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, [token]);
 
   // Load user data from API
@@ -68,10 +88,14 @@ export const AuthProvider = ({ children }) => {
       if (response.data.success) {
         const { user, token } = response.data.data;
 
-        // Store token
-        localStorage.setItem('token', token);
+        // Store token with 30-day expiry
+        const expiryTime = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
+        localStorage.setItem('leadsync_token', token);
+        localStorage.setItem('leadsync_token_expiry', expiryTime.toString());
         setToken(token);
         setUser(user);
+
+        console.log('✅ Token stored with expiry:', new Date(expiryTime).toLocaleString());
 
         return { success: true, user };
       }
@@ -109,10 +133,14 @@ export const AuthProvider = ({ children }) => {
       if (response.data.success) {
         const { user, token } = response.data.data;
 
-        // Store token
-        localStorage.setItem('token', token);
+        // Store token with 30-day expiry
+        const expiryTime = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
+        localStorage.setItem('leadsync_token', token);
+        localStorage.setItem('leadsync_token_expiry', expiryTime.toString());
         setToken(token);
         setUser(user);
+
+        console.log('✅ Token stored with expiry:', new Date(expiryTime).toLocaleString());
 
         return { success: true, user };
       }
@@ -129,7 +157,8 @@ export const AuthProvider = ({ children }) => {
 
   // Logout user
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('leadsync_token');
+    localStorage.removeItem('leadsync_token_expiry');
     setToken(null);
     setUser(null);
   };

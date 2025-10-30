@@ -26,7 +26,11 @@
       "Bash(then node -e \"\nconst fs = require(''fs'');\nconst file = ''Auth.js'';\nlet content = fs.readFileSync(file, ''utf8'');\ncontent = content.replace(/AppointWise/g, ''LeadSync'');\ncontent = content.replace(/appointwise/g, ''leadsync'');\ncontent = content.replace(/Appointwise/g, ''Leadsync'');\nfs.writeFileSync(file, content);\nconsole.log(''Updated frontend/src/components/Auth.js'');\n\")",
       "Bash(find:*)",
       "Bash(for file in Login.js Dashboard.js Sidebar.js)",
-      "Bash(then echo \"=== $file ===\")"
+      "Bash(then echo \"=== $file ===\")",
+      "Bash(ren:*)",
+      "Bash(move:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

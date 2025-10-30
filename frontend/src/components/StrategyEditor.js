@@ -132,6 +132,17 @@ function StrategyEditor() {
           message: 'AI Agent created successfully!',
           onConfirm: () => {
             setModal(prev => ({ ...prev, isOpen: false }));
+
+            // CRITICAL: Refresh the agent list in AIAgents component
+            console.log('🔄 Calling window.refreshAgentList...');
+            if (window.refreshAgentList) {
+              window.refreshAgentList();
+              console.log('✅ Agent list refresh triggered');
+            } else {
+              console.warn('⚠️ window.refreshAgentList not available');
+            }
+
+            // Navigate back to agents list
             routerNavigate('/strategies');
           },
           confirmText: 'OK',
@@ -169,6 +180,14 @@ function StrategyEditor() {
           message: 'AI Agent updated successfully!',
           onConfirm: () => {
             setModal(prev => ({ ...prev, isOpen: false }));
+
+            // Refresh list for updates too
+            console.log('🔄 Calling window.refreshAgentList after update...');
+            if (window.refreshAgentList) {
+              window.refreshAgentList();
+              console.log('✅ Agent list refresh triggered');
+            }
+
             routerNavigate('/strategies');
           },
           confirmText: 'OK',
@@ -448,14 +467,22 @@ function StrategyEditor() {
                 </div>
 
                 <div className="config-field">
-                  <label>🏷️ GHL Tag *</label>
+                  <label>🏷️ GHL Tag * (lowercase only)</label>
                   <input
                     type="text"
                     name="tag"
                     value={formData.tag}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const lowercase = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                      setFormData({ ...formData, tag: lowercase });
+                      setHasUnsavedChanges(true);
+                    }}
                     placeholder="e.g., gyms"
+                    style={{ textTransform: 'lowercase' }}
                   />
+                  <small style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                    Only lowercase letters, numbers, and hyphens allowed
+                  </small>
                 </div>
 
                 <div className="config-field">

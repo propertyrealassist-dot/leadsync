@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import Modal from './Modal';
 import './AIAgents.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -14,17 +15,31 @@ function AIAgents() {
   const [selectedAgents, setSelectedAgents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showMenu, setShowMenu] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null });
   const fileInputRef = React.useRef(null);
+  const menuButtonRef = React.useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
   }, []);
 
+  // CRITICAL: Expose loadData to window so StrategyEditor can refresh the list
+  useEffect(() => {
+    window.refreshAgentList = loadData;
+    console.log('✅ Registered window.refreshAgentList');
+    return () => {
+      delete window.refreshAgentList;
+      console.log('🗑️ Unregistered window.refreshAgentList');
+    };
+  }, []);
+
   const loadData = async () => {
     try {
+      console.log('🔄 Loading agents and conversations...');
       const [agentsRes, conversationsRes] = await Promise.all([
         axios.get(`${API_URL}/api/templates`),
         axios.get(`${API_URL}/api/conversations`)
@@ -32,6 +47,7 @@ function AIAgents() {
 
       setAgents(agentsRes.data);
       setConversations(conversationsRes.data);
+      console.log('✅ Loaded', agentsRes.data.length, 'agents');
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -77,37 +93,125 @@ function AIAgents() {
 
   const handleDuplicateAgent = async (agent) => {
     try {
+      // Fetch full agent data with ALL nested resources (FAQs, questions, follow-ups, custom actions)
+      const response = await axios.get(`${API_URL}/api/templates/${agent.id}`);
+      const fullAgentData = response.data;
+
+      console.log('📋 DUPLICATE - Full agent data:', fullAgentData);
+
+      // Create duplicated agent with ALL data from all 5 steps
       const duplicatedAgent = {
-        ...agent,
+        // Remove ID so backend generates a new one
         id: undefined,
-        name: `${agent.name} (Copy)`,
-        tag: `${agent.tag}-copy`
+
+        // Step 1: Basic Info
+        name: `${fullAgentData.name} (Copy)`,
+        tag: `${fullAgentData.tag}-copy`,
+        tone: fullAgentData.tone,
+        brief: fullAgentData.brief,
+        objective: fullAgentData.objective,
+        companyInformation: fullAgentData.company_information || fullAgentData.companyInformation,
+        initialMessage: fullAgentData.initial_message || fullAgentData.initialMessage,
+
+        // Step 2: FAQs - Transform to expected format
+        faqs: Array.isArray(fullAgentData.faqs) ? fullAgentData.faqs.map(faq => ({
+          question: faq.question,
+          answer: faq.answer,
+          delay: faq.delay || 1
+        })) : [],
+
+        // Step 3: Qualification Questions - Transform to expected format
+        qualificationQuestions: Array.isArray(fullAgentData.qualificationQuestions) ? fullAgentData.qualificationQuestions.map(q => ({
+          text: q.text,
+          conditions: q.conditions || [],
+          delay: q.delay || 1
+        })) : [],
+
+        // Step 4: Follow-ups - Transform to expected format
+        followUps: Array.isArray(fullAgentData.followUps) ? fullAgentData.followUps.map(f => ({
+          Body: f.text || f.body,
+          Delay: f.delay || 180
+        })) : [],
+
+        // Step 5: Custom Actions
+        customActions: fullAgentData.customActions || fullAgentData.custom_actions || [],
+
+        // Settings
+        botTemperature: fullAgentData.bot_temperature || fullAgentData.botTemperature,
+        resiliancy: fullAgentData.resiliancy,
+        bookingReadiness: fullAgentData.booking_readiness || fullAgentData.bookingReadiness,
+        messageDelayInitial: fullAgentData.message_delay_initial || fullAgentData.messageDelayInitial,
+        messageDelayStandard: fullAgentData.message_delay_standard || fullAgentData.messageDelayStandard,
+        cta: fullAgentData.cta
       };
 
+      console.log('📋 DUPLICATE - Sending to API:', duplicatedAgent);
+      console.log('📋 DUPLICATE - FAQs:', duplicatedAgent.faqs.length);
+      console.log('📋 DUPLICATE - Questions:', duplicatedAgent.qualificationQuestions.length);
+      console.log('📋 DUPLICATE - Follow-ups:', duplicatedAgent.followUps.length);
+
       await axios.post(`${API_URL}/api/templates`, duplicatedAgent);
-      alert('Agent duplicated successfully!');
+
+      setModal({
+        isOpen: true,
+        title: '✅ Success',
+        message: `Agent "${duplicatedAgent.name}" duplicated successfully!`,
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
+
       loadData();
     } catch (error) {
-      console.error('Error duplicating agent:', error);
-      alert('Failed to duplicate agent');
+      console.error('❌ Error duplicating agent:', error);
+      console.error('❌ Error response:', error.response?.data);
+
+      setModal({
+        isOpen: true,
+        title: '❌ Error',
+        message: 'Failed to duplicate agent: ' + (error.response?.data?.error || error.message),
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
     }
     setShowMenu(null);
   };
 
-  const handleDeleteAgent = async (agentId) => {
-    if (!window.confirm('Are you sure you want to delete this AI agent?')) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API_URL}/api/templates/${agentId}`);
-      alert('Agent deleted successfully!');
-      loadData();
-    } catch (error) {
-      console.error('Error deleting agent:', error);
-      alert('Failed to delete agent');
-    }
+  const handleDeleteAgent = async (agent) => {
     setShowMenu(null);
+
+    setModal({
+      isOpen: true,
+      title: '⚠️ Delete Strategy',
+      message: `Are you sure you want to delete "${agent.name}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_URL}/api/templates/${agent.id}`);
+
+          setModal({
+            isOpen: true,
+            title: '✅ Success',
+            message: 'Strategy deleted successfully!',
+            onConfirm: () => setModal({ ...modal, isOpen: false }),
+            confirmText: 'OK'
+          });
+
+          loadData();
+        } catch (error) {
+          console.error('Error deleting agent:', error);
+
+          setModal({
+            isOpen: true,
+            title: '❌ Error',
+            message: 'Failed to delete strategy: ' + (error.response?.data?.error || error.message),
+            onConfirm: () => setModal({ ...modal, isOpen: false }),
+            confirmText: 'OK'
+          });
+        }
+      },
+      onCancel: () => setModal({ ...modal, isOpen: false }),
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
   };
 
   const handleCreateNew = () => {
@@ -124,7 +228,13 @@ function AIAgents() {
 
     // Validate file type
     if (!file.name.endsWith('.json')) {
-      alert('Please select a valid JSON file');
+      setModal({
+        isOpen: true,
+        title: '❌ Invalid File',
+        message: 'Please select a valid JSON file',
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
       return;
     }
 
@@ -136,7 +246,13 @@ function AIAgents() {
       try {
         importedData = JSON.parse(fileContent);
       } catch (error) {
-        alert('Invalid JSON file. Please check the file format.');
+        setModal({
+          isOpen: true,
+          title: '❌ Invalid JSON',
+          message: 'Invalid JSON file. Please check the file format.',
+          onConfirm: () => setModal({ ...modal, isOpen: false }),
+          confirmText: 'OK'
+        });
         setImporting(false);
         return;
       }
@@ -145,7 +261,13 @@ function AIAgents() {
 
       // Validate required fields
       if (!importedData.name) {
-        alert('Invalid strategy file. Missing required field: name');
+        setModal({
+          isOpen: true,
+          title: '❌ Invalid Strategy File',
+          message: 'Invalid strategy file. Missing required field: name',
+          onConfirm: () => setModal({ ...modal, isOpen: false }),
+          confirmText: 'OK'
+        });
         setImporting(false);
         return;
       }
@@ -157,14 +279,62 @@ function AIAgents() {
       // Check for duplicate name
       const duplicateName = agents.some(a => a.name.toLowerCase() === transformedData.name.toLowerCase());
       if (duplicateName) {
-        const confirmImport = window.confirm(
-          `An agent named "${transformedData.name}" already exists. Import anyway? (It will be renamed)`
-        );
-        if (!confirmImport) {
-          setImporting(false);
-          return;
-        }
-        transformedData.name = `${transformedData.name} (Imported)`;
+        setModal({
+          isOpen: true,
+          title: '⚠️ Duplicate Name',
+          message: `An agent named "${transformedData.name}" already exists. Import anyway? (It will be renamed)`,
+          onConfirm: async () => {
+            transformedData.name = `${transformedData.name} (Imported)`;
+            setModal({ ...modal, isOpen: false });
+            // Continue with import
+            try {
+              // Check for warnings
+              const warnings = transformedData._warnings;
+              delete transformedData._warnings; // Remove warnings before sending to API
+              delete transformedData.id;
+
+              const response = await axios.post(`${API_URL}/api/templates`, transformedData, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+
+              const warningText = warnings && warnings.length > 0
+                ? `\n\n⚠️ ${warnings.length} field(s) could not be parsed. Check console for details.`
+                : '';
+
+              setModal({
+                isOpen: true,
+                title: '✅ Success',
+                message: `Strategy "${transformedData.name}" imported successfully!${warningText}`,
+                onConfirm: () => setModal({ ...modal, isOpen: false }),
+                confirmText: 'OK'
+              });
+
+              loadData();
+            } catch (error) {
+              console.error('❌ Error importing strategy:', error);
+              const errorMsg = error.response?.status === 404
+                ? `Endpoint not found. Server returned 404 for ${API_URL}/api/templates`
+                : error.response?.data?.error || error.message || 'Unknown error';
+
+              setModal({
+                isOpen: true,
+                title: '❌ Error',
+                message: `Failed to import strategy: ${errorMsg}`,
+                onConfirm: () => setModal({ ...modal, isOpen: false }),
+                confirmText: 'OK'
+              });
+            } finally {
+              setImporting(false);
+            }
+          },
+          onCancel: () => {
+            setModal({ ...modal, isOpen: false });
+            setImporting(false);
+          },
+          confirmText: 'Import Anyway',
+          cancelText: 'Cancel'
+        });
+        return;
       }
 
       // Remove id if present (let backend generate new one)
@@ -175,13 +345,28 @@ function AIAgents() {
       console.log('📦 Data being sent:', JSON.stringify(transformedData, null, 2));
       console.log('🔑 Token:', token ? 'Present' : 'Missing');
 
+      // Check for warnings
+      const warnings = transformedData._warnings;
+      delete transformedData._warnings; // Remove warnings before sending to API
+
       // Import the strategy
       const response = await axios.post(`${API_URL}/api/templates`, transformedData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log('✅ Import API response:', response.data);
 
-      alert(`✅ Strategy "${transformedData.name}" imported successfully!`);
+      const warningText = warnings && warnings.length > 0
+        ? `\n\n⚠️ ${warnings.length} field(s) could not be parsed. Check console for details.`
+        : '';
+
+      setModal({
+        isOpen: true,
+        title: '✅ Success',
+        message: `Strategy "${transformedData.name}" imported successfully!${warningText}`,
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
+
       loadData();
     } catch (error) {
       console.error('❌ Error importing strategy:', error);
@@ -195,7 +380,13 @@ function AIAgents() {
         ? `Endpoint not found. Server returned 404 for ${API_URL}/api/templates`
         : error.response?.data?.error || error.message || 'Unknown error';
 
-      alert(`Failed to import strategy: ${errorMsg}`);
+      setModal({
+        isOpen: true,
+        title: '❌ Error',
+        message: `Failed to import strategy: ${errorMsg}`,
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
     } finally {
       setImporting(false);
       // Reset file input
@@ -321,10 +512,10 @@ function AIAgents() {
       }
     };
 
-    // Log any parsing errors
+    // Log any parsing errors (will show warning after successful import)
     if (errors.length > 0) {
       console.warn('⚠️ Some fields could not be parsed:', errors);
-      alert(`Import succeeded with ${errors.length} warning(s). Check console for details.`);
+      transformed._warnings = errors; // Attach warnings to be shown after import
     }
 
     return transformed;
@@ -338,29 +529,64 @@ function AIAgents() {
       const response = await axios.get(`${API_URL}/api/templates/${agent.id}`);
       const agentData = response.data;
 
-      // Format the export data
+      console.log('📤 EXPORT - Full agent data:', agentData);
+
+      // Format the export data - INCLUDE ALL FIELDS FROM ALL 5 STEPS
       const exportData = {
-        name: agentData.name,
-        tag: agentData.tag,
-        tone: agentData.tone || 'professional',
-        goal: agentData.goal || '',
-        context: agentData.context || '',
-        instructions: agentData.instructions || '',
-        faqs: agentData.faqs || [],
-        qualification_questions: agentData.qualification_questions || [],
-        follow_ups: agentData.follow_ups || [],
-        custom_actions: agentData.custom_actions || [],
+        // Step 1: Basic Info
+        name: agentData.name || '',
+        tag: agentData.tag || '',
+        tone: agentData.tone || 'Friendly and Casual',
+        brief: agentData.brief || '',
+        objective: agentData.objective || '',
+        companyInformation: agentData.company_information || agentData.companyInformation || '',
+        initialMessage: agentData.initial_message || agentData.initialMessage || '',
+
+        // Step 2: FAQs
+        faqs: Array.isArray(agentData.faqs) ? agentData.faqs.map(faq => ({
+          question: faq.question || '',
+          answer: faq.answer || '',
+          delay: faq.delay || 1
+        })) : [],
+
+        // Step 3: Qualification Questions
+        qualificationQuestions: Array.isArray(agentData.qualificationQuestions) ? agentData.qualificationQuestions.map(q => ({
+          text: q.text || '',
+          conditions: q.conditions || [],
+          delay: q.delay || 1
+        })) : [],
+
+        // Step 4: Follow-ups
+        followUps: Array.isArray(agentData.followUps) ? agentData.followUps.map(f => ({
+          message: f.text || f.body || f.message || '',
+          delay: f.delay || 180
+        })) : [],
+
+        // Step 5: Custom Actions (Triggers & Chains)
+        customActions: agentData.customActions || agentData.custom_actions || [],
+
+        // Settings
         settings: {
-          booking_enabled: agentData.booking_enabled || false,
-          booking_url: agentData.booking_url || '',
-          message_delay: agentData.message_delay || 2000,
-          max_messages: agentData.max_messages || 50
+          botTemperature: agentData.bot_temperature || agentData.botTemperature || 0.4,
+          resiliancy: agentData.resiliancy || 3,
+          bookingReadiness: agentData.booking_readiness || agentData.bookingReadiness || 2,
+          messageDelayInitial: agentData.message_delay_initial || agentData.messageDelayInitial || 30,
+          messageDelayStandard: agentData.message_delay_standard || agentData.messageDelayStandard || 5,
+          cta: agentData.cta || '',
+          turnOffAiAfterCta: agentData.turn_off_ai_after_cta || agentData.turnOffAiAfterCta || false,
+          turnOffFollowUps: agentData.turn_off_follow_ups || agentData.turnOffFollowUps || false
         }
       };
 
-      // Create filename with date
+      console.log('📤 EXPORT - Formatted data:', exportData);
+      console.log('📤 EXPORT - FAQs:', exportData.faqs.length);
+      console.log('📤 EXPORT - Questions:', exportData.qualificationQuestions.length);
+      console.log('📤 EXPORT - Follow-ups:', exportData.followUps.length);
+      console.log('📤 EXPORT - Custom actions:', exportData.customActions.length);
+
+      // Create filename with date - use leadsync prefix
       const date = new Date().toISOString().split('T')[0];
-      const filename = `strategy-${agentData.name.toLowerCase().replace(/\s+/g, '-')}-${date}.json`;
+      const filename = `leadsync-${agentData.name.toLowerCase().replace(/\s+/g, '-')}-${date}.json`;
 
       // Trigger download
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -373,10 +599,23 @@ function AIAgents() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      alert(`✅ Strategy exported successfully as "${filename}"`);
+      setModal({
+        isOpen: true,
+        title: '✅ Success',
+        message: `Strategy exported successfully as "${filename}"`,
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
     } catch (error) {
       console.error('Error exporting strategy:', error);
-      alert('Failed to export strategy');
+
+      setModal({
+        isOpen: true,
+        title: '❌ Error',
+        message: 'Failed to export strategy: ' + (error.response?.data?.error || error.message),
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
     } finally {
       setExporting(false);
       setShowMenu(null);
@@ -385,7 +624,13 @@ function AIAgents() {
 
   const handleBulkExport = async () => {
     if (selectedAgents.length === 0) {
-      alert('Please select at least one agent to export');
+      setModal({
+        isOpen: true,
+        title: '⚠️ No Selection',
+        message: 'Please select at least one agent to export',
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
       return;
     }
 
@@ -402,11 +647,25 @@ function AIAgents() {
         }
       }
 
-      alert(`✅ Exported ${selectedAgents.length} strategies successfully!`);
+      setModal({
+        isOpen: true,
+        title: '✅ Success',
+        message: `Exported ${selectedAgents.length} strategies successfully!`,
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
+
       setSelectedAgents([]);
     } catch (error) {
       console.error('Error bulk exporting strategies:', error);
-      alert('Failed to export some strategies');
+
+      setModal({
+        isOpen: true,
+        title: '❌ Error',
+        message: 'Failed to export some strategies: ' + (error.message || 'Unknown error'),
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
     } finally {
       setExporting(false);
     }
@@ -516,7 +775,28 @@ function AIAgents() {
                       </div>
                     </td>
                     <td data-label="GHL Tag">
-                      <span className="tag-badge">{agent.tag}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span className="tag-badge">{agent.tag}</span>
+                        <button
+                          className="copy-tag-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(agent.tag);
+                            // Show temporary feedback
+                            const btn = e.currentTarget;
+                            const originalText = btn.textContent;
+                            btn.textContent = '✓';
+                            btn.style.color = '#34d399';
+                            setTimeout(() => {
+                              btn.textContent = originalText;
+                              btn.style.color = '';
+                            }, 1000);
+                          }}
+                          title="Copy tag to clipboard"
+                        >
+                          📋
+                        </button>
+                      </div>
                     </td>
                     <td className="stat-cell" data-label="Total Leads">{stats.totalLeads}</td>
                     <td className="stat-cell active" data-label="Active Leads">{stats.activeLeads}</td>
@@ -538,14 +818,52 @@ function AIAgents() {
                         </button>
                         <div className="menu-wrapper">
                           <button
+                            ref={menuButtonRef}
                             className="action-btn menu-btn"
-                            onClick={() => setShowMenu(showMenu === agent.id ? null : agent.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const isOpen = showMenu === agent.id;
+                              setShowMenu(isOpen ? null : agent.id);
+
+                              if (!isOpen) {
+                                // Calculate position to keep menu in viewport
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const menuHeight = 200; // Approximate menu height
+                                const menuWidth = 150;
+
+                                let top = rect.bottom + 8;
+                                let left = rect.right - menuWidth;
+
+                                // Adjust if menu goes off bottom of screen
+                                if (top + menuHeight > window.innerHeight) {
+                                  top = rect.top - menuHeight - 8;
+                                }
+
+                                // Adjust if menu goes off left of screen
+                                if (left < 8) {
+                                  left = 8;
+                                }
+
+                                // Adjust if menu goes off right of screen
+                                if (left + menuWidth > window.innerWidth - 8) {
+                                  left = window.innerWidth - menuWidth - 8;
+                                }
+
+                                setMenuPosition({ top, left });
+                              }
+                            }}
                             title="More options"
                           >
                             ⋯
                           </button>
                           {showMenu === agent.id && (
-                            <div className="action-menu">
+                            <div
+                              className="action-menu"
+                              style={{
+                                top: `${menuPosition.top}px`,
+                                left: `${menuPosition.left}px`
+                              }}
+                            >
                               <button onClick={() => handleEditAgent(agent.id)}>
                                 ✏️ Edit
                               </button>
@@ -555,7 +873,7 @@ function AIAgents() {
                               <button onClick={() => handleExportAgent(agent)} disabled={exporting}>
                                 💾 Export
                               </button>
-                              <button onClick={() => handleDeleteAgent(agent.id)} className="delete-option">
+                              <button onClick={() => handleDeleteAgent(agent)} className="delete-option">
                                 🗑️ Delete
                               </button>
                             </div>
@@ -588,6 +906,18 @@ function AIAgents() {
             <button className="bulk-btn delete">Delete</button>
           </div>
         </div>
+      )}
+
+      {/* Modal */}
+      {modal.isOpen && (
+        <Modal
+          title={modal.title}
+          message={modal.message}
+          onConfirm={modal.onConfirm}
+          onCancel={modal.onCancel}
+          confirmText={modal.confirmText}
+          cancelText={modal.cancelText}
+        />
       )}
     </div>
   );
