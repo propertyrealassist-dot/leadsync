@@ -2,12 +2,15 @@
   padding: 40px;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
 }
 
 .hero-section {
   text-align: center;
-  padding: 80px 20px;
+  padding: 60px 20px;
   margin-bottom: 60px;
+  position: relative;
 }
 
 .hero-title {
@@ -75,9 +78,9 @@
 }
 
 .stat-card {
-  background: rgba(26, 32, 44, 0.6);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(26, 32, 44, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: 16px;
   padding: 32px;
   text-align: center;
@@ -146,9 +149,9 @@
 }
 
 .agent-card, .action-card {
-  background: rgba(26, 32, 44, 0.6);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(26, 32, 44, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: 16px;
   padding: 24px;
   cursor: pointer;
@@ -259,6 +262,10 @@
     padding: 20px;
   }
 
+  .hero-section {
+    padding: 40px 20px;
+  }
+
   .hero-title {
     font-size: 36px;
   }
@@ -279,6 +286,7 @@
 
   .quick-stats {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
   }
 
   .stat-icon {
@@ -291,6 +299,7 @@
 
   .agents-grid, .actions-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
 

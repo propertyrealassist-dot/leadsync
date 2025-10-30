@@ -153,104 +153,46 @@ function AppContent() {
                 alignItems: 'center',
                 gap: '12px',
                 padding: '8px',
-                margin: 0
+                margin: 0,
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                const iconBox = e.currentTarget.querySelector('.logo-icon-box');
+                if (iconBox) {
+                  iconBox.style.transform = 'scale(1.1) rotate(5deg)';
+                  iconBox.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.6)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                const iconBox = e.currentTarget.querySelector('.logo-icon-box');
+                if (iconBox) {
+                  iconBox.style.transform = 'scale(1) rotate(0deg)';
+                  iconBox.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.4)';
+                }
               }}
             >
-              <svg
-                width="50"
-                height="50"
-                viewBox="0 0 200 200"
-                className="leadsync-logo"
+              {/* Simple LS Icon */}
+              <div
+                className="logo-icon-box"
                 style={{
-                  filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.5))',
+                  width: '42px',
+                  height: '42px',
+                  background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)',
                   transition: 'all 0.3s ease'
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.filter = 'drop-shadow(0 0 16px rgba(236, 72, 153, 0.8))';
-                  e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.5))';
-                  e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
-                }}
               >
-                <defs>
-                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: '#8B5CF6', stopOpacity: 1 }} />
-                    <stop offset="50%" style={{ stopColor: '#A78BFA', stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: '#EC4899', stopOpacity: 1 }} />
-                  </linearGradient>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                    <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
-                </defs>
+                LS
+              </div>
 
-                {/* L letter */}
-                <rect
-                  x="30"
-                  y="50"
-                  width="20"
-                  height="100"
-                  rx="6"
-                  fill="url(#logoGradient)"
-                  filter="url(#glow)"
-                />
-                <rect
-                  x="30"
-                  y="130"
-                  width="50"
-                  height="20"
-                  rx="6"
-                  fill="url(#logoGradient)"
-                  filter="url(#glow)"
-                />
-
-                {/* S with sync symbol */}
-                <path
-                  d="M 110 80 Q 130 65, 150 80 Q 170 95, 150 110 Q 130 125, 110 110 L 110 95 L 120 95 L 110 82 L 100 95 L 110 95 Z"
-                  fill="url(#logoGradient)"
-                  stroke="url(#logoGradient)"
-                  strokeWidth="2"
-                  filter="url(#glow)"
-                />
-
-                {/* Rotating sync circle */}
-                <circle
-                  cx="135"
-                  cy="95"
-                  r="30"
-                  fill="none"
-                  stroke="url(#logoGradient)"
-                  strokeWidth="6"
-                  strokeDasharray="140 30"
-                  strokeLinecap="round"
-                  filter="url(#glow)"
-                >
-                  <animateTransform
-                    attributeName="transform"
-                    type="rotate"
-                    from="0 135 95"
-                    to="360 135 95"
-                    dur="3s"
-                    repeatCount="indefinite"
-                  />
-                </circle>
-
-                {/* Sparkle stars */}
-                <circle cx="45" cy="40" r="3" fill="#fff" opacity="0.9">
-                  <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/>
-                </circle>
-                <circle cx="160" cy="130" r="4" fill="#EC4899" opacity="0.8">
-                  <animate attributeName="opacity" values="0.8;0.2;0.8" dur="3s" repeatCount="indefinite"/>
-                </circle>
-                <circle cx="95" cy="35" r="2" fill="#8B5CF6" opacity="0.9">
-                  <animate attributeName="opacity" values="0.9;0.4;0.9" dur="2.5s" repeatCount="indefinite"/>
-                </circle>
-              </svg>
+              {/* Text Logo */}
               <span
                 style={{
                   fontSize: '24px',
@@ -258,7 +200,8 @@ function AppContent() {
                   background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text'
+                  backgroundClip: 'text',
+                  letterSpacing: '-0.5px'
                 }}
               >
                 LeadSync
@@ -312,6 +255,62 @@ function AppContent() {
         {/* Sidebar - Hidden on auth pages */}
         {!isAuthPage && (
           <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+            {/* Logo Section - Fixed at top */}
+            <div
+              className="sidebar-logo-section"
+              onClick={() => handleNavigation('/home')}
+              style={{
+                padding: '20px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
+                flexShrink: 0,
+                transition: 'all 0.3s ease',
+                background: 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)',
+                  transition: 'all 0.3s'
+                }}
+              >
+                LS
+              </div>
+              <div
+                style={{
+                  fontSize: '22px',
+                  fontWeight: '700',
+                  background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  letterSpacing: '-0.5px'
+                }}
+              >
+                LeadSync
+              </div>
+            </div>
+
+            {/* Scrollable Menu Content */}
             <div className="sidebar-content">
               <div className="sidebar-section">
                 <span className="sidebar-label">MENU</span>
