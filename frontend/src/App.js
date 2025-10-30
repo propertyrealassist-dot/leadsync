@@ -144,35 +144,126 @@ function AppContent() {
               <span></span>
               <span></span>
             </button>
-            <h1 className="logo" onClick={() => handleNavigation('/')} style={{ cursor: 'pointer', margin: 0 }}>
-              <img
-                src={`${process.env.PUBLIC_URL}/logo.png`}
-                alt="LeadSync"
-                className="logo-image"
+            <div
+              className="logo-container"
+              onClick={() => handleNavigation('/')}
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '8px',
+                margin: 0
+              }}
+            >
+              <svg
+                width="50"
+                height="50"
+                viewBox="0 0 200 200"
+                className="leadsync-logo"
                 style={{
-                  height: '50px',
-                  width: 'auto',
-                  transition: 'filter 0.3s ease, transform 0.3s ease'
+                  filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.5))',
+                  transition: 'all 0.3s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.filter = 'drop-shadow(0 0 12px rgba(139, 92, 246, 0.8))';
-                  e.target.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.filter = 'drop-shadow(0 0 16px rgba(236, 72, 153, 0.8))';
+                  e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.filter = 'none';
-                  e.target.style.transform = 'scale(1)';
+                  e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.5))';
+                  e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
                 }}
-                onError={(e) => {
-                  console.error('❌ Logo failed to load from:', e.target.src);
-                  // Fallback to text if image fails
-                  e.target.style.display = 'none';
-                  const fallback = document.createElement('span');
-                  fallback.textContent = 'LeadSync';
-                  fallback.style.cssText = 'color: #EC4899; font-size: 24px; font-weight: bold; cursor: pointer;';
-                  e.target.parentElement.appendChild(fallback);
+              >
+                <defs>
+                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#8B5CF6', stopOpacity: 1 }} />
+                    <stop offset="50%" style={{ stopColor: '#A78BFA', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#EC4899', stopOpacity: 1 }} />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                {/* L letter */}
+                <rect
+                  x="30"
+                  y="50"
+                  width="20"
+                  height="100"
+                  rx="6"
+                  fill="url(#logoGradient)"
+                  filter="url(#glow)"
+                />
+                <rect
+                  x="30"
+                  y="130"
+                  width="50"
+                  height="20"
+                  rx="6"
+                  fill="url(#logoGradient)"
+                  filter="url(#glow)"
+                />
+
+                {/* S with sync symbol */}
+                <path
+                  d="M 110 80 Q 130 65, 150 80 Q 170 95, 150 110 Q 130 125, 110 110 L 110 95 L 120 95 L 110 82 L 100 95 L 110 95 Z"
+                  fill="url(#logoGradient)"
+                  stroke="url(#logoGradient)"
+                  strokeWidth="2"
+                  filter="url(#glow)"
+                />
+
+                {/* Rotating sync circle */}
+                <circle
+                  cx="135"
+                  cy="95"
+                  r="30"
+                  fill="none"
+                  stroke="url(#logoGradient)"
+                  strokeWidth="6"
+                  strokeDasharray="140 30"
+                  strokeLinecap="round"
+                  filter="url(#glow)"
+                >
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 135 95"
+                    to="360 135 95"
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+
+                {/* Sparkle stars */}
+                <circle cx="45" cy="40" r="3" fill="#fff" opacity="0.9">
+                  <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="160" cy="130" r="4" fill="#EC4899" opacity="0.8">
+                  <animate attributeName="opacity" values="0.8;0.2;0.8" dur="3s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="95" cy="35" r="2" fill="#8B5CF6" opacity="0.9">
+                  <animate attributeName="opacity" values="0.9;0.4;0.9" dur="2.5s" repeatCount="indefinite"/>
+                </circle>
+              </svg>
+              <span
+                style={{
+                  fontSize: '24px',
+                  fontWeight: '700',
+                  background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
                 }}
-              />
-            </h1>
+              >
+                LeadSync
+              </span>
+            </div>
             <div className="nav-right">
               {isAuthenticated() ? (
                 <div className="user-menu-container">
@@ -229,7 +320,12 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/home') || isActive('/') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">🏠</span>
+                  <span className="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <polyline points="9 22 9 12 15 12 15 22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
                   <span>Home</span>
                 </a>
                 <a
@@ -237,7 +333,12 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/strategies') || location.pathname.includes('/strategy') || location.pathname.includes('/agents') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">🎯</span>
+                  <span className="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                      <path d="M12 6v6l4 2" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </span>
                   <span>Strategies</span>
                 </a>
                 <a
@@ -245,7 +346,14 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/copilot') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">🤖</span>
+                  <span className="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2"/>
+                      <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+                      <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+                      <path d="M9 15h6" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </span>
                   <span>Co-Pilot</span>
                 </a>
                 <a
@@ -253,7 +361,11 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/test') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">✨</span>
+                  <span className="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polygon points="12 2 15 8.5 22 9.27 17 14 18.18 21 12 17.77 5.82 21 7 14 2 9.27 9 8.5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
                   <span>Test AI</span>
                 </a>
                 <a
@@ -261,7 +373,13 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/analytics') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">📊</span>
+                  <span className="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <line x1="18" y1="20" x2="18" y2="10" strokeWidth="2" strokeLinecap="round"/>
+                      <line x1="12" y1="20" x2="12" y2="4" strokeWidth="2" strokeLinecap="round"/>
+                      <line x1="6" y1="20" x2="6" y2="14" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </span>
                   <span>Analytics</span>
                 </a>
                 <a
@@ -269,7 +387,12 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/integrations') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">🔗</span>
+                  <span className="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
                   <span>Integrations</span>
                 </a>
               </div>
@@ -281,7 +404,14 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/team') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">👥</span>
+                  <span className="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <circle cx="9" cy="7" r="4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
                   <span>Team Management</span>
                   <span className="badge-new">NEW</span>
                 </a>
@@ -290,7 +420,11 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/analytics/advanced') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">📈</span>
+                  <span className="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
                   <span>Advanced Analytics</span>
                   <span className="badge-new">NEW</span>
                 </a>
@@ -299,7 +433,11 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/white-label') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">🎨</span>
+                  <span className="sidebar-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
                   <span>White Label</span>
                   <span className="badge-new">NEW</span>
                 </a>
