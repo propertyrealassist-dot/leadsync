@@ -14,6 +14,9 @@ import Analytics from './components/Analytics';
 import CoPilot from './components/CoPilot';
 import Integrations from './components/Integrations';
 import Settings from './components/Settings';
+import TeamManagement from './components/TeamManagement';
+import AdvancedAnalytics from './components/AdvancedAnalytics';
+import WhiteLabel from './components/WhiteLabel';
 import Login from './components/Login';
 import Register from './components/Register';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -241,6 +244,37 @@ function AppContent() {
                   <span>Integrations</span>
                 </a>
               </div>
+
+              <div className="sidebar-section">
+                <span className="sidebar-label">ENTERPRISE</span>
+                <a
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/team'); }}
+                  className={`sidebar-item ${isActive('/team') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <span className="sidebar-icon">👥</span>
+                  <span>Team Management</span>
+                  <span className="badge-new">NEW</span>
+                </a>
+                <a
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/analytics/advanced'); }}
+                  className={`sidebar-item ${isActive('/analytics/advanced') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <span className="sidebar-icon">📈</span>
+                  <span>Advanced Analytics</span>
+                  <span className="badge-new">NEW</span>
+                </a>
+                <a
+                  onClick={(e) => { e.preventDefault(); handleNavigation('/white-label'); }}
+                  className={`sidebar-item ${isActive('/white-label') ? 'active' : ''}`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <span className="sidebar-icon">🎨</span>
+                  <span>White Label</span>
+                  <span className="badge-new">NEW</span>
+                </a>
+              </div>
             </div>
           </aside>
         )}
@@ -266,6 +300,30 @@ function AppContent() {
             <Route path="/test" element={<ConversationTest />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/appointments" element={<Appointments />} />
+            <Route
+              path="/team"
+              element={
+                <ProtectedRoute>
+                  <TeamManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics/advanced"
+              element={
+                <ProtectedRoute>
+                  <AdvancedAnalytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/white-label"
+              element={
+                <ProtectedRoute>
+                  <WhiteLabel />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/integrations"
               element={
