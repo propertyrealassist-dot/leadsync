@@ -94,9 +94,24 @@
   box-shadow: 0 12px 24px rgba(139, 92, 246, 0.3);
 }
 
+.stat-card:hover .stat-icon {
+  transform: scale(1.2) rotate(5deg) translateY(-4px);
+  filter: drop-shadow(0 8px 16px rgba(139, 92, 246, 0.5));
+  animation: iconFloat 2s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: scale(1.2) rotate(5deg) translateY(-4px);
+  }
+  50% {
+    transform: scale(1.25) rotate(5deg) translateY(-8px);
+  }
+}
+
 .stat-icon {
-  font-size: 48px;
   margin-bottom: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-value {
@@ -164,6 +179,12 @@
   box-shadow: 0 12px 24px rgba(139, 92, 246, 0.3);
 }
 
+.action-card:hover .action-icon {
+  transform: scale(1.2) rotate(5deg) translateY(-4px);
+  filter: drop-shadow(0 8px 16px rgba(139, 92, 246, 0.5));
+  animation: iconFloat 2s ease-in-out infinite;
+}
+
 .agent-header {
   display: flex;
   justify-content: space-between;
@@ -200,8 +221,8 @@
 }
 
 .action-icon {
-  font-size: 48px;
   margin-bottom: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .action-card h3 {

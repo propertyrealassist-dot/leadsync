@@ -20,6 +20,7 @@ import WhiteLabel from './components/WhiteLabel';
 import Login from './components/Login';
 import Register from './components/Register';
 import ProtectedRoute from './components/ProtectedRoute';
+import Icons from './components/Icons';
 import './App.css';
 
 function AppContent() {
@@ -29,6 +30,17 @@ function AppContent() {
   const { navigate } = useNavigation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Track scroll position for sidebar effects
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Create animated stars and particles background
   useEffect(() => {
@@ -254,7 +266,7 @@ function AppContent() {
 
         {/* Sidebar - Hidden on auth pages */}
         {!isAuthPage && (
-          <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+          <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'} ${scrolled ? 'scrolled' : ''}`}>
             {/* Logo Section - Fixed at top */}
             <div
               className="sidebar-logo-section"
@@ -319,12 +331,7 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/home') || isActive('/') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <polyline points="9 22 9 12 15 12 15 22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </span>
+                  <Icons.Home size={20} className="sidebar-icon" />
                   <span>Home</span>
                 </a>
                 <a
@@ -332,12 +339,7 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/strategies') || location.pathname.includes('/strategy') || location.pathname.includes('/agents') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                      <path d="M12 6v6l4 2" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                  </span>
+                  <Icons.Strategies size={20} className="sidebar-icon" />
                   <span>Strategies</span>
                 </a>
                 <a
@@ -345,14 +347,7 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/copilot') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <rect x="4" y="4" width="16" height="16" rx="2" strokeWidth="2"/>
-                      <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
-                      <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
-                      <path d="M9 15h6" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                  </span>
+                  <Icons.CoPilot size={20} className="sidebar-icon" />
                   <span>Co-Pilot</span>
                 </a>
                 <a
@@ -360,11 +355,7 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/test') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <polygon points="12 2 15 8.5 22 9.27 17 14 18.18 21 12 17.77 5.82 21 7 14 2 9.27 9 8.5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </span>
+                  <Icons.TestAI size={20} className="sidebar-icon" />
                   <span>Test AI</span>
                 </a>
                 <a
@@ -372,13 +363,7 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/analytics') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <line x1="18" y1="20" x2="18" y2="10" strokeWidth="2" strokeLinecap="round"/>
-                      <line x1="12" y1="20" x2="12" y2="4" strokeWidth="2" strokeLinecap="round"/>
-                      <line x1="6" y1="20" x2="6" y2="14" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                  </span>
+                  <Icons.Analytics size={20} className="sidebar-icon" />
                   <span>Analytics</span>
                 </a>
                 <a
@@ -386,12 +371,7 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/integrations') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </span>
+                  <Icons.Integrations size={20} className="sidebar-icon" />
                   <span>Integrations</span>
                 </a>
               </div>
@@ -403,14 +383,7 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/team') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="9" cy="7" r="4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </span>
+                  <Icons.Team size={20} className="sidebar-icon" />
                   <span>Team Management</span>
                   <span className="badge-new">NEW</span>
                 </a>
@@ -419,11 +392,7 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/analytics/advanced') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </span>
+                  <Icons.AdvancedAnalytics size={20} className="sidebar-icon" />
                   <span>Advanced Analytics</span>
                   <span className="badge-new">NEW</span>
                 </a>
@@ -432,11 +401,7 @@ function AppContent() {
                   className={`sidebar-item ${isActive('/white-label') ? 'active' : ''}`}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span className="sidebar-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </span>
+                  <Icons.WhiteLabel size={20} className="sidebar-icon" />
                   <span>White Label</span>
                   <span className="badge-new">NEW</span>
                 </a>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Icons from './Icons';
 import './Home.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -66,13 +67,15 @@ function Home() {
               className="btn-primary-large"
               onClick={() => navigate('/copilot')}
             >
-              🤖 Create AI Agent
+              <Icons.CoPilot size={22} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+              Create AI Agent
             </button>
             <button
               className="btn-secondary-large"
               onClick={() => navigate('/strategies')}
             >
-              📊 View Strategies
+              <Icons.Analytics size={22} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+              View Strategies
             </button>
           </div>
         </div>
@@ -81,22 +84,22 @@ function Home() {
       {/* Quick Stats */}
       <div className="quick-stats">
         <div className="stat-card" onClick={() => navigate('/strategies')}>
-          <div className="stat-icon">🎯</div>
+          <Icons.Target size={48} className="stat-icon" color="#8B5CF6" />
           <div className="stat-value">{stats.totalAgents}</div>
           <div className="stat-label">AI Agents</div>
         </div>
         <div className="stat-card" onClick={() => navigate('/analytics')}>
-          <div className="stat-icon">💬</div>
+          <Icons.Chat size={48} className="stat-icon" color="#EC4899" />
           <div className="stat-value">{stats.totalConversations}</div>
           <div className="stat-label">Total Conversations</div>
         </div>
         <div className="stat-card" onClick={() => navigate('/analytics?filter=active')}>
-          <div className="stat-icon">⚡</div>
+          <Icons.Lightning size={48} className="stat-icon" color="#f59e0b" />
           <div className="stat-value">{stats.activeLeads}</div>
           <div className="stat-label">Active Leads</div>
         </div>
         <div className="stat-card" onClick={() => navigate('/analytics?filter=appointments')}>
-          <div className="stat-icon">📅</div>
+          <Icons.Calendar size={48} className="stat-icon" color="#3b82f6" />
           <div className="stat-value">{stats.appointmentsBooked}</div>
           <div className="stat-label">Appointments</div>
         </div>
@@ -116,13 +119,14 @@ function Home() {
         <div className="agents-grid">
           {recentAgents.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">🤖</div>
+              <Icons.CoPilot size={80} className="empty-icon" color="#8B5CF6" />
               <h3>No AI Agents Yet</h3>
               <p>Create your first AI agent to start automating conversations</p>
               <button
                 className="btn-primary"
                 onClick={() => navigate('/copilot')}
               >
+                <Icons.Plus size={18} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
                 Create First Agent
               </button>
             </div>
@@ -139,8 +143,8 @@ function Home() {
                 </div>
                 <p className="agent-tone">{agent.tone}</p>
                 <div className="agent-stats">
-                  <span>💬 {agent.total_leads || 0} leads</span>
-                  <span>✅ {agent.leads_won || 0} won</span>
+                  <span><Icons.Chat size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} /> {agent.total_leads || 0} leads</span>
+                  <span><Icons.CheckCircle size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} /> {agent.leads_won || 0} won</span>
                 </div>
               </div>
             ))
@@ -153,22 +157,22 @@ function Home() {
         <h2>Quick Actions</h2>
         <div className="actions-grid">
           <div className="action-card" onClick={() => navigate('/copilot')}>
-            <div className="action-icon">🤖</div>
+            <Icons.CoPilot size={48} className="action-icon" color="#8B5CF6" />
             <h3>Build with Co-Pilot</h3>
             <p>Create AI strategies with guided wizard</p>
           </div>
           <div className="action-card" onClick={() => navigate('/test')}>
-            <div className="action-icon">✨</div>
+            <Icons.TestAI size={48} className="action-icon" color="#EC4899" />
             <h3>Test Your AI</h3>
             <p>Simulate conversations in real-time</p>
           </div>
           <div className="action-card" onClick={() => navigate('/analytics')}>
-            <div className="action-icon">📊</div>
+            <Icons.Analytics size={48} className="action-icon" color="#10b981" />
             <h3>View Analytics</h3>
             <p>Track performance and metrics</p>
           </div>
           <div className="action-card" onClick={() => navigate('/integrations')}>
-            <div className="action-icon">🔗</div>
+            <Icons.Integrations size={48} className="action-icon" color="#3b82f6" />
             <h3>Integrations</h3>
             <p>Connect GHL and manage API keys</p>
           </div>
