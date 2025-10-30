@@ -37,14 +37,16 @@ function AppContent() {
     starsContainer.className = 'stars-container';
     document.body.insertBefore(starsContainer, document.body.firstChild);
 
-    // Generate 100 stars
-    for (let i = 0; i < 100; i++) {
+    // Generate 150 stars (more than before)
+    for (let i = 0; i < 150; i++) {
       const star = document.createElement('div');
       const size = Math.random();
 
-      star.className = size < 0.6 ? 'star star-small' :
-                       size < 0.9 ? 'star star-medium' :
-                       'star star-large';
+      star.className = 'star ' + (
+        size < 0.5 ? 'star-small' :
+        size < 0.85 ? 'star-medium' :
+        'star-large'
+      );
 
       star.style.left = `${Math.random() * 100}%`;
       star.style.top = `${Math.random() * 100}%`;
@@ -53,19 +55,46 @@ function AppContent() {
       starsContainer.appendChild(star);
     }
 
-    // Generate 20 floating particles
-    for (let i = 0; i < 20; i++) {
+    // Generate 40 floating particles (more than before)
+    for (let i = 0; i < 40; i++) {
       const particle = document.createElement('div');
-      particle.className = 'particle';
+      const size = Math.random();
+
+      particle.className = 'particle ' + (
+        size < 0.4 ? 'particle-small' :
+        size < 0.8 ? 'particle-medium' :
+        'particle-large'
+      );
+
       particle.style.left = `${Math.random() * 100}%`;
       particle.style.top = `${Math.random() * 100}%`;
-      particle.style.animationDelay = `${Math.random() * 15}s`;
+      particle.style.animationDelay = `${Math.random() * 30}s`;
+
       starsContainer.appendChild(particle);
     }
 
+    // Create 5 shooting stars
+    for (let i = 0; i < 5; i++) {
+      const shootingStar = document.createElement('div');
+      shootingStar.className = 'shooting-star';
+      shootingStar.style.top = `${Math.random() * 50}%`;
+      shootingStar.style.left = `${Math.random() * 50}%`;
+      shootingStar.style.animationDelay = `${Math.random() * 10}s`;
+      starsContainer.appendChild(shootingStar);
+    }
+
+    // Create energy wave effect
+    const energyWave = document.createElement('div');
+    energyWave.className = 'energy-wave';
+    document.body.insertBefore(energyWave, document.body.firstChild);
+
+    // Cleanup
     return () => {
       if (starsContainer.parentNode) {
         starsContainer.parentNode.removeChild(starsContainer);
+      }
+      if (energyWave.parentNode) {
+        energyWave.parentNode.removeChild(energyWave);
       }
     };
   }, []);
