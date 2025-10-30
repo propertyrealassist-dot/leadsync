@@ -1,0 +1,190 @@
+.calendar-picker {
+  background: rgba(26, 32, 44, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.date-selector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.nav-button {
+  background: transparent;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-button:hover {
+  border-color: #8B5CF6;
+  background: rgba(139, 92, 246, 0.1);
+  transform: scale(1.05);
+}
+
+.nav-button:active {
+  transform: scale(0.95);
+}
+
+.selected-date {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+  flex-grow: 1;
+}
+
+.slots-container {
+  min-height: 200px;
+}
+
+.loading-slots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #94a3b8;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(139, 92, 246, 0.2);
+  border-top-color: #8B5CF6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.no-slots {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+
+.no-slots-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.no-slots h4 {
+  color: #fff;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.no-slots p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.slot-button {
+  padding: 12px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.slot-button:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: #8B5CF6;
+  transform: translateY(-2px);
+}
+
+.slot-button.selected {
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.slot-button:active {
+  transform: translateY(0);
+}
+
+.selected-slot-info {
+  margin-top: 24px;
+  padding: 16px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 8px;
+  color: #fff;
+}
+
+.selected-slot-info p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.selected-slot-info strong {
+  color: #8B5CF6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .calendar-picker {
+    padding: 16px;
+  }
+
+  .selected-date {
+    font-size: 14px;
+  }
+
+  .slots-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+
+  .slot-button {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .nav-button {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .slots-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+
+  .selected-date {
+    font-size: 12px;
+  }
+}

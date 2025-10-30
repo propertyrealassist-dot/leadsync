@@ -10,6 +10,7 @@ const appointmentRoutes = require('./routes/appointments');
 const webhookRoutes = require('./routes/webhooks');
 const webhookGHLRoutes = require('./routes/webhook-ghl');
 const downloadRoutes = require('./routes/download');
+const calendarRoutes = require('./routes/calendar');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -58,6 +59,7 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/webhook', webhookGHLRoutes); // GHL webhook receiver
 app.use('/api/download', downloadRoutes); // File downloads
+app.use('/api/calendar', calendarRoutes); // Calendar booking system
 
 // Health check
 app.get('/api/health', (req, res) => {
