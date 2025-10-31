@@ -86,11 +86,10 @@ body {
 }
 
 /* ===================================
-   APP LAYOUT - FLEXBOX STRUCTURE
+   APP LAYOUT - FIXED SIDEBAR LAYOUT
    =================================== */
 .App {
-  display: flex;
-  flex-direction: row;
+  display: block;
   min-height: 100vh;
   width: 100%;
   background: transparent;
@@ -596,14 +595,14 @@ body {
 
 /* ==================== MAIN CONTENT ==================== */
 /* ===================================
-   MAIN CONTENT - NO MARGIN, FULL WIDTH WITH FLEX
+   MAIN CONTENT - OFFSET FOR FIXED SIDEBAR
    =================================== */
 .main-content {
-  /* Takes remaining space in flexbox */
-  flex: 1;
+  /* CRITICAL - Push content to the right of fixed sidebar */
+  margin-left: 260px !important;
 
-  /* Full available width */
-  width: 100%;
+  /* Full width minus sidebar */
+  width: calc(100% - 260px) !important;
 
   /* Height */
   min-height: 100vh;
@@ -614,7 +613,8 @@ body {
   /* Prevent horizontal scroll */
   overflow-x: hidden;
 
-  /* NO margin-left needed because flex handles it */
+  /* Padding */
+  padding: 0;
 }
 
 @media (max-width: 1023px) {
