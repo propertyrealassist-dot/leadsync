@@ -1,39 +1,35 @@
 /* ===================================
-   SIDEBAR - SCROLLS WITH PAGE (NOT FIXED!)
+   SIDEBAR - FIXED ON LEFT, MENU SCROLLS INSIDE
    =================================== */
 .sidebar {
-  /* CRITICAL: Use 'relative' so it scrolls naturally with page */
-  position: relative !important;
+  /* Fixed positioning - stays on left */
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
 
   /* Size */
   width: 260px;
-  min-height: 100vh;
+  height: 100vh;
 
   /* Appearance */
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(20px);
   border-right: 1px solid rgba(139, 92, 246, 0.2);
 
-  /* Layout */
+  /* Layout - Flexbox for logo + scrollable menu */
   display: flex;
   flex-direction: column;
 
   /* Behavior */
-  flex-shrink: 0;
-  z-index: 100;
-
-  /* NO position: fixed or sticky! */
-  /* NO transition on position */
+  z-index: 1000;
+  overflow: hidden; /* Important: don't scroll the sidebar itself */
 }
 
-/* Remove any sticky behavior */
-.sidebar.scrolled {
-  /* Keep same styles, no position change */
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
-}
-
-/* Logo Section - Fixed at top of sidebar */
+/* Logo Section - Fixed at top */
 .logo-section {
+  /* Fixed height, doesn't scroll */
+  flex-shrink: 0;
   padding: 20px;
   display: flex;
   align-items: center;
@@ -41,7 +37,6 @@
   border-bottom: 1px solid rgba(139, 92, 246, 0.2);
   cursor: pointer;
   transition: all 0.3s;
-  flex-shrink: 0;
   background: rgba(15, 23, 42, 0.95);
 }
 
@@ -98,14 +93,22 @@
   letter-spacing: -0.5px;
 }
 
-/* Menu Area - Can scroll if content is long */
+/* ===================================
+   SCROLLABLE MENU AREA - THIS SCROLLS!
+   =================================== */
 .sidebar-menu {
+  /* Takes remaining space */
   flex: 1;
+
+  /* THIS IS THE KEY - This area scrolls! */
   overflow-y: auto;
   overflow-x: hidden;
+
+  /* Padding */
   padding: 20px 0;
 }
 
+/* Custom Scrollbar for menu */
 .sidebar-menu::-webkit-scrollbar {
   width: 6px;
 }
@@ -259,17 +262,11 @@
   }
 }
 
-/* Responsive */
-@media (max-width: 1023px) {
+/* ===================================
+   RESPONSIVE
+   =================================== */
+@media (max-width: 768px) {
   .sidebar {
-    position: fixed;
-    left: -260px;
-    top: 0;
-    height: 100vh;
-    z-index: 1000;
-  }
-
-  .sidebar.open {
-    left: 0;
+    width: 240px;
   }
 }

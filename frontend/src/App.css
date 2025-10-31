@@ -596,12 +596,19 @@ body {
 
 /* ==================== MAIN CONTENT ==================== */
 /* ===================================
-   MAIN CONTENT AREA
+   MAIN CONTENT - OFFSET FOR FIXED SIDEBAR
    =================================== */
 .main-content {
-  flex: 1;
-  width: 100%;
+  /* Push content to the right of fixed sidebar */
+  margin-left: 260px;
+
+  /* Full width minus sidebar */
+  width: calc(100% - 260px);
+
+  /* Height */
   min-height: 100vh;
+
+  /* Behavior */
   position: relative;
   overflow-x: hidden;
 }
