@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import Icons from './Icons';
 import './Analytics.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -65,7 +66,10 @@ function Analytics() {
     <div className="analytics-container">
       <div className="page-header">
         <div>
-          <h1>📊 Analytics</h1>
+          <h1>
+            <Icons.Analytics size={32} style={{ marginRight: '12px', verticalAlign: 'middle' }} color="#8B5CF6" />
+            Analytics
+          </h1>
           <p className="page-subtitle">Track your performance and metrics</p>
         </div>
       </div>

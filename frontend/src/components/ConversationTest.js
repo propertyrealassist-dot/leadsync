@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Icons from './Icons';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -92,7 +93,10 @@ function ConversationTest() {
     <div className="conversation-test-page">
       <div className="test-header">
         <div>
-          <h1>✨ Test Your AI Agent</h1>
+          <h1>
+            <Icons.TestAI size={32} style={{ marginRight: '12px', verticalAlign: 'middle' }} color="#8B5CF6" />
+            Test Your AI Agent
+          </h1>
           <p className="page-subtitle">Test conversations in real-time with your AI agent</p>
         </div>
         {conversationId && (

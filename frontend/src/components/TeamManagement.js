@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Icons from './Icons';
 import './TeamManagement.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -143,7 +144,10 @@ function TeamManagement() {
     <div className="team-management">
       <div className="team-header">
         <div>
-          <h1>Team Management</h1>
+          <h1>
+            <Icons.Team size={32} style={{ marginRight: '12px', verticalAlign: 'middle' }} color="#8B5CF6" />
+            Team Management
+          </h1>
           <p className="team-subtitle">Manage your team members and their access levels</p>
         </div>
       </div>

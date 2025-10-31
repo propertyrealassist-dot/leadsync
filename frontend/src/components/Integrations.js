@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import Icons from './Icons';
 import './Integrations.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -128,7 +129,10 @@ function Integrations() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1>⚙️ Integrations</h1>
+          <h1>
+            <Icons.Integrations size={32} style={{ marginRight: '12px', verticalAlign: 'middle' }} color="#8B5CF6" />
+            Integrations
+          </h1>
           <p className="page-subtitle">Connect your tools and manage API credentials</p>
         </div>
       </div>

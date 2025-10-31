@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Modal from './Modal';
+import Icons from './Icons';
 import './AIAgents.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -685,7 +686,10 @@ function AIAgents() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1>🤖 AI Agents</h1>
+          <h1>
+            <Icons.Target size={32} style={{ marginRight: '12px', verticalAlign: 'middle' }} color="#8B5CF6" />
+            AI Agents
+          </h1>
           <p className="page-subtitle">Manage your AI conversation strategies</p>
         </div>
         <div className="header-actions">
