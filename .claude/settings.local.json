@@ -30,7 +30,9 @@
       "Bash(ren:*)",
       "Bash(move:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(for file in Integrations.js TeamManagement.js AdvancedAnalytics.js WhiteLabel.js)",
+      "Bash(do echo \"=== $file ===\")"
     ],
     "deny": [],
     "ask": []

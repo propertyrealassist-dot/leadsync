@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Icons from './Icons';
 import './AdvancedAnalytics.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -149,9 +150,12 @@ function AdvancedAnalytics() {
   return (
     <div className="advanced-analytics">
       <div className="analytics-header">
-        <div>
-          <h1>Advanced Analytics</h1>
-          <p className="analytics-subtitle">Deep insights and performance metrics</p>
+        <div className="page-header">
+          <Icons.AdvancedAnalytics size={48} color="#8B5CF6" />
+          <div>
+            <h1>Advanced Analytics</h1>
+            <p className="analytics-subtitle">Deep insights and performance metrics</p>
+          </div>
         </div>
         <div className="time-range-selector">
           <button
