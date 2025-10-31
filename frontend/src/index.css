@@ -546,3 +546,30 @@ button:not(.btn-remove):not(.hamburger-menu):hover::after {
 .btn-invite:hover {
   animation: pulse 1.5s ease-in-out infinite;
 }
+
+/* ===================================
+   FORCE SIDEBAR TO SCROLL WITH PAGE
+   =================================== */
+/* Force sidebar to scroll with page */
+.sidebar {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+}
+
+/* Ensure body scrolls normally */
+body {
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
+html, body {
+  height: auto;
+  min-height: 100vh;
+}
+
+/* Ensure App scrolls normally */
+.App {
+  overflow-y: visible;
+  overflow-x: hidden;
+}
