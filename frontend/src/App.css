@@ -596,14 +596,11 @@ body {
 
 /* ==================== MAIN CONTENT ==================== */
 /* ===================================
-   MAIN CONTENT - OFFSET FOR FIXED SIDEBAR
+   MAIN CONTENT - FLEXBOX LAYOUT WITH STICKY SIDEBAR
    =================================== */
 .main-content {
-  /* Push content to the right of fixed sidebar */
-  margin-left: 260px;
-
-  /* Full width minus sidebar */
-  width: calc(100% - 260px);
+  /* Flex layout - takes remaining space next to sidebar */
+  flex: 1;
 
   /* Height */
   min-height: 100vh;
@@ -611,6 +608,7 @@ body {
   /* Behavior */
   position: relative;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 @media (max-width: 1023px) {
