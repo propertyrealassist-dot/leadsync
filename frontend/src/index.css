@@ -548,14 +548,31 @@ button:not(.btn-remove):not(.hamburger-menu):hover::after {
 }
 
 /* ===================================
-   LAYOUT - FIXED SIDEBAR WITH SCROLLABLE CONTENT
+   LAYOUT - SIDEBAR SCROLLS WITH PAGE
    =================================== */
-/* Sidebar is fixed (handled in Sidebar.css) */
-/* Main content has margin-left (handled in App.css) */
 
 /* Ensure body scrolls normally */
 html, body {
-  height: 100%;
-  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: auto;
+  min-height: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Allow natural scrolling */
+.App {
+  overflow-y: visible !important;
+}
+
+/* Force sidebar to be relative (scrolls with page) */
+.sidebar {
+  position: relative !important;
 }

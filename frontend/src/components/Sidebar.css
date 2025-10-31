@@ -1,34 +1,31 @@
 /* ===================================
-   SIDEBAR - STICKY POSITIONING (SCROLLS THEN STICKS)
+   SIDEBAR - SCROLLS WITH PAGE (NOT FIXED)
    =================================== */
 .sidebar {
-  /* Sticky positioning - scrolls with page then sticks at top */
-  position: sticky;
-  left: 0;
-  top: 0;
+  /* KEY CHANGE: relative position so it scrolls naturally */
+  position: relative;
 
   /* Size */
   width: 260px;
   min-height: 100vh;
-  max-height: 100vh;
 
   /* Appearance */
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(139, 92, 246, 0.2);
+  border-right: 1px solid rgba(139, 92, 246, 0.3);
 
-  /* Layout - Flexbox for logo + scrollable menu */
+  /* Layout */
   display: flex;
   flex-direction: column;
 
   /* Behavior */
-  z-index: 1000;
-  overflow: hidden; /* Important: don't scroll the sidebar itself */
+  flex-shrink: 0;
+  z-index: 100;
+  overflow: visible;
 }
 
-/* Logo Section - Fixed at top */
+/* Logo Section - Part of scrolling sidebar */
 .logo-section {
-  /* Fixed height, doesn't scroll */
   flex-shrink: 0;
   padding: 20px;
   display: flex;
@@ -93,37 +90,11 @@
   letter-spacing: -0.5px;
 }
 
-/* ===================================
-   SCROLLABLE MENU AREA - THIS SCROLLS!
-   =================================== */
+/* Menu Area - Also scrolls with page */
 .sidebar-menu {
-  /* Takes remaining space */
   flex: 1;
-
-  /* THIS IS THE KEY - This area scrolls! */
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  /* Padding */
   padding: 20px 0;
-}
-
-/* Custom Scrollbar for menu */
-.sidebar-menu::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar-menu::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
-}
-
-.sidebar-menu::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #8B5CF6, #EC4899);
-  border-radius: 3px;
-}
-
-.sidebar-menu::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #A78BFA, #F472B6);
+  overflow: visible;
 }
 
 /* Menu Sections */

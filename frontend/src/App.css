@@ -596,19 +596,25 @@ body {
 
 /* ==================== MAIN CONTENT ==================== */
 /* ===================================
-   MAIN CONTENT - FLEXBOX LAYOUT WITH STICKY SIDEBAR
+   MAIN CONTENT - NO MARGIN, FULL WIDTH WITH FLEX
    =================================== */
 .main-content {
-  /* Flex layout - takes remaining space next to sidebar */
+  /* Takes remaining space in flexbox */
   flex: 1;
+
+  /* Full available width */
+  width: 100%;
 
   /* Height */
   min-height: 100vh;
 
-  /* Behavior */
+  /* Position */
   position: relative;
+
+  /* Prevent horizontal scroll */
   overflow-x: hidden;
-  overflow-y: auto;
+
+  /* NO margin-left needed because flex handles it */
 }
 
 @media (max-width: 1023px) {
