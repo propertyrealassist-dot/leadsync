@@ -90,7 +90,15 @@ function AppContent() {
   return (
     <div className="App">
       <Sidebar />
-      <main className="main-content">
+      <main
+        className="main-content"
+        style={{
+          marginLeft: '260px',
+          width: 'calc(100% - 260px)',
+          minHeight: '100vh',
+          position: 'relative'
+        }}
+      >
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />

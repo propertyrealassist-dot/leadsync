@@ -23,22 +23,77 @@ function Sidebar() {
   ];
 
   return (
-    <div className="sidebar">
+    <div
+      className="sidebar"
+      style={{
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        width: '260px',
+        height: '100vh',
+        zIndex: 9999,
+        background: 'rgba(15, 23, 42, 0.98)',
+        backdropFilter: 'blur(20px)',
+        borderRight: '2px solid rgba(139, 92, 246, 0.4)',
+        boxShadow: '4px 0 20px rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}
+    >
       {/* Logo Section */}
       <div
         className="logo-section"
         onClick={() => navigate('/home')}
+        style={{
+          flexShrink: 0,
+          padding: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
+          cursor: 'pointer',
+          transition: 'all 0.3s'
+        }}
       >
-        <div className="logo-icon">
-          <span className="logo-text-short">LS</span>
+        <div style={{
+          width: '42px',
+          height: '42px',
+          background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+          borderRadius: '11px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 14px rgba(139, 92, 246, 0.5)',
+          transition: 'all 0.3s'
+        }}>
+          <span style={{
+            fontSize: '20px',
+            fontWeight: 800,
+            color: 'white'
+          }}>LS</span>
         </div>
-        <div className="logo-text">
+        <div style={{
+          fontSize: '22px',
+          fontWeight: 700,
+          background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
           LeadSync
         </div>
       </div>
 
       {/* Scrollable Menu */}
-      <div className="sidebar-menu">
+      <div
+        className="sidebar-menu"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '20px 0'
+        }}
+      >
         {/* Main Menu */}
         <div className="menu-section">
           <div className="menu-section-header">MENU</div>
