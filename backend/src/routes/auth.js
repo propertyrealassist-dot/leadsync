@@ -50,7 +50,9 @@ function hashApiKey(apiKey) {
 // ==========================================
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, firstName, lastName, companyName } = req.body;
+    const { email, password, firstName, lastName, companyName, name } = req.body;
+
+    console.log('Registration request:', { email, name, firstName, lastName, companyName });
 
     // Validation
     if (!email || !password) {
@@ -85,6 +87,17 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    // Parse name if provided (from frontend "name" field)
+    let parsedFirstName = firstName;
+    let parsedLastName = lastName;
+
+    if (name && !firstName && !lastName) {
+      const nameParts = name.trim().split(' ');
+      parsedFirstName = nameParts[0] || null;
+      parsedLastName = nameParts.slice(1).join(' ') || null;
+      console.log('Parsed name:', { parsedFirstName, parsedLastName });
+    }
+
     // Generate credentials
     const userId = generateUserId();
     const clientId = generateClientId();
@@ -105,8 +118,8 @@ router.post('/register', async (req, res) => {
       userId,
       email.toLowerCase(),
       passwordHash,
-      firstName || null,
-      lastName || null,
+      parsedFirstName || null,
+      parsedLastName || null,
       companyName || null,
       clientId,
       apiKey,
@@ -115,6 +128,13 @@ router.post('/register', async (req, res) => {
       0, // email not verified initially
       'free' // default plan
     );
+
+    console.log('User created with:', {
+      userId,
+      email: email.toLowerCase(),
+      firstName: parsedFirstName,
+      lastName: parsedLastName
+    });
 
     // Generate JWT token
     const token = generateToken(userId);
@@ -304,21 +324,34 @@ router.get('/me', authenticateToken, (req, res) => {
   try {
     const user = req.user; // Set by authenticateToken middleware
 
+    // Format name from firstName and lastName
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'User';
+
+    console.log('GET /api/auth/me - User data:', {
+      id: user.id,
+      email: user.email,
+      name: name,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      companyName: user.company_name
+    });
+
     res.json({
-      success: true,
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          companyName: user.company_name,
-          clientId: user.client_id,
-          apiKey: user.api_key,
-          accountStatus: user.account_status,
-          planType: user.plan_type
-        }
-      }
+      id: user.id,
+      email: user.email,
+      name: name,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      companyName: user.company_name,
+      company: user.company_name, // Also include as 'company' for backwards compatibility
+      clientId: user.client_id,
+      apiKey: user.api_key,
+      accountStatus: user.account_status,
+      planType: user.plan_type,
+      subscriptionPlan: user.plan_type || 'free', // Add subscription plan field
+      phone: user.phone || '',
+      timezone: user.timezone || 'America/New_York',
+      language: user.language || 'en'
     });
 
   } catch (error) {
@@ -362,6 +395,64 @@ router.post('/regenerate-api-key', authenticateToken, (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to regenerate API key.'
+    });
+  }
+});
+
+// ==========================================
+// PUT /api/auth/update-profile
+// Update user profile (protected route)
+// ==========================================
+router.put('/update-profile', authenticateToken, async (req, res) => {
+  try {
+    const { name, email, phone, company, timezone, language } = req.body;
+    const userId = req.user.id;
+
+    // Split name into first and last name
+    const nameParts = (name || '').trim().split(' ');
+    const firstName = nameParts[0] || null;
+    const lastName = nameParts.slice(1).join(' ') || null;
+
+    // Update user profile
+    db.prepare(`
+      UPDATE users
+      SET first_name = ?,
+          last_name = ?,
+          email = ?,
+          company_name = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(firstName, lastName, email.toLowerCase(), company || null, userId);
+
+    // Get updated user
+    const user = db.prepare(`
+      SELECT id, email, first_name, last_name, company_name, client_id, plan_type
+      FROM users
+      WHERE id = ?
+    `).get(userId);
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully.',
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: [user.first_name, user.last_name].filter(Boolean).join(' '),
+          firstName: user.first_name,
+          lastName: user.last_name,
+          companyName: user.company_name,
+          clientId: user.client_id,
+          planType: user.plan_type
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update profile.'
     });
   }
 });

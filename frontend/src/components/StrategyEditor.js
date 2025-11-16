@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useNavigation } from '../context/NavigationContext';
+import { toast } from 'react-toastify';
 import PromptBuilder from './PromptBuilder';
 import Modal from './Modal';
 import './StrategyEditor.css';
@@ -10,6 +11,14 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function StrategyEditor() {
   const { id } = useParams();
+
+  // CRITICAL DEBUG: Log the ID we received
+  console.log('🔍 StrategyEditor mounted');
+  console.log('🔍 Raw ID from URL:', id);
+  console.log('🔍 ID type:', typeof id);
+  console.log('🔍 ID === "undefined"?', id === 'undefined');
+  console.log('🔍 ID === undefined?', id === undefined);
+
   const {
     setHasUnsavedChanges: setGlobalUnsavedChanges,
     setOnSaveCallback,
@@ -84,16 +93,32 @@ function StrategyEditor() {
     thirdText: null
   });
 
-  const isNewAgent = id === 'new';
+  // CRITICAL: Check for all variations of "new" or undefined
+  const isNewAgent = !id || id === 'new' || id === 'undefined' || id === undefined;
+
+  console.log('🆕 Is New Agent:', isNewAgent);
 
   // Define handleSave with useCallback to capture current state
   const handleSave = useCallback(async () => {
+    console.log('🔴 SAVE BUTTON CLICKED!');
+    console.log('🔴 handleSave function triggered');
+
     try {
-      console.log('💾 Saving agent...', id);
+      console.log('📝 Saving strategy...');
+      console.log('💾 Agent ID:', id);
+      console.log('🆕 Is New Agent:', isNewAgent);
       console.log('🔍 Current state at save time:');
       console.log('  faqs:', faqs.length);
       console.log('  qualificationQuestions:', qualificationQuestions.length);
       console.log('  followUps:', followUps.length);
+
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        console.error('❌ No token found!');
+        alert('Not authenticated. Please log in again.');
+        return;
+      }
 
       // Ensure required fields have defaults
       const dataToSave = {
@@ -103,70 +128,84 @@ function StrategyEditor() {
         objective: formData.objective || 'Engage and qualify leads'
       };
 
-      if (isNewAgent) {
-        await axios.post(`${API_URL}/api/templates`, {
-          ...dataToSave,
-          faqs: faqs.length > 0 ? faqs : [],
-          qualificationQuestions: qualificationQuestions.length > 0 ? qualificationQuestions : [
-            { Body: JSON.stringify({ text: "What are you looking for today?" }), Delay: 1 }
-          ],
-          followUps: followUps.length > 0 ? followUps : [
-            { Body: "Just checking in - still interested?", Delay: 180 }
-          ],
-          customActions: {
-            APPOINTMENT_BOOKED: [{
-              rule_condition: "Trigger when you agree and confirm a booking slot",
-              chains: [{
-                chain_name: "Confirm Booking",
-                chain_order: 1,
-                steps: [{ step_order: 1, function: "HANDLE_BOOKING", parameters: {} }]
-              }]
+      const payload = {
+        ...dataToSave,
+        faqs: faqs.length > 0 ? faqs : [],
+        qualificationQuestions: qualificationQuestions.length > 0 ? qualificationQuestions : [
+          { Body: JSON.stringify({ text: "What are you looking for today?" }), Delay: 1 }
+        ],
+        followUps: followUps.length > 0 ? followUps : [
+          { Body: "Just checking in - still interested?", Delay: 180 }
+        ],
+        customActions: {
+          APPOINTMENT_BOOKED: [{
+            rule_condition: "Trigger when you agree and confirm a booking slot",
+            chains: [{
+              chain_name: "Confirm Booking",
+              chain_order: 1,
+              steps: [{ step_order: 1, function: "HANDLE_BOOKING", parameters: {} }]
             }]
-          }
-        });
+          }]
+        }
+      };
 
+      console.log('📤 Sending data to backend:', payload);
+
+      let response;
+      if (isNewAgent) {
+        console.log('🆕 Creating new strategy...');
+        response = await axios.post(`${API_URL}/api/templates`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('✅ Strategy created:', response.data);
+
+        // CRITICAL: Clear unsaved changes BEFORE navigation
         setHasUnsavedChanges(false);
-        setModal({
-          isOpen: true,
-          title: 'Success',
-          message: 'AI Agent created successfully!',
-          onConfirm: () => {
-            setModal(prev => ({ ...prev, isOpen: false }));
+        setGlobalUnsavedChanges(false);
 
-            // CRITICAL: Refresh the agent list in AIAgents component
-            console.log('🔄 Calling window.refreshAgentList...');
-            if (window.refreshAgentList) {
-              window.refreshAgentList();
-              console.log('✅ Agent list refresh triggered');
-            } else {
-              console.warn('⚠️ window.refreshAgentList not available');
-            }
+        toast.success('AI Agent created successfully!');
 
-            // Navigate back to agents list
-            routerNavigate('/strategies');
-          },
-          confirmText: 'OK',
-          onCancel: null
-        });
+        // CRITICAL: Refresh the agent list in AIAgents component
+        console.log('🔄 Attempting to refresh agent list...');
+        if (window.refreshAgentList) {
+          await window.refreshAgentList();
+          console.log('✅ Agent list refresh completed');
+        } else {
+          console.warn('⚠️ window.refreshAgentList not available');
+        }
+
+        console.log('✅ Strategy saved, navigating back...');
+
+        // Small delay to ensure state updates, then navigate
+        setTimeout(() => {
+          window.location.href = '/strategies';
+        }, 100);
       } else {
+        console.log('♻️ Updating existing strategy...');
         console.log('  Updating with nested data:', {
           faqs: faqs.length,
           questions: qualificationQuestions.length,
           followUps: followUps.length
         });
-        console.log('📤 Sending data to backend:');
-        console.log('  FAQs:', JSON.stringify(faqs, null, 2));
-        console.log('  Questions:', JSON.stringify(qualificationQuestions, null, 2));
-        console.log('  FollowUps:', JSON.stringify(followUps, null, 2));
 
-        await axios.put(`${API_URL}/api/templates/${id}`, {
+        const updatePayload = {
           ...dataToSave,
           faqs: faqs,
           qualificationQuestions: qualificationQuestions,
           followUps: followUps
+        };
+
+        console.log('📤 Sending update data to backend:', updatePayload);
+
+        response = await axios.put(`${API_URL}/api/templates/${id}`, updatePayload, {
+          headers: { Authorization: `Bearer ${token}` }
         });
 
+        console.log('✅ Strategy updated:', response.data);
+
+        // CRITICAL: Clear unsaved changes BEFORE navigation
         setHasUnsavedChanges(false);
+        setGlobalUnsavedChanges(false);
         setOriginalFormData(JSON.stringify({
           formData: dataToSave,
           faqs: faqs,
@@ -174,38 +213,33 @@ function StrategyEditor() {
           followUps: followUps
         }));
 
-        setModal({
-          isOpen: true,
-          title: 'Success',
-          message: 'AI Agent updated successfully!',
-          onConfirm: () => {
-            setModal(prev => ({ ...prev, isOpen: false }));
+        toast.success('AI Agent updated successfully!');
 
-            // Refresh list for updates too
-            console.log('🔄 Calling window.refreshAgentList after update...');
-            if (window.refreshAgentList) {
-              window.refreshAgentList();
-              console.log('✅ Agent list refresh triggered');
-            }
+        // Refresh list for updates too
+        console.log('🔄 Attempting to refresh agent list after update...');
+        if (window.refreshAgentList) {
+          await window.refreshAgentList();
+          console.log('✅ Agent list refresh completed');
+        } else {
+          console.warn('⚠️ window.refreshAgentList not available');
+        }
 
-            routerNavigate('/strategies');
-          },
-          confirmText: 'OK',
-          onCancel: null
-        });
+        console.log('✅ Strategy saved, navigating back...');
+
+        // Small delay to ensure state updates, then navigate
+        setTimeout(() => {
+          window.location.href = '/strategies';
+        }, 100);
       }
     } catch (error) {
       console.error('❌ Error saving agent:', error);
-      console.error('Error details:', error.response?.data);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Error message:', error.message);
 
-      setModal({
-        isOpen: true,
-        title: 'Error',
-        message: `Failed to save agent: ${error.response?.data?.error || error.message}`,
-        onConfirm: () => setModal(prev => ({ ...prev, isOpen: false })),
-        confirmText: 'OK',
-        onCancel: null
-      });
+      const errorMsg = error.response?.data?.error || error.message || 'Unknown error';
+      toast.error(`Failed to save agent: ${errorMsg}`);
+      alert(`Failed to save: ${errorMsg}`);
     }
   }, [id, formData, faqs, qualificationQuestions, followUps, isNewAgent, routerNavigate]);
 
@@ -218,6 +252,51 @@ function StrategyEditor() {
   useEffect(() => {
     setOnSaveCallback(() => handleSave);
   }, [setOnSaveCallback, handleSave]);
+
+  // Save as Snapshot function
+  const saveAsSnapshot = async () => {
+    const snapshotName = prompt('Enter a name for this snapshot:', formData.name + ' Snapshot');
+    if (!snapshotName) return;
+
+    const description = prompt('Enter a description (optional):');
+
+    try {
+      const token = localStorage.getItem('token');
+
+      // Prepare the complete template data
+      const templateData = {
+        name: formData.name,
+        description: formData.brief,
+        tag: formData.tag,
+        conversationSteps: [],
+        intentRecognition: {},
+        bookingWorkflow: {},
+        responseStyle: {
+          tone: formData.tone,
+          objective: formData.objective,
+          companyInformation: formData.companyInformation,
+          botTemperature: formData.botTemperature
+        },
+        availabilitySettings: {}
+      };
+
+      await axios.post(
+        `${API_URL}/api/snapshots`,
+        {
+          name: snapshotName,
+          description: description || formData.brief || null,
+          template_data: templateData,
+          tags: formData.tag || null
+        },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+
+      toast.success('Snapshot saved successfully! You can deploy it from the Snapshots page.');
+    } catch (error) {
+      console.error('Failed to save snapshot:', error);
+      toast.error('Failed to save snapshot. Please try again.');
+    }
+  };
 
   // Show modal when navigation is blocked by context
   useEffect(() => {
@@ -242,6 +321,12 @@ function StrategyEditor() {
   }, [showUnsavedModal, saveAndProceed, proceedWithNavigation, cancelNavigation]);
 
   useEffect(() => {
+    // Don't load if creating new strategy or invalid ID
+    if (!id || id === 'new' || id === 'undefined' || id === undefined) {
+      console.log('📝 Creating new agent - skipping load');
+      return;
+    }
+
     if (!isNewAgent) {
       loadAgent();
     }
@@ -264,7 +349,10 @@ function StrategyEditor() {
   const loadAgent = async () => {
     try {
       console.log('📥 Loading agent:', id);
-      const res = await axios.get(`${API_URL}/api/templates/${id}`);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/templates/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       console.log('✅ Agent data loaded:', res.data);
       console.log('  Received FAQs:', res.data.faqs?.length || 0);
       console.log('  Received Questions:', res.data.qualificationQuestions?.length || 0);
@@ -313,6 +401,7 @@ function StrategyEditor() {
     } catch (error) {
       console.error('❌ Error loading agent:', error);
       console.error('Error details:', error.response?.data);
+      toast.error('Failed to load agent data');
     }
   };
 
@@ -420,7 +509,7 @@ function StrategyEditor() {
     { id: 2, name: 'Conversation', label: 'Step 2: Conversation' },
     { id: 3, name: 'Booking', label: 'Step 3: Booking' },
     { id: 4, name: 'Knowledge', label: 'Step 4: Knowledge' },
-    { id: 5, name: 'Custom Tasks', label: 'Step 5: Custom Tasks', badge: 'Requires 7.0' }
+    { id: 5, name: 'Custom Tasks', label: 'Step 5: Custom Tasks' }
   ];
 
   return (
@@ -432,7 +521,26 @@ function StrategyEditor() {
         </div>
         <div className="editor-actions">
           <button className="btn btn-secondary" onClick={() => handleNavigation('/strategies')}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSave}>Save Strategy</button>
+          <button
+            className="btn btn-secondary"
+            onClick={saveAsSnapshot}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <span>📸</span>
+            Save as Snapshot
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('🔴 SAVE BUTTON PHYSICALLY CLICKED!');
+              handleSave();
+            }}
+          >
+            Save Strategy
+          </button>
         </div>
       </div>
 
@@ -522,7 +630,6 @@ function StrategyEditor() {
             <div className="adjustments-sidebar">
               <div className="adjustments-header">
                 <h3>⚙️ Adjustments</h3>
-                <span className="badge-requires">Requires 7.0</span>
               </div>
 
               {/* Time Inputs */}

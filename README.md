@@ -8,15 +8,20 @@ LeadSync is a cutting-edge SaaS platform that leverages artificial intelligence 
 
 ## ✨ Features
 
-- 🤖 **AI Conversation Agents** - Build intelligent AI agents that handle lead conversations automatically
-- 📊 **Advanced Analytics** - Track performance metrics, conversion rates, and agent effectiveness
+- 🤖 **AI Conversation Agents** - Real Claude API integration for intelligent lead interactions
+- 👥 **Lead Management** - Comprehensive lead tracking and status management
+- 📅 **Appointment Booking** - Google Calendar integration with automated scheduling
+- 🎯 **GoHighLevel Integration** - Sync contacts and appointments seamlessly
+- 📊 **Analytics Dashboard** - Real-time performance tracking and insights
+- 🔗 **Webhooks** - Capture leads from multiple sources (Zapier, Typeform, Calendly, custom)
+- 📧 **Email Notifications** - Automated confirmations and reminders
 - ✨ **Test AI Interface** - Real-time testing environment to simulate conversations
-- 🤖 **Co-Pilot Strategy Builder** - Guided wizard to create sophisticated conversation strategies (coming soon)
-- 🔗 **GoHighLevel Integration** - Seamless integration with GHL for workflow automation
 - 💬 **Multi-Step Conversations** - FAQs, qualification questions, follow-ups, and custom actions
 - 📈 **Performance Tracking** - Monitor leads won, opt-outs, and response rates
-- 🎯 **Strategy Management** - Import/export AI strategies, duplicate and customize agents
-- 📅 **Appointment Booking** - Automated appointment scheduling with calendar integration
+- 🎯 **Strategy Management** - Create, edit, and manage AI strategies
+- 🎨 **Beautiful UI** - Modern gradient design with smooth animations
+- 🔒 **Security** - Rate limiting, helmet protection, JWT authentication
+- 🌐 **Production Ready** - Full deployment configuration included
 
 ---
 
@@ -100,14 +105,19 @@ ANTHROPIC_API_KEY=your-anthropic-api-key
 
 Initialize database:
 ```bash
-npm run init-db
+npm run migrate
 ```
 
 Start backend server:
 ```bash
-npm start
+npm run dev
 ```
 Backend will run on http://localhost:3001
+
+Run API tests:
+```bash
+npm test
+```
 
 ---
 

@@ -110,7 +110,17 @@ function WhiteLabel() {
             className={`btn-preview ${previewMode ? 'active' : ''}`}
             onClick={() => setPreviewMode(!previewMode)}
           >
-            {previewMode ? '⚙️ Edit' : '👁️ Preview'}
+            {previewMode ? (
+              <>
+                <Icons.Settings size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="currentColor" />
+                Edit
+              </>
+            ) : (
+              <>
+                <Icons.Eye size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="currentColor" />
+                Preview
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -183,12 +193,12 @@ function WhiteLabel() {
                           className="btn-remove-logo"
                           onClick={() => setSettings({ ...settings, logoUrl: '' })}
                         >
-                          ✕
+                          <Icons.X size={16} color="#ffffff" />
                         </button>
                       </div>
                     ) : (
                       <div className="logo-placeholder">
-                        <span>📷</span>
+                        <Icons.Upload size={32} color="#8B5CF6" />
                         <p>No logo uploaded</p>
                       </div>
                     )}
@@ -344,7 +354,7 @@ function WhiteLabel() {
                   <div className="preview-cards">
                     <div className="preview-card">
                       <div className="preview-card-icon" style={{ background: settings.primaryColor }}>
-                        📊
+                        <Icons.Analytics size={24} color="#ffffff" />
                       </div>
                       <h3>Total Leads</h3>
                       <div className="preview-value">1,234</div>
@@ -352,7 +362,7 @@ function WhiteLabel() {
 
                     <div className="preview-card">
                       <div className="preview-card-icon" style={{ background: settings.secondaryColor }}>
-                        🎯
+                        <Icons.Target size={24} color="#ffffff" />
                       </div>
                       <h3>Conversions</h3>
                       <div className="preview-value">567</div>
@@ -360,7 +370,7 @@ function WhiteLabel() {
 
                     <div className="preview-card">
                       <div className="preview-card-icon" style={{ background: settings.accentColor }}>
-                        ⚡
+                        <Icons.Zap size={24} color="#ffffff" />
                       </div>
                       <h3>Active</h3>
                       <div className="preview-value">89</div>

@@ -1,180 +1,423 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Icons from './Icons';
+import { useToast } from './ToastContainer';
 import './Analytics.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
+const COLORS = {
+  primary: '#8B5CF6',
+  success: '#10B981',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  danger: '#EF4444',
+  purple: '#A855F7',
+  pink: '#EC4899',
+  teal: '#14B8A6'
+};
+
 function Analytics() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [conversations, setConversations] = useState([]);
-  const [agents, setAgents] = useState([]);
+  const { showToast } = useToast();
+  const [analytics, setAnalytics] = useState(null);
+  const [realTimeStats, setRealTimeStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState(searchParams.get('filter') || 'all');
+  const [dateRange, setDateRange] = useState('30'); // 7, 30, 90 days
+  const [refreshInterval, setRefreshInterval] = useState(null);
 
   useEffect(() => {
-    loadAnalyticsData();
-  }, []);
+    loadAnalytics();
+    loadRealTimeStats();
 
-  const loadAnalyticsData = async () => {
+    // Auto-refresh real-time stats every 30 seconds
+    const interval = setInterval(() => {
+      loadRealTimeStats();
+    }, 30000);
+    setRefreshInterval(interval);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [dateRange]);
+
+  const loadAnalytics = async () => {
     try {
       const token = localStorage.getItem('leadsync_token');
-
-      const [convoRes, agentsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/conversations`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API_URL}/api/templates`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ]);
-
-      setConversations(convoRes.data || []);
-      setAgents(agentsRes.data || []);
+      const response = await axios.get(`${API_URL}/api/analytics/dashboard?dateRange=${dateRange}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAnalytics(response.data);
     } catch (error) {
-      console.error('Error loading analytics data:', error);
+      console.error('Error loading analytics:', error);
+      showToast('Failed to load analytics data', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredConversations = conversations.filter(conv => {
-    if (filter === 'all') return true;
-    if (filter === 'active') return conv.status === 'active';
-    if (filter === 'appointments') return conv.status === 'booked';
-    if (filter === 'completed') return conv.status === 'completed';
-    return true;
-  });
-
-  const stats = {
-    total: conversations.length,
-    active: conversations.filter(c => c.status === 'active').length,
-    booked: conversations.filter(c => c.status === 'booked').length,
-    completed: conversations.filter(c => c.status === 'completed').length,
-    conversionRate: conversations.length > 0
-      ? Math.round((conversations.filter(c => c.status === 'booked').length / conversations.length) * 100)
-      : 0
+  const loadRealTimeStats = async () => {
+    try {
+      const token = localStorage.getItem('leadsync_token');
+      const response = await axios.get(`${API_URL}/api/analytics/realtime`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRealTimeStats(response.data);
+    } catch (error) {
+      console.error('Error loading real-time stats:', error);
+    }
   };
 
-  if (loading) {
-    return <div className="loading">Loading analytics...</div>;
+  const handleDateRangeChange = (range) => {
+    setDateRange(range);
+    setLoading(true);
+  };
+
+  if (loading || !analytics) {
+    return (
+      <div className="analytics-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading analytics...</p>
+      </div>
+    );
   }
+
+  const { leadMetrics, conversionRates, leadSources, overTime, appointments, conversations, strategyPerformance } = analytics;
+
+  // Prepare pie chart data for lead sources
+  const sourceChartData = leadSources.map(source => ({
+    name: source.source,
+    value: source.count
+  }));
+
+  // Prepare line chart data for leads over time
+  const timeSeriesData = overTime.map(item => ({
+    date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    leads: item.leads,
+    appointments: item.appointments,
+    conversations: item.conversations
+  }));
 
   return (
     <div className="analytics-container">
-      <div className="page-header">
+      {/* Header */}
+      <div className="analytics-header">
         <div>
           <h1>
-            <Icons.Analytics size={32} style={{ marginRight: '12px', verticalAlign: 'middle' }} color="#8B5CF6" />
-            Analytics
+            <Icons.Analytics size={32} color={COLORS.primary} />
+            Analytics Dashboard
           </h1>
           <p className="page-subtitle">Track your performance and metrics</p>
         </div>
-      </div>
-
-      {/* Overview Stats */}
-      <div className="analytics-stats">
-        <div className="analytics-stat-card" onClick={() => setFilter('all')}>
-          <div className="stat-icon">💬</div>
-          <div className="stat-value">{stats.total}</div>
-          <div className="stat-label">Total Conversations</div>
-        </div>
-        <div className="analytics-stat-card" onClick={() => setFilter('active')}>
-          <div className="stat-icon">⚡</div>
-          <div className="stat-value">{stats.active}</div>
-          <div className="stat-label">Active Leads</div>
-        </div>
-        <div className="analytics-stat-card" onClick={() => setFilter('appointments')}>
-          <div className="stat-icon">📅</div>
-          <div className="stat-value">{stats.booked}</div>
-          <div className="stat-label">Appointments</div>
-        </div>
-        <div className="analytics-stat-card">
-          <div className="stat-icon">✅</div>
-          <div className="stat-value">{stats.conversionRate}%</div>
-          <div className="stat-label">Conversion Rate</div>
+        <div className="date-range-selector">
+          <button
+            className={dateRange === '7' ? 'active' : ''}
+            onClick={() => handleDateRangeChange('7')}
+          >
+            7 Days
+          </button>
+          <button
+            className={dateRange === '30' ? 'active' : ''}
+            onClick={() => handleDateRangeChange('30')}
+          >
+            30 Days
+          </button>
+          <button
+            className={dateRange === '90' ? 'active' : ''}
+            onClick={() => handleDateRangeChange('90')}
+          >
+            90 Days
+          </button>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="filter-tabs">
-        <button
-          className={filter === 'all' ? 'active' : ''}
-          onClick={() => setFilter('all')}
-        >
-          All ({conversations.length})
-        </button>
-        <button
-          className={filter === 'active' ? 'active' : ''}
-          onClick={() => setFilter('active')}
-        >
-          Active ({stats.active})
-        </button>
-        <button
-          className={filter === 'appointments' ? 'active' : ''}
-          onClick={() => setFilter('appointments')}
-        >
-          Appointments ({stats.booked})
-        </button>
-        <button
-          className={filter === 'completed' ? 'active' : ''}
-          onClick={() => setFilter('completed')}
-        >
-          Completed ({stats.completed})
-        </button>
-      </div>
-
-      {/* Conversations List */}
-      <div className="conversations-list">
-        {filteredConversations.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📊</div>
-            <h3>No conversations yet</h3>
-            <p>Start testing your AI agents to see analytics data</p>
-            <button className="btn-primary" onClick={() => navigate('/test')}>
-              Test AI Agent
-            </button>
+      {/* Real-Time Stats Banner */}
+      {realTimeStats && (
+        <div className="realtime-banner">
+          <div className="realtime-badge">
+            <span className="pulse-dot"></span>
+            LIVE
           </div>
-        ) : (
-          <table className="conversations-table">
-            <thead>
-              <tr>
-                <th>Contact</th>
-                <th>Agent</th>
-                <th>Status</th>
-                <th>Messages</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredConversations.map(conv => (
-                <tr key={conv.id}>
-                  <td>{conv.contact_name || conv.phone || 'Unknown'}</td>
-                  <td>{conv.template_name || 'N/A'}</td>
-                  <td>
-                    <span className={`status-badge status-${conv.status}`}>
-                      {conv.status}
-                    </span>
-                  </td>
-                  <td>{conv.message_count || 0}</td>
-                  <td>{new Date(conv.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <button
-                      className="btn-view"
-                      onClick={() => navigate(`/conversation/${conv.id}`)}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="realtime-stats">
+            <div className="realtime-stat">
+              <span className="realtime-label">Today's Leads:</span>
+              <span className="realtime-value">{realTimeStats.todayLeads}</span>
+            </div>
+            <div className="realtime-stat">
+              <span className="realtime-label">Today's Appointments:</span>
+              <span className="realtime-value">{realTimeStats.todayAppointments}</span>
+            </div>
+            <div className="realtime-stat">
+              <span className="realtime-label">Pending Actions:</span>
+              <span className="realtime-value">{realTimeStats.pendingLeads}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Key Metrics Grid */}
+      <div className="metrics-grid">
+        <div className="metric-card">
+          <div className="metric-icon" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}>
+            <Icons.Users size={28} color={COLORS.primary} />
+          </div>
+          <div className="metric-content">
+            <div className="metric-value">{leadMetrics.total}</div>
+            <div className="metric-label">Total Leads</div>
+            <div className="metric-change positive">+{leadMetrics.new} this period</div>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+            <Icons.Check size={28} color={COLORS.success} />
+          </div>
+          <div className="metric-content">
+            <div className="metric-value">{conversionRates.leadToAppointment}%</div>
+            <div className="metric-label">Conversion Rate</div>
+            <div className="metric-sublabel">{leadMetrics.qualified} qualified leads</div>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+            <Icons.Calendar size={28} color={COLORS.info} />
+          </div>
+          <div className="metric-content">
+            <div className="metric-value">{appointments.total}</div>
+            <div className="metric-label">Appointments</div>
+            <div className="metric-sublabel">{appointments.completed} completed</div>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+            <Icons.Chat size={28} color={COLORS.warning} />
+          </div>
+          <div className="metric-content">
+            <div className="metric-value">{conversations.totalMessages}</div>
+            <div className="metric-label">Total Messages</div>
+            <div className="metric-sublabel">{conversations.avgPerConversation.toFixed(1)} avg per chat</div>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon" style={{ backgroundColor: 'rgba(236, 72, 153, 0.1)' }}>
+            <Icons.Target size={28} color={COLORS.pink} />
+          </div>
+          <div className="metric-content">
+            <div className="metric-value">{leadMetrics.contacted}</div>
+            <div className="metric-label">Contacted</div>
+            <div className="metric-sublabel">{conversionRates.contactedToQualified}% qualified</div>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+            <Icons.Star size={28} color={COLORS.danger} />
+          </div>
+          <div className="metric-content">
+            <div className="metric-value">{leadMetrics.won}</div>
+            <div className="metric-label">Won Deals</div>
+            <div className="metric-sublabel">{conversionRates.qualifiedToWon}% close rate</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="charts-section">
+        {/* Leads Over Time */}
+        <div className="chart-card full-width">
+          <div className="chart-header">
+            <h3>
+              <Icons.Analytics size={20} color={COLORS.primary} />
+              Activity Over Time
+            </h3>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={timeSeriesData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(139, 92, 246, 0.1)" />
+              <XAxis
+                dataKey="date"
+                stroke="rgba(255, 255, 255, 0.6)"
+                style={{ fontSize: '12px' }}
+              />
+              <YAxis
+                stroke="rgba(255, 255, 255, 0.6)"
+                style={{ fontSize: '12px' }}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(26, 10, 46, 0.95)',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  borderRadius: '8px',
+                  color: '#fff'
+                }}
+              />
+              <Legend wrapperStyle={{ color: '#fff' }} />
+              <Line
+                type="monotone"
+                dataKey="leads"
+                stroke={COLORS.primary}
+                strokeWidth={3}
+                dot={{ fill: COLORS.primary, r: 4 }}
+                activeDot={{ r: 6 }}
+                name="Leads"
+              />
+              <Line
+                type="monotone"
+                dataKey="appointments"
+                stroke={COLORS.success}
+                strokeWidth={3}
+                dot={{ fill: COLORS.success, r: 4 }}
+                name="Appointments"
+              />
+              <Line
+                type="monotone"
+                dataKey="conversations"
+                stroke={COLORS.info}
+                strokeWidth={3}
+                dot={{ fill: COLORS.info, r: 4 }}
+                name="Conversations"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Lead Sources Pie Chart */}
+        {sourceChartData.length > 0 && (
+          <div className="chart-card">
+            <div className="chart-header">
+              <h3>
+                <Icons.Target size={20} color={COLORS.primary} />
+                Lead Sources
+              </h3>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={sourceChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {sourceChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={Object.values(COLORS)[index % Object.values(COLORS).length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(26, 10, 46, 0.95)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    borderRadius: '8px',
+                    color: '#fff'
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Strategy Performance */}
+        {strategyPerformance.length > 0 && (
+          <div className="chart-card">
+            <div className="chart-header">
+              <h3>
+                <Icons.Lightning size={20} color={COLORS.primary} />
+                Strategy Performance
+              </h3>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={strategyPerformance.slice(0, 5)}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(139, 92, 246, 0.1)" />
+                <XAxis
+                  dataKey="strategyName"
+                  stroke="rgba(255, 255, 255, 0.6)"
+                  style={{ fontSize: '11px' }}
+                  angle={-15}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis
+                  stroke="rgba(255, 255, 255, 0.6)"
+                  style={{ fontSize: '12px' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(26, 10, 46, 0.95)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    borderRadius: '8px',
+                    color: '#fff'
+                  }}
+                />
+                <Legend wrapperStyle={{ color: '#fff' }} />
+                <Bar dataKey="conversationCount" fill={COLORS.primary} radius={[8, 8, 0, 0]} name="Conversations" />
+                <Bar dataKey="appointmentCount" fill={COLORS.success} radius={[8, 8, 0, 0]} name="Appointments" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
+
+      {/* Strategy Performance Table */}
+      {strategyPerformance.length > 0 && (
+        <div className="table-card">
+          <div className="table-header">
+            <h3>
+              <Icons.Target size={20} color={COLORS.primary} />
+              Detailed Strategy Performance
+            </h3>
+          </div>
+          <div className="table-wrapper">
+            <table className="analytics-table">
+              <thead>
+                <tr>
+                  <th>Strategy Name</th>
+                  <th>Conversations</th>
+                  <th>Appointments</th>
+                  <th>Conversion Rate</th>
+                  <th>Avg Messages</th>
+                </tr>
+              </thead>
+              <tbody>
+                {strategyPerformance.map((strategy, index) => (
+                  <tr key={index}>
+                    <td className="strategy-name">{strategy.strategyName}</td>
+                    <td>{strategy.conversationCount}</td>
+                    <td>{strategy.appointmentCount}</td>
+                    <td>
+                      <span className="conversion-badge">
+                        {strategy.conversionRate}%
+                      </span>
+                    </td>
+                    <td>{strategy.avgMessagesPerConversation.toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {leadMetrics.total === 0 && (
+        <div className="empty-state">
+          <div className="empty-icon">
+            <Icons.Analytics size={64} color={COLORS.primary} />
+          </div>
+          <h3>No data yet</h3>
+          <p>Start capturing leads and booking appointments to see analytics</p>
+          <button className="btn-primary" onClick={() => navigate('/leads')}>
+            Go to Leads
+          </button>
+        </div>
+      )}
     </div>
   );
 }

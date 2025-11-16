@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function TemplateBuilder() {
   const [templates, setTemplates] = useState([]);
@@ -22,7 +22,7 @@ function TemplateBuilder() {
 
   const loadTemplates = async () => {
     try {
-      const res = await axios.get(`${API_URL}/templates`);
+      const res = await axios.get(`${API_URL}/api/templates`);
       setTemplates(res.data);
     } catch (error) {
       console.error('Error loading templates:', error);
@@ -33,7 +33,7 @@ function TemplateBuilder() {
     e.preventDefault();
     
     try {
-      await axios.post(`${API_URL}/templates`, {
+      await axios.post(`${API_URL}/api/templates`, {
         ...formData,
         qualificationQuestions: [
           { Body: JSON.stringify({ text: "What are you looking for today?" }), Delay: 1 },
@@ -95,7 +95,7 @@ function TemplateBuilder() {
     if (!window.confirm('Are you sure you want to delete this template?')) return;
     
     try {
-      await axios.delete(`${API_URL}/templates/${id}`);
+      await axios.delete(`${API_URL}/api/templates/${id}`);
       loadTemplates();
     } catch (error) {
       console.error('Error deleting template:', error);

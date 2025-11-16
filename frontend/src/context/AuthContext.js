@@ -16,95 +16,86 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('leadsync_token'));
 
-  // Check token expiry on mount and periodically
+  // Initialize auth on mount
   useEffect(() => {
-    const checkTokenExpiry = () => {
-      const expiryTime = localStorage.getItem('leadsync_token_expiry');
-      if (expiryTime && Date.now() > parseInt(expiryTime)) {
-        console.log('⚠️ Token expired, logging out');
-        logout();
-        return false;
+    const initAuth = () => {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+
+      if (token && userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+
+          // CRITICAL: Restore axios header on page load
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+          setUser(userData);
+          console.log('✅ Auth restored from storage');
+        } catch (error) {
+          console.error('Failed to restore auth:', error);
+          localStorage.clear();
+        }
       }
-      return true;
+
+      setLoading(false);
     };
 
-    // Check immediately
-    if (token && checkTokenExpiry()) {
-      loadUser();
-    } else {
-      setLoading(false);
-    }
-
-    // Check every minute
-    const interval = setInterval(() => {
-      if (token) {
-        checkTokenExpiry();
-      }
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [token]);
-
-  // Load user data from API
-  const loadUser = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.data.success) {
-        setUser(response.data.data.user);
-      }
-    } catch (error) {
-      console.error('Error loading user:', error);
-      // If token is invalid, clear it
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        logout();
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    initAuth();
+  }, []);
 
   // Register new user
-  const register = async (userData) => {
+  const register = async (name, email, password) => {
     try {
-      console.log('Sending registration request to:', `${API_URL}/api/auth/register`);
+      console.log('🔐 Sending register request...');
 
-      const response = await axios.post(
-        `${API_URL}/api/auth/register`,
-        userData,
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/auth/register`, {
+        name,
+        email,
+        password,
+      });
 
-      console.log('Registration response:', response.data);
+      console.log('📥 Full register response:', JSON.stringify(response.data, null, 2));
 
-      if (response.data.success) {
-        const { user, token } = response.data.data;
+      // Handle different response structures
+      let token, userData;
 
-        // Store token with 30-day expiry
-        const expiryTime = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
-        localStorage.setItem('leadsync_token', token);
-        localStorage.setItem('leadsync_token_expiry', expiryTime.toString());
-        setToken(token);
-        setUser(user);
-
-        console.log('✅ Token stored with expiry:', new Date(expiryTime).toLocaleString());
-
-        return { success: true, user };
+      if (response.data.data) {
+        console.log('📦 Using nested data structure');
+        token = response.data.data.token;
+        userData = response.data.data.user;
+      } else if (response.data.token) {
+        console.log('📦 Using flat structure');
+        token = response.data.token;
+        userData = response.data.user;
+      } else {
+        console.error('❌ Unknown response structure:', response.data);
+        throw new Error('Invalid response - no token found');
       }
+
+      console.log('🔑 Token extracted:', token ? '✅ YES' : '❌ NO');
+      console.log('👤 User extracted:', userData ? '✅ YES' : '❌ NO');
+
+      if (!token || !userData) {
+        throw new Error('Invalid response structure');
+      }
+
+      // Store everything
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      // Set axios header
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      setUser(userData);
+      console.log('✅ Registration complete!');
+
+      return { success: true };
     } catch (error) {
-      console.error('Registration error:', error);
-      console.error('Error response:', error.response?.data);
+      console.error('❌ Register error:', error);
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Registration failed. Please try again.'
+        error: error.response?.data?.error || error.message || 'Registration failed',
       };
     }
   };
@@ -112,55 +103,76 @@ export const AuthProvider = ({ children }) => {
   // Login user
   const login = async (email, password) => {
     try {
-      console.log('Sending login request to:', `${API_URL}/api/auth/login`);
-      console.log('Payload:', { email, password: '***' });
+      console.log('🔐 Sending login request to:', `${API_URL}/api/auth/login`);
 
-      const response = await axios.post(
-        `${API_URL}/api/auth/login`,
-        {
-          email,
-          password
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
+        email,
+        password,
+      });
 
-      console.log('Login response:', response.data);
+      console.log('📥 Full login response:', JSON.stringify(response.data, null, 2));
 
-      if (response.data.success) {
-        const { user, token } = response.data.data;
+      // Handle different response structures
+      let token, userData;
 
-        // Store token with 30-day expiry
-        const expiryTime = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
-        localStorage.setItem('leadsync_token', token);
-        localStorage.setItem('leadsync_token_expiry', expiryTime.toString());
-        setToken(token);
-        setUser(user);
-
-        console.log('✅ Token stored with expiry:', new Date(expiryTime).toLocaleString());
-
-        return { success: true, user };
+      if (response.data.data) {
+        // Nested: { success: true, data: { token, user } }
+        console.log('📦 Using nested data structure');
+        token = response.data.data.token;
+        userData = response.data.data.user;
+      } else if (response.data.token) {
+        // Flat: { token, user }
+        console.log('📦 Using flat structure');
+        token = response.data.token;
+        userData = response.data.user;
+      } else {
+        console.error('❌ Unknown response structure:', response.data);
+        throw new Error('Invalid response - no token found');
       }
+
+      console.log('🔑 Token extracted:', token ? '✅ YES' : '❌ NO');
+      console.log('👤 User extracted:', userData ? '✅ YES' : '❌ NO');
+      console.log('👤 User data:', userData);
+
+      if (!token) {
+        throw new Error('No token in response');
+      }
+
+      if (!userData) {
+        throw new Error('No user data in response');
+      }
+
+      // Store everything
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      // Set axios header
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      setUser(userData);
+      console.log('✅ Login complete! Token and user saved.');
+
+      return { success: true };
     } catch (error) {
-      console.error('Login error:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
+      console.error('❌ Login error:', error);
+      console.error('Error details:', error.response?.data);
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Login failed. Please try again.'
+        error: error.response?.data?.error || error.message || 'Login failed',
       };
     }
   };
 
   // Logout user
   const logout = () => {
-    localStorage.removeItem('leadsync_token');
-    localStorage.removeItem('leadsync_token_expiry');
-    setToken(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
+    // CRITICAL: Clear axios header
+    delete axios.defaults.headers.common['Authorization'];
+
     setUser(null);
+    console.log('✅ Logged out successfully');
   };
 
   // Update user data (for API key regeneration, etc.)
@@ -170,19 +182,18 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is authenticated
   const isAuthenticated = () => {
-    return !!user && !!token;
+    const storedToken = localStorage.getItem('token');
+    return !!storedToken;
   };
 
   const value = {
     user,
-    token,
     loading,
     register,
     login,
     logout,
     updateUser,
-    isAuthenticated,
-    loadUser
+    isAuthenticated
   };
 
   return (

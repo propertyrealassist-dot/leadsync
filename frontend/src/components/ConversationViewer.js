@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function ConversationViewer() {
   const { id } = useParams();
@@ -16,7 +16,7 @@ function ConversationViewer() {
 
   const loadConversation = async () => {
     try {
-      const res = await axios.get(`${API_URL}/conversations/${id}`);
+      const res = await axios.get(`${API_URL}/api/conversations/${id}`);
       setConversation(res.data);
     } catch (error) {
       console.error('Error loading conversation:', error);

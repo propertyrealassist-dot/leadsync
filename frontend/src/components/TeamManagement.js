@@ -128,10 +128,10 @@ function TeamManagement() {
 
   const getRoleBadge = (role) => {
     const badges = {
-      admin: { label: 'Admin', color: '#EC4899', icon: '👑' },
-      manager: { label: 'Manager', color: '#8B5CF6', icon: '⭐' },
-      member: { label: 'Member', color: '#3B82F6', icon: '👤' },
-      viewer: { label: 'Viewer', color: '#64748B', icon: '👁️' }
+      admin: { label: 'Admin', color: '#EC4899', icon: <Icons.Settings size={14} color="#ffffff" /> },
+      manager: { label: 'Manager', color: '#8B5CF6', icon: <Icons.TrendingUp size={14} color="#ffffff" /> },
+      member: { label: 'Member', color: '#3B82F6', icon: <Icons.Users size={14} color="#ffffff" /> },
+      viewer: { label: 'Viewer', color: '#64748B', icon: <Icons.Eye size={14} color="#ffffff" /> }
     };
     return badges[role] || badges.member;
   };
@@ -196,7 +196,9 @@ function TeamManagement() {
           </div>
         ) : teamMembers.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">👥</div>
+            <div className="empty-icon">
+              <Icons.Users size={48} color="#8B5CF6" />
+            </div>
             <h3>No team members yet</h3>
             <p>Invite your first team member to get started</p>
           </div>
@@ -275,53 +277,109 @@ function TeamManagement() {
         <div className="permissions-grid">
           <div className="permission-card">
             <div className="permission-header">
-              <span className="permission-icon">👁️</span>
+              <span className="permission-icon">
+                <Icons.Eye size={24} color="#8B5CF6" />
+              </span>
               <h3>Viewer</h3>
             </div>
             <ul className="permission-list">
-              <li>✓ View strategies</li>
-              <li>✓ View conversations</li>
-              <li>✓ View analytics</li>
-              <li>✗ Cannot edit or create</li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                View strategies
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                View conversations
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                View analytics
+              </li>
+              <li>
+                <Icons.X size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ef4444" />
+                Cannot edit or create
+              </li>
             </ul>
           </div>
 
           <div className="permission-card">
             <div className="permission-header">
-              <span className="permission-icon">👤</span>
+              <span className="permission-icon">
+                <Icons.Users size={24} color="#8B5CF6" />
+              </span>
               <h3>Member</h3>
             </div>
             <ul className="permission-list">
-              <li>✓ All viewer permissions</li>
-              <li>✓ Create strategies</li>
-              <li>✓ Edit own strategies</li>
-              <li>✓ Manage conversations</li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                All viewer permissions
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                Create strategies
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                Edit own strategies
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                Manage conversations
+              </li>
             </ul>
           </div>
 
           <div className="permission-card">
             <div className="permission-header">
-              <span className="permission-icon">⭐</span>
+              <span className="permission-icon">
+                <Icons.TrendingUp size={24} color="#8B5CF6" />
+              </span>
               <h3>Manager</h3>
             </div>
             <ul className="permission-list">
-              <li>✓ All member permissions</li>
-              <li>✓ Edit all strategies</li>
-              <li>✓ Delete strategies</li>
-              <li>✓ View team analytics</li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                All member permissions
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                Edit all strategies
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                Delete strategies
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                View team analytics
+              </li>
             </ul>
           </div>
 
           <div className="permission-card">
             <div className="permission-header">
-              <span className="permission-icon">👑</span>
+              <span className="permission-icon">
+                <Icons.Settings size={24} color="#8B5CF6" />
+              </span>
               <h3>Admin</h3>
             </div>
             <ul className="permission-list">
-              <li>✓ All manager permissions</li>
-              <li>✓ Manage team members</li>
-              <li>✓ Billing & settings</li>
-              <li>✓ Full system access</li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                All manager permissions
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                Manage team members
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                Billing & settings
+              </li>
+              <li>
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                Full system access
+              </li>
             </ul>
           </div>
         </div>

@@ -1,0 +1,251 @@
+APPOINTWISE JAVASCRIPT ANALYSIS
+================================
+Generated: 2025-11-13
+Source: C:\Users\Kurtv\Desktop\LS\static\js\main.d6214b90.js
+File Size: 5.5 MB (minified)
+
+================================================================================
+1. ROUTE STRUCTURE (50+ Routes Identified)
+================================================================================
+
+AUTHENTICATION & ONBOARDING:
+  - /login                          Login page
+  - /reset-password                 Password recovery
+  - /onboarding                     New user onboarding flow
+  - /getting-started                Getting started guide
+
+CORE DASHBOARD:
+  - /                               Root/Home page
+  - /profile                        User profile settings
+
+AI & AUTOMATION FEATURES:
+  - /ai-settings                    AI configuration settings
+  - /ai-rules                       AI behavior rules
+  - /ai-tasks                       AI task management
+  - /ai-tasks/builder               Task builder interface
+  - /ai-tasks/builder/new/:id       Create new AI task
+  - /ai-tasks/builder/edit/:id      Edit existing AI task
+  - /ai-test-lab                    AI testing environment
+  - /agent-builder/:strategyId      Build AI agents for strategy
+  - /agent-builder/new              Create new agent
+  - /co-pilot                       AI Co-Pilot feature
+
+STRATEGY MANAGEMENT:
+  - /strategy-overview              Strategy overview dashboard
+  - /strategy-detail/*              Detailed strategy view
+  - /strategy/:strategyId           View specific strategy
+  - /strategy/duplicate             Duplicate strategy
+
+LEAD MANAGEMENT:
+  - /leads/*                        Leads overview
+  - /:leadId                        Individual lead detail
+
+ANALYTICS & REPORTING:
+  - /analytics/*                    Analytics dashboard
+  - /analytics/:strategyId          Strategy-specific analytics
+  - /conversations                  Conversation history
+  - /logs                          System logs
+
+CUSTOM ACTIONS & API:
+  - /custom-actions                 Custom actions manager
+  - /custom-actions/assign          Assign custom actions
+  - /custom-actions/client/all      Get all client actions
+  - /custom-actions/copy            Copy custom action
+  - /custom-actions/execute         Execute custom action
+  - /custom-actions/get             Get custom action
+  - /custom-actions/healthcheck     Health check endpoint
+  - /custom-actions/remove          Remove custom action
+  - /custom-actions/search          Search custom actions
+  - /api-explorer                   API documentation/testing
+
+BILLING & PAYMENTS:
+  - /billing                        Billing settings
+  - /billing-portal                 Stripe billing portal
+
+INTEGRATIONS:
+  - /external/google/oauth/connect-url    Google OAuth connection
+  - /code-redirect                        OAuth callback handler
+
+EDUCATION & SUPPORT:
+  - /education                      Educational resources
+  - /masterclass                    Training masterclass
+  - /advanced-guides                Advanced user guides
+
+ADMIN & UTILITIES:
+  - /snapshots                      GHL Snapshot manager
+  - /migrate-to-7                   Version migration tool
+  - /agency/*                       Agency features
+  - /debug-plan                     Debug planning tool
+  - /style-guide                    UI style guide
+  - /healthcheck                    System health check
+
+================================================================================
+2. FEATURE KEYWORDS (Occurrence Count)
+================================================================================
+
+Primary Features (mentions in code):
+  - AI: 803 occurrences              HIGHEST - Core AI functionality
+  - User: 665 occurrences            User management & auth
+  - Strategy: 630 occurrences        Strategy system is core
+  - Lead: 490 occurrences            Lead management
+  - Message: 347 occurrences         Messaging/conversations
+  - Agent: 273 occurrences           AI agent system
+  - Calendar: 178 occurrences        Calendar integration
+  - Template: 101 occurrences        Template system
+  - Conversations: 66 occurrences    Conversation tracking
+  - Settings: 54 occurrences         Settings management
+  - Contact: 44 occurrences          Contact management
+  - Workflow: 32 occurrences         Workflow automation
+  - Billing: 30 occurrences          Payment processing
+  - Analytics: 29 occurrences        Analytics & reporting
+  - Report: 16 occurrences           Report generation
+  - Integration: 15 occurrences      Third-party integrations
+  - Profile: 14 occurrences          User profiles
+  - Dashboard: 13 occurrences        Dashboard views
+  - Chat: 5 occurrences              Chat functionality
+  - Team: 2 occurrences              Team management
+
+================================================================================
+3. THIRD-PARTY INTEGRATIONS
+================================================================================
+
+PRIMARY INTEGRATIONS (by occurrence):
+  - GoHighLevel (GHL): 360 total mentions
+    * ghl: 227 mentions
+    * GHL: 180 mentions
+    * HighLevel: 56 mentions
+    * highlevel: 12 mentions
+    * HIGHLEVEL: 2 mentions
+    → DEEP GHL INTEGRATION - Core platform dependency
+
+  - Stripe: 209 total mentions
+    * stripe: 137 mentions
+    * Stripe: 63 mentions
+    * STRIPE: 9 mentions
+    → Payment processing & billing
+
+  - Google: 125 total mentions
+    * google: 89 mentions
+    * Google: 36 mentions
+    → Google Calendar, OAuth, APIs
+
+  - Calendly: 54 total mentions
+    * calendly: 48 mentions
+    * Calendly: 6 mentions
+    → Scheduling integration
+
+  - Zapier: 51 total mentions
+    * zapier: 37 mentions
+    * Zapier: 14 mentions
+    → Automation & webhooks
+
+  - Facebook: 34 total mentions
+    * Facebook: 19 mentions
+    * facebook: 15 mentions
+    * FACEBOOK: 2 mentions
+    → Facebook Lead Ads integration
+
+INTEGRATION FEATURES FOUND:
+  - FirstPromoter (Affiliate tracking)
+  - Featurebase SDK (Feature flags/feedback)
+  - Facebook SDK (v19.0)
+  - OAuth 2.0 flows (Google, Facebook)
+
+================================================================================
+4. API ENDPOINTS DISCOVERED
+================================================================================
+
+Direct API Paths Found:
+  - /api/disconnect
+  - /api/exchange-code
+  - /api/getapikey
+  - /api/isconnected/
+
+Pattern Analysis:
+  - RESTful API structure
+  - OAuth token exchange endpoints
+  - API key management
+  - Connection status checking
+
+================================================================================
+5. STATE MANAGEMENT & ARCHITECTURE
+================================================================================
+
+Framework: React (detected)
+  - React Router for navigation
+  - Component-based architecture
+  - State management (likely Redux or Context API)
+
+Code Characteristics:
+  - Minified/uglified production build
+  - Single-page application (SPA)
+  - Heavy use of dynamic imports
+  - Lazy loading for route components
+
+================================================================================
+6. TRACKING & ANALYTICS
+================================================================================
+
+UTM Parameter Tracking:
+  - utm_source
+  - utm_campaign
+  - utm_medium
+  - Stored in localStorage
+
+FirstPromoter Integration:
+  - Affiliate tracking
+  - Referral system (fpr parameter)
+  - Customer ID: 7stagpr7
+
+Facebook Pixel:
+  - App ID: 2038397826968235
+  - Page view tracking
+  - Event tracking
+  - Login status monitoring
+
+================================================================================
+7. KEY FINDINGS & INSIGHTS
+================================================================================
+
+STRENGTHS OF APPOINTWISE:
+  1. Comprehensive AI Agent System
+     - Multiple AI features (settings, rules, tasks, test lab)
+     - Agent builder with strategy integration
+     - Co-pilot functionality
+
+  2. Advanced Strategy Management
+     - Strategy overview & detail views
+     - Strategy duplication
+     - Per-strategy analytics
+
+  3. Deep GHL Integration
+     - 360+ references throughout code
+     - Snapshot support
+     - Migration tools
+
+  4. Custom Actions Framework
+     - Extensible action system
+     - Healthcheck monitoring
+     - Client-side execution
+
+  5. Education & Support
+     - Masterclass content
+     - Advanced guides
+     - Getting started flows
+
+  6. Developer Tools
+     - API Explorer
+     - Debug planning
+     - Style guide
+     - Healthcheck endpoints
+
+ARCHITECTURAL PATTERNS:
+  - Feature-based routing
+  - Deep linking support
+  - OAuth integration patterns
+  - Modular action system
+  - Comprehensive analytics tracking
+
+================================================================================
+END OF JAVASCRIPT ANALYSIS
+================================================================================

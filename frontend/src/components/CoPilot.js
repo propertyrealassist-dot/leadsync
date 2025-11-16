@@ -18,6 +18,10 @@ function CoPilot() {
   });
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [websiteData, setWebsiteData] = useState(null);
+  const [keepAIActive, setKeepAIActive] = useState(true);
 
   // Generate strategy
   const generateStrategy = async () => {
@@ -100,6 +104,106 @@ function CoPilot() {
       { text: 'Just checking in - still interested?', delay: 180 },
       { text: 'We have availability this week!', delay: 1440 }
     ];
+  };
+
+  const scanWebsite = async (url) => {
+    if (!url || !url.trim()) {
+      alert('⚠️ Please enter a website URL');
+      return;
+    }
+
+    setIsScanning(true);
+    setScanProgress(0);
+
+    let progressInterval; // Declare outside try block
+
+    try {
+      // Simulate progress
+      progressInterval = setInterval(() => {
+        setScanProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 300);
+
+      const token = localStorage.getItem('token');
+
+      console.log('🌐 Scanning website:', url);
+      console.log('📝 API URL:', `${API_URL}/api/copilot/scan`);
+      console.log('🔑 Token exists:', !!token);
+
+      // Call backend to scrape website
+      const response = await axios.post(
+        `${API_URL}/api/copilot/scan`,
+        { url },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 20000 // 20 second timeout
+        }
+      );
+
+      clearInterval(progressInterval);
+      setScanProgress(100);
+
+      console.log('✅ Scan response:', response.data);
+
+      // Store scraped data
+      setWebsiteData(response.data.data || response.data);
+
+      // Auto-fill services if found
+      const scannedData = response.data.data || response.data;
+      if (scannedData) {
+        const autoServices = [
+          scannedData.description || '',
+          scannedData.content ? scannedData.content.substring(0, 500) : '',
+          scannedData.services ? scannedData.services.slice(0, 5).join(', ') : ''
+        ].filter(Boolean).join('\n\n');
+
+        if (autoServices) {
+          setData(prev => ({
+            ...prev,
+            services: autoServices
+          }));
+        }
+      }
+
+      // Move to next step
+      setTimeout(() => {
+        setStep('services');
+      }, 500);
+
+    } catch (error) {
+      console.error('❌ Website scan error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+
+      if (progressInterval) clearInterval(progressInterval);
+      setScanProgress(0);
+
+      let errorMessage = 'Unable to scan website. You can skip this step and enter information manually.';
+
+      if (error.response) {
+        // Server responded with error
+        errorMessage = error.response.data.message || error.response.data.error || errorMessage;
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Request timed out. The website took too long to respond.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      alert(`⚠️ ${errorMessage}`);
+
+      // Still allow user to continue
+      setStep('services');
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   // INITIAL VIEW
@@ -188,6 +292,45 @@ function CoPilot() {
 
   // WEBSITE
   if (step === 'website') {
+    if (isScanning) {
+      return (
+        <div className="copilot-container">
+          <div className="copilot-progress">
+            <div className="progress-bar" style={{ width: '40%' }}></div>
+          </div>
+
+          <div className="scanning-state">
+            <Icons.Settings size={64} color="#8B5CF6" className="spinning-icon" />
+            <h2>Scanning Website...</h2>
+            <p>Analyzing {data.website} to understand your business</p>
+
+            <div className="progress-container">
+              <div className="progress-bar-animated" style={{ width: `${scanProgress}%` }}></div>
+            </div>
+
+            <div className="scanning-steps">
+              <div className={scanProgress >= 25 ? 'step active' : 'step'}>
+                <Icons.CheckCircle size={20} color={scanProgress >= 25 ? '#10b981' : '#666'} />
+                <span>Fetching content</span>
+              </div>
+              <div className={scanProgress >= 50 ? 'step active' : 'step'}>
+                <Icons.CheckCircle size={20} color={scanProgress >= 50 ? '#10b981' : '#666'} />
+                <span>Extracting info</span>
+              </div>
+              <div className={scanProgress >= 75 ? 'step active' : 'step'}>
+                <Icons.CheckCircle size={20} color={scanProgress >= 75 ? '#10b981' : '#666'} />
+                <span>Analyzing services</span>
+              </div>
+              <div className={scanProgress >= 100 ? 'step active' : 'step'}>
+                <Icons.CheckCircle size={20} color={scanProgress >= 100 ? '#10b981' : '#666'} />
+                <span>Complete</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="copilot-container">
         <div className="copilot-progress">
@@ -217,11 +360,11 @@ function CoPilot() {
             Skip
           </button>
           <button
-            onClick={() => setStep('services')}
+            onClick={() => scanWebsite(data.website)}
             disabled={!data.website}
             className="btn-primary"
           >
-            Continue
+            Scan & Continue
             <Icons.ArrowRight size={18} />
           </button>
         </div>
@@ -332,38 +475,94 @@ function CoPilot() {
         </div>
 
         <h2>Post-Booking Behavior</h2>
-        <p>How should the AI behave after booking?</p>
+        <p>Configure how your AI agent should behave after successfully booking an appointment</p>
 
-        <div className="behavior-cards">
-          <div
-            className="behavior-card"
-            onClick={() => {
-              setData({ ...data, postBooking: 'turnOffAI' });
-              generateStrategy();
-            }}
-          >
-            <Icons.X size={48} color="#ef4444" />
-            <h3>Turn OFF AI Completely</h3>
-            <ul>
-              <li>No automated messages</li>
-              <li>Manual takeover only</li>
-            </ul>
+        {/* Toggle Switch */}
+        <div className="post-booking-toggle">
+          <div className="toggle-label">
+            <Icons.CoPilot size={24} color="#8B5CF6" />
+            <span>Keep AI Active After Booking</span>
           </div>
+          <label className="switch">
+            <input
+              type="checkbox"
+              checked={keepAIActive}
+              onChange={(e) => setKeepAIActive(e.target.checked)}
+            />
+            <span className="slider"></span>
+          </label>
+        </div>
 
-          <div
-            className="behavior-card recommended"
-            onClick={() => {
-              setData({ ...data, postBooking: 'turnOffFollowUps' });
-              generateStrategy();
-            }}
-          >
-            <span className="badge-recommended">Recommended</span>
-            <Icons.Check size={48} color="#10b981" />
-            <h3>Turn OFF Follow-ups Only</h3>
-            <ul>
-              <li>Responds to messages</li>
-              <li>No proactive outreach</li>
-            </ul>
+        <div className="behavior-cards-container">
+          <div className="behavior-cards">
+            {/* Turn OFF AI Completely */}
+            <div
+              className={`behavior-card ${!keepAIActive ? 'selected' : ''}`}
+              onClick={() => {
+                setData({ ...data, postBooking: 'turnOffAI' });
+                generateStrategy();
+              }}
+            >
+              <div className="card-icon-wrapper danger">
+                <Icons.X size={40} color="#ef4444" />
+              </div>
+              <h3>Turn OFF AI Completely</h3>
+              <p className="card-subtitle">Full manual control</p>
+              <ul className="feature-list">
+                <li>
+                  <Icons.X size={16} color="#ef4444" />
+                  <span>No automated responses</span>
+                </li>
+                <li>
+                  <Icons.X size={16} color="#ef4444" />
+                  <span>No follow-up messages</span>
+                </li>
+                <li>
+                  <Icons.Check size={16} color="#10b981" />
+                  <span>Complete manual takeover</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Turn OFF Follow-ups Only */}
+            <div
+              className={`behavior-card ${keepAIActive ? 'selected' : ''} recommended`}
+              onClick={() => {
+                setData({ ...data, postBooking: 'turnOffFollowUps' });
+                generateStrategy();
+              }}
+            >
+              <span className="badge-recommended">
+                <Icons.CheckCircle size={16} color="#ffffff" />
+                RECOMMENDED
+              </span>
+              <div className="card-icon-wrapper success">
+                <Icons.Check size={40} color="#10b981" />
+              </div>
+              <h3>Turn OFF Follow-ups Only</h3>
+              <p className="card-subtitle">Smart responsive mode</p>
+              <ul className="feature-list">
+                <li>
+                  <Icons.Check size={16} color="#10b981" />
+                  <span>Responds to incoming messages</span>
+                </li>
+                <li>
+                  <Icons.Check size={16} color="#10b981" />
+                  <span>Answers questions naturally</span>
+                </li>
+                <li>
+                  <Icons.X size={16} color="#ef4444" />
+                  <span>No proactive outreach</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="info-banner">
+          <Icons.Info size={20} color="#8B5CF6" />
+          <div>
+            <strong>Recommendation:</strong> Keep follow-ups disabled to prevent over-messaging while maintaining responsiveness to client questions.
           </div>
         </div>
 

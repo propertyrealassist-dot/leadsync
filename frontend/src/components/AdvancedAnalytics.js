@@ -31,25 +31,25 @@ function AdvancedAnalytics() {
   const [aiInsights, setAiInsights] = useState([
     {
       type: 'success',
-      icon: '🎯',
+      icon: 'Target',
       title: 'Peak Performance Time',
       message: 'Your conversion rate is 35% higher between 2-4 PM. Consider scheduling more outreach during this window.'
     },
     {
       type: 'warning',
-      icon: '⚠️',
+      icon: 'AlertCircle',
       title: 'Drop-Off Alert',
       message: 'There\'s a 23% drop-off rate at the qualification stage. Review your qualification criteria.'
     },
     {
       type: 'info',
-      icon: '💡',
+      icon: 'Info',
       title: 'Optimization Opportunity',
       message: 'Leads from referrals convert 2.3x better. Consider implementing a referral program.'
     },
     {
       type: 'success',
-      icon: '📈',
+      icon: 'TrendingUp',
       title: 'Growth Trend',
       message: 'Your appointment booking rate increased 18% this week. Keep up the momentum!'
     }
@@ -183,7 +183,7 @@ function AdvancedAnalytics() {
       <div className="kpi-grid">
         <div className="kpi-card">
           <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)' }}>
-            📊
+            <Icons.Analytics size={32} color="#ffffff" />
           </div>
           <div className="kpi-content">
             <div className="kpi-label">Total Leads</div>
@@ -194,7 +194,7 @@ function AdvancedAnalytics() {
 
         <div className="kpi-card">
           <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #8B5CF6, #EC4899)' }}>
-            🎯
+            <Icons.Target size={32} color="#ffffff" />
           </div>
           <div className="kpi-content">
             <div className="kpi-label">Conversion Rate</div>
@@ -205,7 +205,7 @@ function AdvancedAnalytics() {
 
         <div className="kpi-card">
           <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #EC4899, #F59E0B)' }}>
-            ⚡
+            <Icons.Zap size={32} color="#ffffff" />
           </div>
           <div className="kpi-content">
             <div className="kpi-label">Avg Response Time</div>
@@ -216,7 +216,7 @@ function AdvancedAnalytics() {
 
         <div className="kpi-card">
           <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #10B981, #3B82F6)' }}>
-            📅
+            <Icons.Calendar size={32} color="#ffffff" />
           </div>
           <div className="kpi-content">
             <div className="kpi-label">Appointments Booked</div>
@@ -227,7 +227,7 @@ function AdvancedAnalytics() {
 
         <div className="kpi-card">
           <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #F59E0B, #EF4444)' }}>
-            💰
+            <Icons.TrendingUp size={32} color="#ffffff" />
           </div>
           <div className="kpi-content">
             <div className="kpi-label">Revenue</div>
@@ -238,7 +238,7 @@ function AdvancedAnalytics() {
 
         <div className="kpi-card">
           <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)' }}>
-            👥
+            <Icons.Users size={32} color="#ffffff" />
           </div>
           <div className="kpi-content">
             <div className="kpi-label">Customer LTV</div>
@@ -250,23 +250,36 @@ function AdvancedAnalytics() {
 
       {/* AI Insights */}
       <div className="insights-section">
-        <h2>🤖 AI-Powered Insights</h2>
+        <h2>
+          <Icons.CoPilot size={24} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+          AI-Powered Insights
+        </h2>
         <div className="insights-grid">
-          {aiInsights.map((insight, idx) => (
-            <div key={idx} className={`insight-card insight-${insight.type}`}>
-              <div className="insight-icon">{insight.icon}</div>
-              <div className="insight-content">
-                <h3>{insight.title}</h3>
-                <p>{insight.message}</p>
+          {aiInsights.map((insight, idx) => {
+            const IconComponent = Icons[insight.icon];
+            const iconColor = insight.type === 'success' ? '#10b981' :
+                            insight.type === 'warning' ? '#f59e0b' : '#3b82f6';
+            return (
+              <div key={idx} className={`insight-card insight-${insight.type}`}>
+                <div className="insight-icon">
+                  {IconComponent && <IconComponent size={24} color={iconColor} />}
+                </div>
+                <div className="insight-content">
+                  <h3>{insight.title}</h3>
+                  <p>{insight.message}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       {/* Conversion Funnel */}
       <div className="funnel-section">
-        <h2>📊 Conversion Funnel</h2>
+        <h2>
+          <Icons.AdvancedAnalytics size={24} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+          Conversion Funnel
+        </h2>
         <div className="funnel-container">
           {funnel.map((stage, idx) => (
             <div key={idx} className="funnel-stage">
@@ -327,7 +340,10 @@ function AdvancedAnalytics() {
 
       {/* Strategy Performance */}
       <div className="performance-section">
-        <h2>🎯 Strategy Performance</h2>
+        <h2>
+          <Icons.Target size={24} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+          Strategy Performance
+        </h2>
         <div className="performance-table">
           <div className="table-header">
             <div>Strategy</div>

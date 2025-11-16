@@ -19,7 +19,22 @@ import AdvancedAnalytics from './components/AdvancedAnalytics';
 import WhiteLabel from './components/WhiteLabel';
 import Login from './components/Login';
 import Register from './components/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
+import TestAI from './pages/TestAI';
+import Snapshots from './pages/Snapshots';
+import Calendar from './pages/Calendar';
+import Leads from './pages/Leads';
+import Header from './components/Header';
+import AccountSettings from './components/AccountSettings';
+import Billing from './components/Billing';
+import APIKeys from './components/APIKeys';
+import UserSettings from './components/UserSettings';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastProvider } from './components/ToastContainer';
+import './fonts.css';
 import './App.css';
 
 function AppContent() {
@@ -81,6 +96,8 @@ function AppContent() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
@@ -99,6 +116,7 @@ function AppContent() {
           position: 'relative'
         }}
       >
+        <Header />
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />
@@ -111,6 +129,10 @@ function AppContent() {
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/copilot" element={<CoPilot />} />
           <Route path="/test" element={<ConversationTest />} />
+          <Route path="/test-ai" element={<TestAI />} />
+          <Route path="/snapshots" element={<Snapshots />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/leads" element={<Leads />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route
             path="/team"
@@ -148,10 +170,13 @@ function AppContent() {
             path="/settings"
             element={
               <ProtectedRoute>
-                <Settings />
+                <UserSettings />
               </ProtectedRoute>
             }
           />
+          <Route path="/account" element={<AccountSettings />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/api-keys" element={<APIKeys />} />
           <Route path="/login" element={<Navigate to="/home" replace />} />
           <Route path="/register" element={<Navigate to="/home" replace />} />
         </Routes>
@@ -164,9 +189,23 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <NavigationProvider>
-          <AppContent />
-        </NavigationProvider>
+        <ToastProvider>
+          <NavigationProvider>
+            <AppContent />
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={true}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="dark"
+            />
+          </NavigationProvider>
+        </ToastProvider>
       </AuthProvider>
     </Router>
   );

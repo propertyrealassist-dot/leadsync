@@ -48,18 +48,21 @@ class ClaudeAIService {
   }
 
   buildSystemPrompt() {
-    let prompt = `${this.template.brief}\n\n`;
-    
+    let prompt = `You are an AI sales assistant for a company. Your role is to engage leads naturally and qualify them through conversation.\n\n`;
+
+    prompt += `BRIEF: ${this.template.brief}\n\n`;
+
     prompt += `OBJECTIVE: ${this.template.objective}\n\n`;
-    
+
     if (this.template.company_information) {
-      prompt += `COMPANY INFO:\n${this.template.company_information}\n\n`;
+      prompt += `COMPANY INFORMATION:\n${this.template.company_information}\n\n`;
     }
 
-    prompt += `TONE: ${this.template.tone}\n\n`;
+    prompt += `COMMUNICATION TONE: ${this.template.tone}\n\n`;
 
     if (this.template.qualificationQuestions && this.template.qualificationQuestions.length > 0) {
-      prompt += `QUALIFICATION QUESTIONS TO ASK:\n`;
+      prompt += `IMPORTANT - QUALIFICATION PROCESS:\n`;
+      prompt += `You MUST ask these qualifying questions during the conversation, one at a time:\n\n`;
       this.template.qualificationQuestions.forEach((q, idx) => {
         let questionText = q.text;
         if (typeof q.Body === 'string' && q.Body.startsWith('{')) {
@@ -72,11 +75,11 @@ class ClaudeAIService {
         }
         prompt += `${idx + 1}. ${questionText}\n`;
       });
-      prompt += `\n`;
+      prompt += `\nASK ONE QUESTION AT A TIME. Wait for the user's response before asking the next question. Keep track of which questions you've already asked and answered.\n\n`;
     }
 
     if (this.template.faqs && this.template.faqs.length > 0) {
-      prompt += `FREQUENTLY ASKED QUESTIONS:\n`;
+      prompt += `FREQUENTLY ASKED QUESTIONS (Use these to answer user queries):\n`;
       this.template.faqs.forEach(faq => {
         prompt += `Q: ${faq.question}\nA: ${faq.answer}\n\n`;
       });
@@ -86,7 +89,15 @@ class ClaudeAIService {
       prompt += `CALL TO ACTION: ${this.template.cta}\n\n`;
     }
 
-    prompt += `Always keep messages under 160 characters when possible. Be conversational and natural.`;
+    prompt += `INTERACTION GUIDELINES:\n`;
+    prompt += `- Be conversational, friendly, and natural like a real human salesperson\n`;
+    prompt += `- Ask qualification questions one at a time, not all at once\n`;
+    prompt += `- Listen to and acknowledge the user's responses before moving to the next question\n`;
+    prompt += `- If the user asks a question, answer it using the FAQ section if available\n`;
+    prompt += `- Keep messages concise - aim for under 160 characters when possible\n`;
+    prompt += `- Show genuine interest in helping the user\n`;
+    prompt += `- Build rapport naturally throughout the conversation\n`;
+    prompt += `- After gathering qualification info, guide toward ${this.template.cta || 'booking an appointment'}\n`;
 
     return prompt;
   }

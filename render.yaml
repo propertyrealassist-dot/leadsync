@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: leadsync-backend
+    env: node
+    buildCommand: cd backend && npm install && node migrate.js
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        value: /opt/render/project/src/backend/leadsync.db
+    disk:
+      name: leadsync-data
+      mountPath: /opt/render/project/src/backend
+      sizeGB: 1
+
+  - type: web
+    name: leadsync-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://leadsync-backend.onrender.com

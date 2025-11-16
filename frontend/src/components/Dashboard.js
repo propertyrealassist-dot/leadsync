@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Dashboard.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -23,7 +23,7 @@ function Dashboard() {
   const loadDashboardData = async () => {
     try {
       // Fetch conversations for stats
-      const conversationsRes = await axios.get(`${API_URL}/conversations`);
+      const conversationsRes = await axios.get(`${API_URL}/api/conversations`);
       const conversations = conversationsRes.data;
 
       // Calculate stats
@@ -40,7 +40,7 @@ function Dashboard() {
       });
 
       // Fetch AI agents/strategies
-      const templatesRes = await axios.get(`${API_URL}/templates`);
+      const templatesRes = await axios.get(`${API_URL}/api/templates`);
       setAgents(templatesRes.data);
 
     } catch (error) {

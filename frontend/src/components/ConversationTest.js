@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Icons from './Icons';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function ConversationTest() {
   const [templates, setTemplates] = useState([]);
@@ -19,7 +19,7 @@ function ConversationTest() {
 
   const loadTemplates = async () => {
     try {
-      const res = await axios.get(`${API_URL}/templates`);
+      const res = await axios.get(`${API_URL}/api/templates`);
       setTemplates(res.data);
       if (res.data.length > 0) {
         setSelectedTemplate(res.data[0].id);
@@ -37,7 +37,7 @@ function ConversationTest() {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/conversations/start`, {
+      const res = await axios.post(`${API_URL}/api/conversations/start`, {
         templateId: selectedTemplate,
         contactName: contactName,
         contactPhone: '+1234567890'
@@ -62,7 +62,7 @@ function ConversationTest() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_URL}/conversations/${conversationId}/message`, {
+      const res = await axios.post(`${API_URL}/api/conversations/${conversationId}/message`, {
         message: userMessage
       });
       
@@ -101,7 +101,8 @@ function ConversationTest() {
         </div>
         {conversationId && (
           <button className="btn btn-secondary" onClick={resetConversation}>
-            🔄 Reset Conversation
+            <Icons.RotateCcw size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+            Reset Conversation
           </button>
         )}
       </div>
@@ -109,7 +110,9 @@ function ConversationTest() {
       {!conversationId ? (
         <div className="test-setup-card">
           <div className="setup-content">
-            <div className="setup-icon">🤖</div>
+            <div className="setup-icon">
+              <Icons.CoPilot size={64} color="#8B5CF6" />
+            </div>
             <h2>Choose a Strategy to Test</h2>
             <p>Select an AI agent below and start a test conversation</p>
             
@@ -143,12 +146,22 @@ function ConversationTest() {
                 <p>Create an AI agent first to test conversations</p>
               </div>
             ) : (
-              <button 
-                className="btn btn-mint btn-large" 
+              <button
+                className="btn btn-mint btn-large"
                 onClick={startConversation}
                 disabled={loading}
               >
-                {loading ? '⏳ Starting...' : '🚀 Start Conversation'}
+                {loading ? (
+                  <>
+                    <Icons.Clock size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <Icons.Send size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+                    Start Conversation
+                  </>
+                )}
               </button>
             )}
           </div>
@@ -168,15 +181,21 @@ function ConversationTest() {
               </div>
             </div>
             <div className="conversation-actions">
-              <button className="btn-icon-action" title="View Details">ℹ️</button>
-              <button className="btn-icon-action" title="Full Screen">⛶</button>
+              <button className="btn-icon-action icon-spin" title="View Details">
+                <Icons.Info size={20} color="#8B5CF6" />
+              </button>
+              <button className="btn-icon-action icon-spin" title="Full Screen">
+                <Icons.Maximize size={20} color="#8B5CF6" />
+              </button>
             </div>
           </div>
 
           {/* Messages Area */}
           <div className="messages-container">
             <div className="system-message">
-              <span className="system-icon">⚡</span>
+              <span className="system-icon">
+                <Icons.Zap size={16} color="#10b981" />
+              </span>
               <span>Conversation started at {getTimeOnly(messages[0]?.timestamp)}</span>
             </div>
 
@@ -185,7 +204,7 @@ function ConversationTest() {
                 {msg.sender === 'bot' ? (
                   <div className="message-group bot-message">
                     <div className="message-avatar bot">
-                      <span>🤖</span>
+                      <Icons.CoPilot size={20} color="#fff" />
                     </div>
                     <div className="message-content-wrapper">
                       <div className="message-bubble bot">
@@ -214,7 +233,7 @@ function ConversationTest() {
               <div className="message-wrapper bot">
                 <div className="message-group bot-message">
                   <div className="message-avatar bot">
-                    <span>🤖</span>
+                    <Icons.CoPilot size={20} color="#fff" />
                   </div>
                   <div className="message-content-wrapper">
                     <div className="message-bubble bot typing">

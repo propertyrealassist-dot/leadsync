@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './Conversations.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function Conversations() {
   const [searchParams] = useSearchParams();
@@ -37,7 +37,7 @@ function Conversations() {
 
   const loadConversations = async () => {
     try {
-      const response = await axios.get(`${API_URL}/conversations`);
+      const response = await axios.get(`${API_URL}/api/conversations`);
       const convos = response.data;
       setConversations(convos);
 

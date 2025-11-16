@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 const { v4: uuidv4 } = require('uuid');
+const { authenticateToken } = require('../middleware/auth');
 
 // Get all templates
-router.get('/', (req, res) => {
+router.get('/', authenticateToken, (req, res) => {
   try {
-    const templates = db.prepare('SELECT * FROM templates ORDER BY created_at DESC').all();
+    console.log('📋 Loading templates for user:', req.user.id);
+
+    const templates = db.prepare('SELECT * FROM templates WHERE user_id = ? ORDER BY created_at DESC').all(req.user.id);
+
+    console.log('✅ Found', templates.length, 'templates');
     res.json(templates);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -14,9 +19,9 @@ router.get('/', (req, res) => {
 });
 
 // Get single template with all related data
-router.get('/:id', (req, res) => {
+router.get('/:id', authenticateToken, (req, res) => {
   try {
-    const template = db.prepare('SELECT * FROM templates WHERE id = ?').get(req.params.id);
+    const template = db.prepare('SELECT * FROM templates WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
 
     if (!template) {
       return res.status(404).json({ error: 'Template not found' });
@@ -82,10 +87,10 @@ router.get('/:id', (req, res) => {
 });
 
 // Create new template
-router.post('/', (req, res) => {
+router.post('/', authenticateToken, (req, res) => {
   console.log('🔥 POST /api/templates HIT');
+  console.log('📝 Creating template for user:', req.user.id);
   console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
-  console.log('🔑 Auth header:', req.headers.authorization);
 
   try {
     // Validate required fields
@@ -122,14 +127,14 @@ router.post('/', (req, res) => {
     const insertTemplate = db.transaction(() => {
       const stmt = db.prepare(`
         INSERT INTO templates (
-          id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
+          id, user_id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
           tone, initial_message, objective, company_information,
           message_delay_initial, message_delay_standard, cta
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
-      id, name, mappedTag, botTemperature || 0.4, mappedBrief, resiliancy || 3, bookingReadiness || 2,
+      id, req.user.id, name, mappedTag, botTemperature || 0.4, mappedBrief, resiliancy || 3, bookingReadiness || 2,
       tone || 'Friendly and Casual', mappedInitialMessage, mappedObjective, mappedCompanyInfo,
       messageDelayInitial || 30, mappedMessageDelayStandard, mappedCta
     );
@@ -279,8 +284,9 @@ router.post('/', (req, res) => {
 });
 
 // Update template
-router.put('/:id', (req, res) => {
+router.put('/:id', authenticateToken, (req, res) => {
   console.log('🔄 PUT /api/templates/:id HIT');
+  console.log('♻️ Updating template for user:', req.user.id);
   console.log('📦 Request body keys:', Object.keys(req.body));
   console.log('📊 FAQs in body:', req.body.faqs?.length || 0);
   console.log('📊 Questions in body:', req.body.qualificationQuestions?.length || 0);
@@ -296,13 +302,13 @@ router.put('/:id', (req, res) => {
     } = req.body;
 
     const updateTemplate = db.transaction(() => {
-      // Update main template fields
+      // Update main template fields (only if owned by user)
       db.prepare(`
         UPDATE templates
         SET name = ?, brief = ?, tone = ?, initial_message = ?, objective = ?, tag = ?,
             bot_temperature = ?, company_information = ?, cta = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `).run(name, brief, tone, initialMessage, objective, tag, botTemperature, companyInformation, cta, req.params.id);
+        WHERE id = ? AND user_id = ?
+      `).run(name, brief, tone, initialMessage, objective, tag, botTemperature, companyInformation, cta, req.params.id, req.user.id);
       console.log('  ✅ Template fields updated');
 
       // Update nested data if provided
@@ -370,10 +376,160 @@ router.put('/:id', (req, res) => {
   }
 });
 
+// Duplicate a strategy
+router.post('/:id/duplicate', authenticateToken, (req, res) => {
+  console.log('📋 POST /api/templates/:id/duplicate HIT');
+  console.log('📝 Template ID:', req.params.id);
+  console.log('📝 User ID:', req.user.id);
+  console.log('📦 Custom name:', req.body.customName);
+
+  try {
+    const { customName } = req.body;
+    const originalId = req.params.id;
+
+    // Get the original strategy with all its data
+    const original = db.prepare('SELECT * FROM templates WHERE id = ?').get(originalId);
+
+    if (!original) {
+      console.log('❌ Original template not found');
+      return res.status(404).json({ error: 'Strategy not found' });
+    }
+
+    const newId = uuidv4();
+    const now = new Date().toISOString();
+    const newName = customName || `${original.name} (Copy)`;
+
+    console.log('✨ Creating duplicate with ID:', newId);
+    console.log('📝 New name:', newName);
+
+    const duplicateTemplate = db.transaction(() => {
+      // Create duplicate template
+      db.prepare(`
+        INSERT INTO templates (
+          id, user_id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
+          tone, initial_message, objective, company_information,
+          message_delay_initial, message_delay_standard, cta, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        newId,
+        req.user.id,
+        newName,
+        `${original.tag}-copy`,
+        original.bot_temperature,
+        original.brief,
+        original.resiliancy,
+        original.booking_readiness,
+        original.tone,
+        original.initial_message,
+        original.objective,
+        original.company_information,
+        original.message_delay_initial,
+        original.message_delay_standard,
+        original.cta,
+        now,
+        now
+      );
+      console.log('  ✅ Template record duplicated');
+
+      // Duplicate FAQs
+      const faqs = db.prepare('SELECT * FROM faqs WHERE template_id = ?').all(originalId);
+      if (faqs.length > 0) {
+        console.log('  Duplicating', faqs.length, 'FAQs...');
+        const faqStmt = db.prepare('INSERT INTO faqs (template_id, question, answer, delay) VALUES (?, ?, ?, ?)');
+        faqs.forEach(faq => {
+          faqStmt.run(newId, faq.question, faq.answer, faq.delay);
+        });
+        console.log('  ✅ FAQs duplicated');
+      }
+
+      // Duplicate qualification questions
+      const questions = db.prepare('SELECT * FROM qualification_questions WHERE template_id = ?').all(originalId);
+      if (questions.length > 0) {
+        console.log('  Duplicating', questions.length, 'questions...');
+        const qStmt = db.prepare('INSERT INTO qualification_questions (template_id, text, conditions, delay) VALUES (?, ?, ?, ?)');
+        questions.forEach(q => {
+          qStmt.run(newId, q.text, q.conditions, q.delay);
+        });
+        console.log('  ✅ Questions duplicated');
+      }
+
+      // Duplicate follow-ups
+      const followUps = db.prepare('SELECT * FROM follow_ups WHERE template_id = ?').all(originalId);
+      if (followUps.length > 0) {
+        console.log('  Duplicating', followUps.length, 'follow-ups...');
+        const fStmt = db.prepare('INSERT INTO follow_ups (template_id, body, delay) VALUES (?, ?, ?)');
+        followUps.forEach(f => {
+          fStmt.run(newId, f.body, f.delay);
+        });
+        console.log('  ✅ Follow-ups duplicated');
+      }
+
+      // Duplicate custom actions
+      const customActions = db.prepare('SELECT * FROM custom_actions WHERE template_id = ?').all(originalId);
+      if (customActions.length > 0) {
+        console.log('  Duplicating', customActions.length, 'custom actions...');
+        customActions.forEach(action => {
+          const actionStmt = db.prepare(`
+            INSERT INTO custom_actions (template_id, action, rule_condition, description)
+            VALUES (?, ?, ?, ?)
+          `);
+          const result = actionStmt.run(newId, action.action, action.rule_condition, action.description);
+          const newActionId = result.lastInsertRowid;
+          const oldActionId = action.id;
+
+          // Duplicate action chains
+          const chains = db.prepare('SELECT * FROM action_chains WHERE custom_action_id = ?').all(oldActionId);
+          chains.forEach(chain => {
+            const chainStmt = db.prepare(`
+              INSERT INTO action_chains (custom_action_id, chain_name, chain_order)
+              VALUES (?, ?, ?)
+            `);
+            const chainResult = chainStmt.run(newActionId, chain.chain_name, chain.chain_order);
+            const newChainId = chainResult.lastInsertRowid;
+            const oldChainId = chain.id;
+
+            // Duplicate chain steps
+            const steps = db.prepare('SELECT * FROM chain_steps WHERE chain_id = ?').all(oldChainId);
+            steps.forEach(step => {
+              db.prepare(`
+                INSERT INTO chain_steps (chain_id, step_order, function, parameters)
+                VALUES (?, ?, ?, ?)
+              `).run(newChainId, step.step_order, step.function, step.parameters);
+            });
+          });
+        });
+        console.log('  ✅ Custom actions duplicated');
+      }
+    });
+
+    // Execute the transaction
+    duplicateTemplate();
+
+    // Get the complete duplicate with all nested data
+    const duplicate = db.prepare('SELECT * FROM templates WHERE id = ?').get(newId);
+
+    console.log('✅ Strategy duplicated successfully');
+    res.status(201).json({
+      message: 'Strategy duplicated successfully',
+      strategy: duplicate
+    });
+
+  } catch (error) {
+    console.error('❌ Duplicate strategy error:', error);
+    console.error('❌ Stack trace:', error.stack);
+    res.status(500).json({ error: 'Failed to duplicate strategy' });
+  }
+});
+
 // Delete template with proper cascade
-router.delete('/:id', (req, res) => {
+router.delete('/:id', authenticateToken, (req, res) => {
+  console.log('🗑️ DELETE /api/templates/:id HIT');
+  console.log('🗑️ Deleting template for user:', req.user.id);
+  console.log('📝 Template ID:', req.params.id);
+  console.log('📝 ID type:', typeof req.params.id);
+
   const deleteTemplate = db.transaction((templateId) => {
-    console.log('Deleting template:', templateId);
+    console.log('  🔄 Transaction started - Deleting template:', templateId);
     
     // Temporarily disable foreign keys
     db.pragma('foreign_keys = OFF');
@@ -409,11 +565,12 @@ router.delete('/:id', (req, res) => {
       db.prepare('DELETE FROM qualification_questions WHERE template_id = ?').run(templateId);
       db.prepare('DELETE FROM follow_ups WHERE template_id = ?').run(templateId);
       
-      // Delete the template
-      const result = db.prepare('DELETE FROM templates WHERE id = ?').run(templateId);
-      
-      console.log('Delete result:', result);
-      
+      // Delete the template (only if owned by user)
+      const result = db.prepare('DELETE FROM templates WHERE id = ? AND user_id = ?').run(templateId, req.user.id);
+
+      console.log('  ✅ Delete result:', result);
+      console.log('  📊 Rows affected:', result.changes);
+
       return result;
     } finally {
       // Re-enable foreign keys
@@ -423,14 +580,17 @@ router.delete('/:id', (req, res) => {
   
   try {
     const result = deleteTemplate(req.params.id);
-    
+
     if (result.changes === 0) {
+      console.log('⚠️ Template not found or already deleted');
       return res.status(404).json({ error: 'Template not found' });
     }
-    
+
+    console.log('✅ Template deleted successfully');
     res.json({ message: 'Template deleted successfully' });
   } catch (error) {
-    console.error('Delete error:', error);
+    console.error('❌ Delete error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({ error: error.message });
   }
 });

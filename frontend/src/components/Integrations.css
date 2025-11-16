@@ -414,3 +414,202 @@
     font-size: 1.125rem;
   }
 }
+
+/* ============================================
+   ANIMATIONS - Added for enhanced UX
+   ============================================ */
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.integrations-container {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.page-header {
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Integration Cards Animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.integration-card {
+  animation: scaleIn 0.5s ease-out;
+  animation-fill-mode: backwards;
+}
+
+.integration-card:nth-child(1) { animation-delay: 0.1s; }
+.integration-card:nth-child(2) { animation-delay: 0.2s; }
+.integration-card:nth-child(3) { animation-delay: 0.3s; }
+.integration-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Icon Float Animation */
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(5deg);
+  }
+}
+
+.integration-card:hover svg {
+  animation: iconFloat 2s ease-in-out infinite;
+}
+
+/* Icon Spin on Hover */
+@keyframes iconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn-toggle-visibility svg {
+  transition: transform 0.3s ease;
+}
+
+.btn-toggle-visibility:hover svg {
+  animation: iconSpin 0.6s ease-in-out;
+}
+
+/* Pulse Animation for Connection Status */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+  }
+}
+
+.status-dot.connected {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Shimmer Loading Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading {
+  background: linear-gradient(
+    90deg,
+    rgba(26, 32, 44, 0.7) 0%,
+    rgba(139, 92, 246, 0.2) 50%,
+    rgba(26, 32, 44, 0.7) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2xl);
+}
+
+/* Button Glow Effect */
+@keyframes buttonGlow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(117, 92, 183, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(117, 92, 183, 0.7);
+  }
+}
+
+.btn-primary:hover:not(:disabled) {
+  animation: buttonGlow 1.5s ease-in-out infinite;
+}
+
+/* Gradient Background Animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.card-icon-wrapper {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+/* Slide In Animation */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.credential-field {
+  animation: slideInRight 0.5s ease-out;
+  animation-fill-mode: backwards;
+}
+
+.credential-field:nth-child(1) { animation-delay: 0.1s; }
+.credential-field:nth-child(2) { animation-delay: 0.15s; }
+.credential-field:nth-child(3) { animation-delay: 0.2s; }
+
+/* Enhanced Card Hover Effect */
+.integration-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.integration-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(117, 92, 183, 0.4);
+}
+
+/* Success Animation for Connection Info */
+@keyframes successPulse {
+  0%, 100% {
+    background: rgba(52, 211, 153, 0.1);
+  }
+  50% {
+    background: rgba(52, 211, 153, 0.2);
+  }
+}
+
+.connection-info {
+  animation: successPulse 2s ease-in-out infinite;
+}
+
+/* Input Focus Animation */
+.credential-input:focus {
+  animation: scaleIn 0.3s ease-out;
+}

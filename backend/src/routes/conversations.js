@@ -38,16 +38,20 @@ router.get('/:id', (req, res) => {
 router.post('/start', (req, res) => {
   try {
     const { templateId, contactName, contactPhone } = req.body;
-    
+
     if (!templateId) {
       return res.status(400).json({ error: 'Template ID required' });
     }
 
     const conversationId = engine.startConversation(templateId, contactName, contactPhone);
     const messages = engine.getMessages(conversationId);
-    
+
+    // Get the first AI message (welcome message)
+    const welcomeMessage = messages && messages.length > 0 ? messages[messages.length - 1].content : 'Hello! How can I help you today?';
+
     res.status(201).json({
       conversationId,
+      message: welcomeMessage,
       messages
     });
   } catch (error) {
@@ -59,15 +63,16 @@ router.post('/start', (req, res) => {
 router.post('/:id/message', async (req, res) => {
   try {
     const { message } = req.body;
-    
+
     if (!message) {
       return res.status(400).json({ error: 'Message required' });
     }
 
     const response = await engine.processMessage(req.params.id, message);
     const messages = engine.getMessages(req.params.id);
-    
+
     res.json({
+      aiResponse: response,
       response,
       messages
     });

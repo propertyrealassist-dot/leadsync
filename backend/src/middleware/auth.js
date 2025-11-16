@@ -25,9 +25,23 @@ const authenticateToken = (req, res, next) => {
     // Verify token
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
+        console.error('JWT verification failed:', err.message);
         return res.status(403).json({
           success: false,
           error: 'Invalid or expired token.'
+        });
+      }
+
+      console.log('JWT decoded:', decoded);
+
+      // Handle both userId and id for backward compatibility
+      const userId = decoded.userId || decoded.id;
+
+      if (!userId) {
+        console.error('No userId found in token:', decoded);
+        return res.status(403).json({
+          success: false,
+          error: 'Invalid token format.'
         });
       }
 
@@ -36,18 +50,22 @@ const authenticateToken = (req, res, next) => {
         SELECT id, email, first_name, last_name, company_name,
                client_id, api_key, account_status, plan_type
         FROM users
-        WHERE id = ? AND account_status = 'active'
-      `).get(decoded.userId);
+        WHERE id = ?
+      `).get(userId);
 
       if (!user) {
+        console.error('User not found for id:', userId);
         return res.status(404).json({
           success: false,
           error: 'User not found or account is inactive.'
         });
       }
 
+      console.log('Auth successful for user:', user.email);
+
       // Attach user to request object
       req.user = user;
+      req.user.id = user.id; // Ensure id is always available
       next();
     });
   } catch (error) {

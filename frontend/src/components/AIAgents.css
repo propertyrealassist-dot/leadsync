@@ -100,11 +100,14 @@
 
 /* Search Bar */
 .agents-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-bottom: var(--spacing-lg);
 }
 
 .agents-search-input {
-  width: 100%;
+  flex: 1;
   max-width: 500px;
   padding: 0.75rem 1rem;
   background: var(--card-bg);
@@ -119,6 +122,30 @@
   outline: none;
   border-color: var(--lead-purple);
   box-shadow: 0 0 0 3px rgba(117, 92, 183, 0.1);
+}
+
+.agents-search-button {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  flex-shrink: 0;
+}
+
+.agents-search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+}
+
+.agents-search-button:active {
+  transform: translateY(0);
 }
 
 /* Agents Table */
@@ -620,4 +647,231 @@
     font-size: 0.8125rem;
     padding: 0.625rem 1rem;
   }
+}
+
+/* ============================================
+   ANIMATIONS - Added for enhanced UX
+   ============================================ */
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-agents-container {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Icon Spin on Hover */
+@keyframes iconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.action-btn svg,
+.btn-create-agent svg,
+.btn-import-agent svg {
+  transition: transform 0.3s ease;
+}
+
+.action-btn:hover svg {
+  animation: iconSpin 0.6s ease-in-out;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.status-dot.active {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Shimmer Loading Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading {
+  background: linear-gradient(
+    90deg,
+    rgba(26, 32, 44, 0.7) 0%,
+    rgba(139, 92, 246, 0.2) 50%,
+    rgba(26, 32, 44, 0.7) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2xl);
+}
+
+/* Slide In Right Animation */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.agents-table tbody tr {
+  animation: slideInRight 0.4s ease-out;
+  animation-fill-mode: backwards;
+}
+
+.agents-table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.agents-table tbody tr:nth-child(2) { animation-delay: 0.15s; }
+.agents-table tbody tr:nth-child(3) { animation-delay: 0.2s; }
+.agents-table tbody tr:nth-child(4) { animation-delay: 0.25s; }
+.agents-table tbody tr:nth-child(5) { animation-delay: 0.3s; }
+
+/* Enhanced Card/Row Hover */
+.agents-table tbody tr:hover {
+  transform: translateX(4px);
+  box-shadow: -4px 0 0 var(--lead-purple);
+}
+
+/* Button Glow Effect */
+@keyframes buttonGlow {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(117, 92, 183, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(117, 92, 183, 0.6);
+  }
+}
+
+.btn-create-agent:hover:not(:disabled),
+.btn-import-agent:hover:not(:disabled) {
+  animation: buttonGlow 1.5s ease-in-out infinite;
+}
+
+/* Icon Float Animation */
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.empty-state-icon svg {
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+/* Gradient Border Animation */
+@keyframes gradientBorder {
+  0% {
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    border-color: rgba(236, 72, 153, 0.6);
+  }
+  100% {
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+}
+
+.agents-table-wrapper {
+  animation: gradientBorder 3s ease-in-out infinite;
+}
+
+/* Strategy Actions Dropdown */
+.strategy-actions-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1a0a2e;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  min-width: 180px;
+  z-index: 1000;
+  overflow: hidden;
+  animation: dropdownSlide 0.2s ease;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.dropdown-item svg {
+  color: #8B5CF6;
+  flex-shrink: 0;
+}
+
+.dropdown-item.danger {
+  color: #ef4444;
+}
+
+.dropdown-item.danger svg {
+  color: #ef4444;
+}
+
+.dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(139, 92, 246, 0.2);
+  margin: 4px 0;
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 import Modal from './Modal';
 import Icons from './Icons';
 import './AIAgents.css';
@@ -19,6 +20,7 @@ function AIAgents() {
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null });
   const fileInputRef = React.useRef(null);
   const menuButtonRef = React.useRef(null);
@@ -27,6 +29,18 @@ function AIAgents() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdown && !event.target.closest('.strategy-actions-dropdown')) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
 
   // CRITICAL: Expose loadData to window so StrategyEditor can refresh the list
   useEffect(() => {
@@ -41,9 +55,15 @@ function AIAgents() {
   const loadData = async () => {
     try {
       console.log('🔄 Loading agents and conversations...');
+      const token = localStorage.getItem('token');
+
       const [agentsRes, conversationsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/templates`),
-        axios.get(`${API_URL}/api/conversations`)
+        axios.get(`${API_URL}/api/templates`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API_URL}/api/conversations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
 
       setAgents(agentsRes.data);
@@ -51,6 +71,7 @@ function AIAgents() {
       console.log('✅ Loaded', agentsRes.data.length, 'agents');
     } catch (error) {
       console.error('Error loading data:', error);
+      toast.error('Failed to load strategies');
     } finally {
       setLoading(false);
     }
@@ -93,92 +114,212 @@ function AIAgents() {
   };
 
   const handleDuplicateAgent = async (agent) => {
+    const newName = prompt('Enter name for duplicated strategy:', `${agent.name} (Copy)`);
+
+    if (!newName) return;
+
     try {
-      // Fetch full agent data with ALL nested resources (FAQs, questions, follow-ups, custom actions)
-      const response = await axios.get(`${API_URL}/api/templates/${agent.id}`);
-      const fullAgentData = response.data;
+      const token = localStorage.getItem('token');
 
-      console.log('📋 DUPLICATE - Full agent data:', fullAgentData);
+      if (!token) {
+        alert('Not authenticated. Please log in again.');
+        return;
+      }
 
-      // Create duplicated agent with ALL data from all 5 steps
-      const duplicatedAgent = {
-        // Remove ID so backend generates a new one
-        id: undefined,
+      console.log('📋 Duplicating agent:', agent.id);
 
-        // Step 1: Basic Info
-        name: `${fullAgentData.name} (Copy)`,
-        tag: `${fullAgentData.tag}-copy`,
-        tone: fullAgentData.tone,
-        brief: fullAgentData.brief,
-        objective: fullAgentData.objective,
-        companyInformation: fullAgentData.company_information || fullAgentData.companyInformation,
-        initialMessage: fullAgentData.initial_message || fullAgentData.initialMessage,
+      const response = await axios.post(
+        `${API_URL}/api/templates/${agent.id}/duplicate`,
+        { newName },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
 
-        // Step 2: FAQs - Transform to expected format
-        faqs: Array.isArray(fullAgentData.faqs) ? fullAgentData.faqs.map(faq => ({
-          question: faq.question,
-          answer: faq.answer,
-          delay: faq.delay || 1
-        })) : [],
+      console.log('✅ Agent duplicated:', response.data);
+      alert('Strategy duplicated successfully!');
 
-        // Step 3: Qualification Questions - Transform to expected format
-        qualificationQuestions: Array.isArray(fullAgentData.qualificationQuestions) ? fullAgentData.qualificationQuestions.map(q => ({
-          text: q.text,
-          conditions: q.conditions || [],
-          delay: q.delay || 1
-        })) : [],
+      // Reload agents
+      loadData();
 
-        // Step 4: Follow-ups - Transform to expected format
-        followUps: Array.isArray(fullAgentData.followUps) ? fullAgentData.followUps.map(f => ({
-          Body: f.text || f.body,
-          Delay: f.delay || 180
-        })) : [],
+    } catch (error) {
+      console.error('❌ Duplication failed:', error);
+      alert('Failed to duplicate strategy: ' + (error.response?.data?.error || error.message));
+    }
+  };
 
-        // Step 5: Custom Actions
-        customActions: fullAgentData.customActions || fullAgentData.custom_actions || [],
+  const handleDuplicateAgentOld = async (agent) => {
+    setShowMenu(null);
 
-        // Settings
-        botTemperature: fullAgentData.bot_temperature || fullAgentData.botTemperature,
-        resiliancy: fullAgentData.resiliancy,
-        bookingReadiness: fullAgentData.booking_readiness || fullAgentData.bookingReadiness,
-        messageDelayInitial: fullAgentData.message_delay_initial || fullAgentData.messageDelayInitial,
-        messageDelayStandard: fullAgentData.message_delay_standard || fullAgentData.messageDelayStandard,
-        cta: fullAgentData.cta
+    // Create a custom modal with input for the new name
+    const DuplicateModal = () => {
+      const [newName, setNewName] = React.useState(`${agent.name} (Copy)`);
+      const [duplicating, setDuplicating] = React.useState(false);
+
+      const performDuplicate = async () => {
+        if (!newName.trim()) {
+          toast.error('Please enter a name for the duplicate strategy');
+          return;
+        }
+
+        setDuplicating(true);
+        try {
+          console.log('📋 Duplicating strategy:', agent.id);
+          console.log('📋 New name:', newName);
+
+          // Call the new duplicate endpoint
+          const response = await axios.post(
+            `${API_URL}/api/templates/${agent.id}/duplicate`,
+            { customName: newName.trim() },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          console.log('✅ Duplicate successful:', response.data);
+
+          toast.success(`Strategy "${newName}" duplicated successfully!`);
+          setModal({ ...modal, isOpen: false });
+
+          // Reload the strategies list
+          loadData();
+        } catch (error) {
+          console.error('❌ Error duplicating strategy:', error);
+          console.error('❌ Error response:', error.response?.data);
+
+          toast.error('Failed to duplicate strategy: ' + (error.response?.data?.error || error.message));
+        } finally {
+          setDuplicating(false);
+        }
       };
 
-      console.log('📋 DUPLICATE - Sending to API:', duplicatedAgent);
-      console.log('📋 DUPLICATE - FAQs:', duplicatedAgent.faqs.length);
-      console.log('📋 DUPLICATE - Questions:', duplicatedAgent.qualificationQuestions.length);
-      console.log('📋 DUPLICATE - Follow-ups:', duplicatedAgent.followUps.length);
+      return (
+        <div className="modal-body">
+          <p style={{ marginBottom: '24px', color: 'rgba(255,255,255,0.7)' }}>
+            Create a copy of: <strong>{agent.name}</strong>
+          </p>
 
-      await axios.post(`${API_URL}/api/templates`, duplicatedAgent);
+          <div className="form-group">
+            <label>New Strategy Name</label>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Enter name for duplicate"
+              className="form-input"
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '8px',
+                color: '#fff',
+                fontSize: '14px'
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !duplicating) {
+                  performDuplicate();
+                }
+              }}
+              autoFocus
+            />
+          </div>
 
-      setModal({
-        isOpen: true,
-        title: '✅ Success',
-        message: `Agent "${duplicatedAgent.name}" duplicated successfully!`,
-        onConfirm: () => setModal({ ...modal, isOpen: false }),
-        confirmText: 'OK'
-      });
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+            <button
+              onClick={() => setModal({ ...modal, isOpen: false })}
+              disabled={duplicating}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: 'transparent',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                color: '#fff',
+                cursor: duplicating ? 'not-allowed' : 'pointer',
+                opacity: duplicating ? 0.5 : 1
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={performDuplicate}
+              disabled={duplicating || !newName.trim()}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: duplicating || !newName.trim() ? 'rgba(99, 102, 241, 0.5)' : '#6366f1',
+                border: 'none',
+                borderRadius: '8px',
+                color: '#fff',
+                cursor: duplicating || !newName.trim() ? 'not-allowed' : 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              {duplicating ? 'Duplicating...' : 'Duplicate'}
+            </button>
+          </div>
+        </div>
+      );
+    };
 
-      loadData();
-    } catch (error) {
-      console.error('❌ Error duplicating agent:', error);
-      console.error('❌ Error response:', error.response?.data);
-
-      setModal({
-        isOpen: true,
-        title: '❌ Error',
-        message: 'Failed to duplicate agent: ' + (error.response?.data?.error || error.message),
-        onConfirm: () => setModal({ ...modal, isOpen: false }),
-        confirmText: 'OK'
-      });
-    }
-    setShowMenu(null);
+    setModal({
+      isOpen: true,
+      title: '📋 Duplicate Strategy',
+      customContent: <DuplicateModal />,
+      onConfirm: null, // Handled by the custom modal
+      onCancel: () => setModal({ ...modal, isOpen: false })
+    });
   };
 
   const handleDeleteAgent = async (agent) => {
+    console.log('🗑️ Delete function called');
+    console.log('📝 Agent:', agent);
+    console.log('📝 Agent ID:', agent.id);
+
+    if (!window.confirm(`Are you sure you want to delete "${agent.name}"?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        alert('Not authenticated. Please log in again.');
+        return;
+      }
+
+      console.log('🗑️ Deleting agent:', agent.id);
+
+      await axios.delete(`${API_URL}/api/templates/${agent.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log('✅ Agent deleted successfully');
+      alert('Strategy deleted successfully!');
+
+      // Reload agents
+      loadData();
+
+    } catch (error) {
+      console.error('❌ Delete failed:', error);
+      alert('Failed to delete strategy: ' + (error.response?.data?.error || error.message));
+    }
+  };
+
+  const handleDeleteAgentOld = async (agent) => {
+    console.log('🗑️ Delete function called');
+    console.log('📝 Agent:', agent);
+    console.log('📝 Agent ID:', agent?.id);
+    console.log('📝 Agent ID type:', typeof agent?.id);
+
     setShowMenu(null);
+
+    if (!agent || !agent.id) {
+      console.error('❌ No agent or agent ID provided!');
+      setModal({
+        isOpen: true,
+        title: '❌ Error',
+        message: 'Error: No agent ID',
+        onConfirm: () => setModal({ ...modal, isOpen: false }),
+        confirmText: 'OK'
+      });
+      return;
+    }
 
     setModal({
       isOpen: true,
@@ -186,19 +327,28 @@ function AIAgents() {
       message: `Are you sure you want to delete "${agent.name}"? This action cannot be undone.`,
       onConfirm: async () => {
         try {
-          await axios.delete(`${API_URL}/api/templates/${agent.id}`);
+          console.log('🔑 Token exists:', !!token);
+          const url = `${API_URL}/api/templates/${agent.id}`;
+          console.log('🌐 DELETE URL:', url);
 
-          setModal({
-            isOpen: true,
-            title: '✅ Success',
-            message: 'Strategy deleted successfully!',
-            onConfirm: () => setModal({ ...modal, isOpen: false }),
-            confirmText: 'OK'
+          const response = await axios.delete(url, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
           });
+
+          console.log('✅ Delete successful:', response.data);
+
+          toast.success('Strategy deleted successfully!');
+          setModal({ ...modal, isOpen: false });
 
           loadData();
         } catch (error) {
-          console.error('Error deleting agent:', error);
+          console.error('❌ Delete failed:', error);
+          console.error('❌ Error message:', error.message);
+          console.error('❌ Error response:', error.response?.data);
+          console.error('❌ Error status:', error.response?.status);
 
           setModal({
             isOpen: true,
@@ -299,16 +449,11 @@ function AIAgents() {
               });
 
               const warningText = warnings && warnings.length > 0
-                ? `\n\n⚠️ ${warnings.length} field(s) could not be parsed. Check console for details.`
+                ? ` (${warnings.length} field(s) could not be parsed)`
                 : '';
 
-              setModal({
-                isOpen: true,
-                title: '✅ Success',
-                message: `Strategy "${transformedData.name}" imported successfully!${warningText}`,
-                onConfirm: () => setModal({ ...modal, isOpen: false }),
-                confirmText: 'OK'
-              });
+              toast.success(`Strategy "${transformedData.name}" imported successfully!${warningText}`);
+              setModal({ ...modal, isOpen: false });
 
               loadData();
             } catch (error) {
@@ -317,13 +462,7 @@ function AIAgents() {
                 ? `Endpoint not found. Server returned 404 for ${API_URL}/api/templates`
                 : error.response?.data?.error || error.message || 'Unknown error';
 
-              setModal({
-                isOpen: true,
-                title: '❌ Error',
-                message: `Failed to import strategy: ${errorMsg}`,
-                onConfirm: () => setModal({ ...modal, isOpen: false }),
-                confirmText: 'OK'
-              });
+              toast.error(`Failed to import strategy: ${errorMsg}`);
             } finally {
               setImporting(false);
             }
@@ -357,16 +496,10 @@ function AIAgents() {
       console.log('✅ Import API response:', response.data);
 
       const warningText = warnings && warnings.length > 0
-        ? `\n\n⚠️ ${warnings.length} field(s) could not be parsed. Check console for details.`
+        ? ` (${warnings.length} field(s) could not be parsed)`
         : '';
 
-      setModal({
-        isOpen: true,
-        title: '✅ Success',
-        message: `Strategy "${transformedData.name}" imported successfully!${warningText}`,
-        onConfirm: () => setModal({ ...modal, isOpen: false }),
-        confirmText: 'OK'
-      });
+      toast.success(`Strategy "${transformedData.name}" imported successfully!${warningText}`);
 
       loadData();
     } catch (error) {
@@ -381,13 +514,7 @@ function AIAgents() {
         ? `Endpoint not found. Server returned 404 for ${API_URL}/api/templates`
         : error.response?.data?.error || error.message || 'Unknown error';
 
-      setModal({
-        isOpen: true,
-        title: '❌ Error',
-        message: `Failed to import strategy: ${errorMsg}`,
-        onConfirm: () => setModal({ ...modal, isOpen: false }),
-        confirmText: 'OK'
-      });
+      toast.error(`Failed to import strategy: ${errorMsg}`);
     } finally {
       setImporting(false);
       // Reset file input
@@ -600,23 +727,11 @@ function AIAgents() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setModal({
-        isOpen: true,
-        title: '✅ Success',
-        message: `Strategy exported successfully as "${filename}"`,
-        onConfirm: () => setModal({ ...modal, isOpen: false }),
-        confirmText: 'OK'
-      });
+      toast.success(`Strategy exported as "${filename}"`);
     } catch (error) {
       console.error('Error exporting strategy:', error);
 
-      setModal({
-        isOpen: true,
-        title: '❌ Error',
-        message: 'Failed to export strategy: ' + (error.response?.data?.error || error.message),
-        onConfirm: () => setModal({ ...modal, isOpen: false }),
-        confirmText: 'OK'
-      });
+      toast.error('Failed to export strategy: ' + (error.response?.data?.error || error.message));
     } finally {
       setExporting(false);
       setShowMenu(null);
@@ -648,25 +763,13 @@ function AIAgents() {
         }
       }
 
-      setModal({
-        isOpen: true,
-        title: '✅ Success',
-        message: `Exported ${selectedAgents.length} strategies successfully!`,
-        onConfirm: () => setModal({ ...modal, isOpen: false }),
-        confirmText: 'OK'
-      });
+      toast.success(`Exported ${selectedAgents.length} strategies successfully!`);
 
       setSelectedAgents([]);
     } catch (error) {
       console.error('Error bulk exporting strategies:', error);
 
-      setModal({
-        isOpen: true,
-        title: '❌ Error',
-        message: 'Failed to export some strategies: ' + (error.message || 'Unknown error'),
-        onConfirm: () => setModal({ ...modal, isOpen: false }),
-        confirmText: 'OK'
-      });
+      toast.error('Failed to export some strategies: ' + (error.message || 'Unknown error'));
     } finally {
       setExporting(false);
     }
@@ -705,10 +808,21 @@ function AIAgents() {
             onClick={handleImportClick}
             disabled={importing}
           >
-            {importing ? '⏳ Importing...' : '📥 Import Strategy'}
+            {importing ? (
+              <>
+                <Icons.Clock size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+                Importing...
+              </>
+            ) : (
+              <>
+                <Icons.Download size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+                Import Strategy
+              </>
+            )}
           </button>
           <button className="btn-create-agent" onClick={handleCreateNew}>
-            ✨ Create New Agent
+            <Icons.Plus size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+            Create New Agent
           </button>
         </div>
       </div>
@@ -720,17 +834,28 @@ function AIAgents() {
           placeholder="Search agents by name or tag..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && setSearchTerm(e.target.value)}
           className="agents-search-input"
         />
+        <button
+          className="agents-search-button"
+          onClick={() => setSearchTerm(searchTerm)}
+          title="Search"
+        >
+          <Icons.Search size={20} color="#fff" />
+        </button>
       </div>
 
       {/* Agents Table */}
       {filteredAgents.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-state-icon">🤖</div>
+          <div className="empty-state-icon">
+            <Icons.Target size={80} color="#8B5CF6" />
+          </div>
           <h3>No AI Agents Yet</h3>
           <p>Create your first AI agent to start automating conversations</p>
           <button className="btn-primary" onClick={handleCreateNew}>
+            <Icons.Plus size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
             Create Your First Agent
           </button>
         </div>
@@ -782,23 +907,22 @@ function AIAgents() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span className="tag-badge">{agent.tag}</span>
                         <button
-                          className="copy-tag-btn"
+                          className="copy-tag-btn icon-spin"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigator.clipboard.writeText(agent.tag);
+                            toast.success(`Tag "${agent.tag}" copied to clipboard!`);
                             // Show temporary feedback
                             const btn = e.currentTarget;
-                            const originalText = btn.textContent;
-                            btn.textContent = '✓';
-                            btn.style.color = '#34d399';
+                            const originalHTML = btn.innerHTML;
+                            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
                             setTimeout(() => {
-                              btn.textContent = originalText;
-                              btn.style.color = '';
+                              btn.innerHTML = originalHTML;
                             }, 1000);
                           }}
                           title="Copy tag to clipboard"
                         >
-                          📋
+                          <Icons.Copy size={16} color="#8B5CF6" />
                         </button>
                       </div>
                     </td>
@@ -813,13 +937,60 @@ function AIAgents() {
                     </td>
                     <td className="actions-col" onClick={(e) => e.stopPropagation()}>
                       <div className="action-buttons">
-                        <button
-                          className="action-btn settings-btn"
-                          onClick={() => handleEditAgent(agent.id)}
-                          title="Settings"
-                        >
-                          ⚙️
-                        </button>
+                        <div className="strategy-actions-dropdown">
+                          <button
+                            className="action-btn settings-btn icon-spin"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdown(openDropdown === agent.id ? null : agent.id);
+                            }}
+                            title="Settings"
+                          >
+                            <Icons.Settings size={18} color="#8B5CF6" />
+                          </button>
+
+                          {openDropdown === agent.id && (
+                            <div className="dropdown-menu">
+                              <button
+                                className="dropdown-item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditAgent(agent.id);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                <Icons.Edit size={16} />
+                                <span>Edit</span>
+                              </button>
+
+                              <button
+                                className="dropdown-item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleExportAgent(agent);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                <Icons.Download size={16} />
+                                <span>Export</span>
+                              </button>
+
+                              <div className="dropdown-divider"></div>
+
+                              <button
+                                className="dropdown-item danger"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdown(null);
+                                  handleDeleteAgent(agent);
+                                }}
+                              >
+                                <Icons.Trash size={16} />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                         <div className="menu-wrapper">
                           <button
                             ref={menuButtonRef}
@@ -869,16 +1040,20 @@ function AIAgents() {
                               }}
                             >
                               <button onClick={() => handleEditAgent(agent.id)}>
-                                ✏️ Edit
+                                <Icons.Edit size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+                                Edit
                               </button>
                               <button onClick={() => handleDuplicateAgent(agent)}>
-                                📋 Duplicate
+                                <Icons.Copy size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+                                Duplicate
                               </button>
                               <button onClick={() => handleExportAgent(agent)} disabled={exporting}>
-                                💾 Export
+                                <Icons.Upload size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+                                Export
                               </button>
                               <button onClick={() => handleDeleteAgent(agent)} className="delete-option">
-                                🗑️ Delete
+                                <Icons.Trash size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ef4444" />
+                                Delete
                               </button>
                             </div>
                           )}
@@ -903,7 +1078,17 @@ function AIAgents() {
               onClick={handleBulkExport}
               disabled={exporting}
             >
-              {exporting ? '⏳ Exporting...' : '💾 Export Selected'}
+              {exporting ? (
+                <>
+                  <Icons.Clock size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Icons.Upload size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+                  Export Selected
+                </>
+              )}
             </button>
             <button className="bulk-btn">Activate</button>
             <button className="bulk-btn">Pause</button>

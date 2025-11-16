@@ -1,7 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/auth');
+const passwordResetRoutes = require('./routes/passwordReset');
 const templateRoutes = require('./routes/templates');
 const conversationRoutes = require('./routes/conversations');
 const actionRoutes = require('./routes/actions');
@@ -12,12 +15,43 @@ const webhookGHLRoutes = require('./routes/webhook-ghl');
 const downloadRoutes = require('./routes/download');
 const calendarRoutes = require('./routes/calendar');
 const teamRoutes = require('./routes/team');
+const copilotRoutes = require('./routes/copilot');
+const snapshotsRoutes = require('./routes/snapshots');
+const testAIRoutes = require('./routes/test-ai');
+const leadsRoutes = require('./routes/leads');
+const bookingRoutes = require('./routes/booking');
+const analyticsRoutes = require('./routes/analytics');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests, please try again later'
+});
+
+app.use('/api/', limiter);
+
+// Stricter rate limit for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Too many login attempts, please try again later'
+});
+
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // Serve static files from public directory
 app.use('/public', express.static('public'));
@@ -39,6 +73,16 @@ app.use(express.json({
 // Parse URL-encoded bodies (for form submissions)
 app.use(express.urlencoded({ extended: true }));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`${req.method} ${req.path} ${res.statusCode} - ${duration}ms`);
+  });
+  next();
+});
+
 // Log all incoming requests in development
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
@@ -52,6 +96,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', passwordResetRoutes); // Password reset routes
 app.use('/api/templates', templateRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/actions', actionRoutes);
@@ -62,13 +107,31 @@ app.use('/api/webhook', webhookGHLRoutes); // GHL webhook receiver
 app.use('/api/download', downloadRoutes); // File downloads
 app.use('/api/calendar', calendarRoutes); // Calendar booking system
 app.use('/api/team', teamRoutes); // Team management
+app.use('/api/copilot', copilotRoutes); // Co-Pilot website scanning
+app.use('/api/snapshots', snapshotsRoutes); // Snapshot management
+app.use('/api/test-ai', testAIRoutes); // Test AI conversations
+app.use('/api/leads', leadsRoutes); // Lead management
+app.use('/api/booking', bookingRoutes); // Public booking widget
+app.use('/api/analytics', analyticsRoutes); // Analytics dashboard
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'LeadSync API Server Running',
-    mockAI: process.env.USE_MOCK_AI === 'true'
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0',
+    message: 'LeadSync API Server Running'
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found',
+    path: req.path
   });
 });
 
@@ -87,15 +150,14 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// General error handling
+// Global error handler
 app.use((err, req, res, next) => {
-  console.error('Server error:', err.stack);
-
+  console.error('❌ Unhandled error:', err);
   const isDevelopment = process.env.NODE_ENV === 'development';
   res.status(err.status || 500).json({
     success: false,
-    error: 'Something went wrong!',
-    message: isDevelopment ? err.message : 'Internal server error',
+    error: 'Internal server error',
+    message: isDevelopment ? err.message : 'Something went wrong',
     stack: isDevelopment ? err.stack : undefined
   });
 });

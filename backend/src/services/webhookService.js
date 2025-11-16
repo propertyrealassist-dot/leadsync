@@ -1,5 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
+const emailService = require('./emailService');
 
 class WebhookService {
   /**
@@ -168,6 +170,170 @@ class WebhookService {
     } catch (error) {
       return { success: false, message: 'Webhook test failed', error: error.message };
     }
+  }
+
+  // ========== INCOMING WEBHOOK PROCESSING ==========
+
+  /**
+   * Process incoming webhook for lead capture
+   */
+  async processIncomingWebhook(webhookData, source, db, userId) {
+    try {
+      console.log('📥 Processing incoming webhook from:', source);
+
+      // Extract lead data based on source
+      let leadData = this.extractLeadData(webhookData, source);
+
+      if (!leadData.name && !leadData.email) {
+        throw new Error('Webhook must contain name or email');
+      }
+
+      // Create lead
+      const leadId = await this.createLead(db, userId, leadData);
+
+      // Log activity
+      this.logLeadActivity(db, leadId, 'webhook_received', `Lead captured from ${source}`);
+
+      // Send notification
+      await this.notifyUserAboutLead(db, userId, leadData);
+
+      console.log('✅ Incoming webhook processed successfully');
+      return { leadId, status: 'success' };
+
+    } catch (error) {
+      console.error('❌ Incoming webhook processing error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Extract lead data from different sources
+   */
+  extractLeadData(data, source) {
+    switch (source) {
+      case 'gohighlevel':
+        return {
+          name: `${data.contact?.firstName || ''} ${data.contact?.lastName || ''}`.trim(),
+          email: data.contact?.email,
+          phone: data.contact?.phone,
+          company: data.contact?.companyName,
+          source: 'gohighlevel',
+          custom_fields: {
+            ghl_contact_id: data.contact?.id,
+            ghl_location_id: data.locationId
+          }
+        };
+
+      case 'zapier':
+        return {
+          name: data.name || data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
+          email: data.email,
+          phone: data.phone || data.phone_number,
+          company: data.company || data.organization,
+          source: 'zapier',
+          custom_fields: data.custom_fields || {}
+        };
+
+      case 'typeform':
+        return {
+          name: data.answers?.find(a => a.field.type === 'name')?.text || 'Unknown',
+          email: data.answers?.find(a => a.field.type === 'email')?.email,
+          phone: data.answers?.find(a => a.field.type === 'phone_number')?.phone_number,
+          source: 'typeform',
+          custom_fields: {
+            form_id: data.form_response?.form_id,
+            response_id: data.form_response?.token
+          }
+        };
+
+      case 'calendly':
+        return {
+          name: data.name || data.invitee?.name,
+          email: data.email || data.invitee?.email,
+          phone: data.invitee?.phone_number,
+          source: 'calendly',
+          custom_fields: {
+            event_type: data.event_type?.name,
+            scheduled_time: data.scheduled_event?.start_time
+          }
+        };
+
+      case 'custom':
+      default:
+        return {
+          name: data.name || data.full_name,
+          email: data.email,
+          phone: data.phone,
+          company: data.company,
+          source: source || 'custom',
+          custom_fields: data.custom_fields || {}
+        };
+    }
+  }
+
+  /**
+   * Create lead in database
+   */
+  async createLead(db, userId, leadData) {
+    const leadId = uuidv4();
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO leads (
+        id, user_id, name, email, phone, company,
+        source, custom_fields, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      leadId,
+      userId,
+      leadData.name || 'Unknown',
+      leadData.email || null,
+      leadData.phone || null,
+      leadData.company || null,
+      leadData.source || 'webhook',
+      leadData.custom_fields ? JSON.stringify(leadData.custom_fields) : null,
+      'new',
+      now,
+      now
+    );
+
+    return leadId;
+  }
+
+  /**
+   * Log lead activity
+   */
+  logLeadActivity(db, leadId, activityType, description) {
+    const activityId = uuidv4();
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO lead_activities (id, lead_id, activity_type, description, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(activityId, leadId, activityType, description, now);
+  }
+
+  /**
+   * Notify user about new lead
+   */
+  async notifyUserAboutLead(db, userId, leadData) {
+    try {
+      const user = db.prepare('SELECT email, name FROM users WHERE id = ?').get(userId);
+
+      if (user && user.email) {
+        await emailService.sendLeadNotification(user.email, leadData);
+      }
+    } catch (error) {
+      console.error('Failed to send lead notification:', error);
+      // Don't throw - notification failure shouldn't break webhook
+    }
+  }
+
+  /**
+   * Generate webhook URL for incoming webhooks
+   */
+  generateIncomingWebhookUrl(userId, source) {
+    return `${process.env.API_URL || 'http://localhost:3001'}/api/webhooks/incoming/${source}/${userId}`;
   }
 }
 

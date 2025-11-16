@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Icons from './Icons';
 import './Integrations.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function Integrations() {
   const { user, token, isAuthenticated, updateUser } = useAuth();
@@ -33,7 +33,7 @@ function Integrations() {
 
   const checkGHLConnection = async () => {
     try {
-      const response = await axios.get(`${API_URL}/ghl/status`, {
+      const response = await axios.get(`${API_URL}/api/ghl/status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGhlConnected(response.data.connected || false);
@@ -61,11 +61,11 @@ function Integrations() {
       if (response.data.success) {
         // Update user context with new API key
         updateUser({ apiKey: response.data.data.apiKey });
-        alert('✅ API key regenerated successfully!');
+        alert('API key regenerated successfully!');
       }
     } catch (error) {
       console.error('Error regenerating API key:', error);
-      alert('❌ Failed to regenerate API key. Please try again.');
+      alert('Failed to regenerate API key. Please try again.');
     } finally {
       setRegenerating(false);
     }
@@ -77,7 +77,7 @@ function Integrations() {
       return;
     }
     navigator.clipboard.writeText(text);
-    alert(`✅ ${label} copied to clipboard!`);
+    alert(`${label} copied to clipboard!`);
   };
 
   const maskCredential = (credential) => {
@@ -87,7 +87,7 @@ function Integrations() {
 
   const handleConnectGHL = () => {
     // Redirect to GHL OAuth with token
-    window.location.href = `${API_URL}/ghl/auth?token=${token}`;
+    window.location.href = `${API_URL}/api/ghl/auth?token=${token}`;
   };
 
   const handleDisconnectGHL = async () => {
@@ -97,17 +97,17 @@ function Integrations() {
 
     try {
       await axios.post(
-        `${API_URL}/ghl/disconnect`,
+        `${API_URL}/api/ghl/disconnect`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
       setGhlConnected(false);
-      alert('✅ Disconnected from GoHighLevel');
+      alert('Disconnected from GoHighLevel');
     } catch (error) {
       console.error('Error disconnecting GHL:', error);
-      alert('❌ Failed to disconnect from GoHighLevel');
+      alert('Failed to disconnect from GoHighLevel');
     }
   };
 
@@ -115,8 +115,8 @@ function Integrations() {
     window.open(snapshotUrl, '_blank');
   };
 
-  // Show loading state while user data is being fetched
-  if (loading || !user) {
+  // Show loading state while data is being fetched
+  if (loading) {
     return (
       <div className="integrations-container">
         <div className="loading">Loading integrations...</div>
@@ -142,7 +142,9 @@ function Integrations() {
         {/* Card 1: API Credentials */}
         <div className="integration-card">
           <div className="card-icon-wrapper api">
-            <span className="card-icon">🔑</span>
+            <span className="card-icon">
+              <Icons.Settings size={32} color="#8B5CF6" />
+            </span>
           </div>
           <h3 className="card-title">API Credentials</h3>
           <p className="card-description">
@@ -163,7 +165,7 @@ function Integrations() {
                 onClick={() => setShowApiKey(!showApiKey)}
                 title={showApiKey ? 'Hide' : 'Show'}
               >
-                {showApiKey ? '👁️' : '👁️‍🗨️'}
+                <Icons.Eye size={16} color="#8B5CF6" />
               </button>
             </div>
           </div>
@@ -174,14 +176,20 @@ function Integrations() {
               onClick={() => handleCopy(user?.apiKey, 'API Key')}
               disabled={!user?.apiKey}
             >
-              📋 Copy
+              <Icons.Copy size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+              Copy
             </button>
             <button
               className="btn-danger"
               onClick={handleRegenerateApiKey}
               disabled={regenerating}
             >
-              {regenerating ? '⏳ Regenerating...' : '🔄 Regenerate'}
+              {regenerating ? 'Regenerating...' : (
+                <>
+                  <Icons.Settings size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
+                  Regenerate
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -189,7 +197,9 @@ function Integrations() {
         {/* Card 2: Client ID */}
         <div className="integration-card">
           <div className="card-icon-wrapper client">
-            <span className="card-icon">🆔</span>
+            <span className="card-icon">
+              <Icons.Info size={32} color="#8B5CF6" />
+            </span>
           </div>
           <h3 className="card-title">Client ID</h3>
           <p className="card-description">
@@ -210,7 +220,7 @@ function Integrations() {
                 onClick={() => setShowClientId(!showClientId)}
                 title={showClientId ? 'Hide' : 'Show'}
               >
-                {showClientId ? '👁️' : '👁️‍🗨️'}
+                <Icons.Eye size={16} color="#8B5CF6" />
               </button>
             </div>
           </div>
@@ -221,7 +231,8 @@ function Integrations() {
               onClick={() => handleCopy(user?.clientId, 'Client ID')}
               disabled={!user?.clientId}
             >
-              📋 Copy Client ID
+              <Icons.Copy size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+              Copy Client ID
             </button>
           </div>
         </div>
@@ -229,7 +240,9 @@ function Integrations() {
         {/* Card 3: GHL Integration */}
         <div className="integration-card">
           <div className="card-icon-wrapper ghl">
-            <span className="card-icon">🔗</span>
+            <span className="card-icon">
+              <Icons.Integrations size={32} color="#8B5CF6" />
+            </span>
           </div>
           <h3 className="card-title">GoHighLevel Integration</h3>
           <p className="card-description">
@@ -245,7 +258,10 @@ function Integrations() {
             </div>
             {ghlConnected && (
               <div className="connection-info">
-                <p className="info-text">✓ Your GHL account is connected and ready</p>
+                <p className="info-text">
+                  <Icons.Check size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                  Your GHL account is connected and ready
+                </p>
               </div>
             )}
           </div>
@@ -256,14 +272,16 @@ function Integrations() {
                 className="btn-danger full-width"
                 onClick={handleDisconnectGHL}
               >
-                🔌 Disconnect
+                <Icons.X size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
+                Disconnect
               </button>
             ) : (
               <button
                 className="btn-primary full-width"
                 onClick={handleConnectGHL}
               >
-                🔗 Connect GHL Account
+                <Icons.Integrations size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
+                Connect GHL Account
               </button>
             )}
           </div>
@@ -272,7 +290,9 @@ function Integrations() {
         {/* Card 4: Snapshot */}
         <div className="integration-card">
           <div className="card-icon-wrapper snapshot">
-            <span className="card-icon">📦</span>
+            <span className="card-icon">
+              <Icons.Download size={32} color="#8B5CF6" />
+            </span>
           </div>
           <h3 className="card-title">GHL Snapshot</h3>
           <p className="card-description">
@@ -283,10 +303,22 @@ function Integrations() {
             <div className="info-box">
               <p><strong>What's included:</strong></p>
               <ul>
-                <li>✓ Custom fields and values</li>
-                <li>✓ AI automation workflows</li>
-                <li>✓ Tags and status tracking</li>
-                <li>✓ Error handling setup</li>
+                <li>
+                  <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                  Custom fields and values
+                </li>
+                <li>
+                  <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                  AI automation workflows
+                </li>
+                <li>
+                  <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                  Tags and status tracking
+                </li>
+                <li>
+                  <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                  Error handling setup
+                </li>
               </ul>
             </div>
           </div>
@@ -305,7 +337,7 @@ function Integrations() {
                 onClick={() => handleCopy(snapshotUrl, 'Snapshot URL')}
                 title="Copy URL"
               >
-                📋
+                <Icons.Copy size={16} color="#8B5CF6" />
               </button>
             </div>
           </div>
@@ -315,7 +347,8 @@ function Integrations() {
               className="btn-primary full-width"
               onClick={handleMigrateSnapshot}
             >
-              📥 View Snapshot
+              <Icons.Download size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
+              View Snapshot
             </button>
           </div>
         </div>
@@ -324,7 +357,10 @@ function Integrations() {
       {/* Info Section */}
       <div className="integrations-info">
         <div className="info-card">
-          <h3>🔒 Security Best Practices</h3>
+          <h3>
+            <Icons.Settings size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+            Security Best Practices
+          </h3>
           <ul>
             <li>Never share your API key or Client ID publicly</li>
             <li>Regenerate your API key if you suspect it has been compromised</li>
@@ -334,7 +370,10 @@ function Integrations() {
         </div>
 
         <div className="info-card">
-          <h3>📚 Documentation</h3>
+          <h3>
+            <Icons.Info size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+            Documentation
+          </h3>
           <ul>
             <li><a href="/public/SNAPSHOT_IMPORT_GUIDE.md" target="_blank">Snapshot Import Guide</a></li>
             <li><a href="#" target="_blank">API Documentation</a></li>

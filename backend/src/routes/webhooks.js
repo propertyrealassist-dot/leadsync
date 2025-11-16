@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../database/db');
+const webhookService = require('../services/webhookService');
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * GHL Webhook Handler for Calendar Events
@@ -306,6 +308,105 @@ router.get('/test', (req, res) => {
     message: 'Webhook endpoint is working',
     timestamp: new Date().toISOString()
   });
+});
+
+// ========== INCOMING WEBHOOK ROUTES FOR LEAD CAPTURE ==========
+
+/**
+ * Generic incoming webhook receiver (PUBLIC - with user ID in URL)
+ * POST /api/webhooks/incoming/:source/:userId
+ */
+router.post('/incoming/:source/:userId', async (req, res) => {
+  try {
+    const { source, userId } = req.params;
+
+    console.log(`📥 Incoming webhook received: ${source} for user ${userId}`);
+    console.log('Webhook data:', JSON.stringify(req.body, null, 2));
+
+    // Verify user exists
+    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Process webhook
+    const result = await webhookService.processIncomingWebhook(
+      req.body,
+      source,
+      db,
+      userId
+    );
+
+    res.json({
+      success: true,
+      message: 'Webhook processed',
+      leadId: result.leadId
+    });
+
+  } catch (error) {
+    console.error('Incoming webhook error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Get webhook URLs for user (AUTHENTICATED)
+ * GET /api/webhooks/urls
+ */
+router.get('/urls', authenticateToken, (req, res) => {
+  try {
+    const sources = ['gohighlevel', 'zapier', 'typeform', 'calendly', 'custom'];
+
+    const urls = sources.reduce((acc, source) => {
+      acc[source] = webhookService.generateIncomingWebhookUrl(req.user.id, source);
+      return acc;
+    }, {});
+
+    res.json({
+      success: true,
+      data: urls
+    });
+
+  } catch (error) {
+    console.error('Get webhook URLs error:', error);
+    res.status(500).json({ error: 'Failed to generate URLs' });
+  }
+});
+
+/**
+ * Test incoming webhook (AUTHENTICATED)
+ * POST /api/webhooks/test-incoming
+ */
+router.post('/test-incoming', authenticateToken, async (req, res) => {
+  try {
+    const testData = {
+      name: 'Test Lead',
+      email: 'test@example.com',
+      phone: '+1 (555) 123-4567',
+      company: 'Test Company',
+      source: 'test'
+    };
+
+    const result = await webhookService.processIncomingWebhook(
+      testData,
+      'custom',
+      db,
+      req.user.id
+    );
+
+    res.json({
+      success: true,
+      message: 'Test webhook processed',
+      leadId: result.leadId
+    });
+
+  } catch (error) {
+    console.error('Test webhook error:', error);
+    res.status(500).json({ error: 'Test failed' });
+  }
 });
 
 module.exports = router;

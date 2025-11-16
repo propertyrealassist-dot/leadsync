@@ -430,3 +430,212 @@
     width: 100%;
   }
 }
+
+/* ============================================
+   ANIMATIONS - Added for enhanced UX
+   ============================================ */
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.team-management {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.team-header {
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Member Cards Animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.member-card {
+  animation: scaleIn 0.5s ease-out;
+  animation-fill-mode: backwards;
+}
+
+.member-card:nth-child(1) { animation-delay: 0.1s; }
+.member-card:nth-child(2) { animation-delay: 0.15s; }
+.member-card:nth-child(3) { animation-delay: 0.2s; }
+.member-card:nth-child(4) { animation-delay: 0.25s; }
+.member-card:nth-child(5) { animation-delay: 0.3s; }
+.member-card:nth-child(6) { animation-delay: 0.35s; }
+
+/* Permission Cards Animation */
+.permission-card {
+  animation: scaleIn 0.5s ease-out;
+  animation-fill-mode: backwards;
+}
+
+.permission-card:nth-child(1) { animation-delay: 0.1s; }
+.permission-card:nth-child(2) { animation-delay: 0.15s; }
+.permission-card:nth-child(3) { animation-delay: 0.2s; }
+.permission-card:nth-child(4) { animation-delay: 0.25s; }
+
+/* Avatar Float Animation */
+@keyframes avatarFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.05);
+  }
+}
+
+.member-card:hover .member-avatar {
+  animation: avatarFloat 2s ease-in-out infinite;
+}
+
+/* Status Indicator Pulse */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+.status-indicator {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Icon Spin on Hover */
+@keyframes iconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.permission-card:hover svg {
+  animation: iconSpin 1s ease-in-out;
+}
+
+/* Button Glow Effect */
+@keyframes buttonGlow {
+  0%, 100% {
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 12px 28px rgba(139, 92, 246, 0.7);
+  }
+}
+
+.btn-invite:hover {
+  animation: buttonGlow 1.5s ease-in-out infinite;
+}
+
+/* Shimmer Loading Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading-container {
+  background: linear-gradient(
+    90deg,
+    rgba(26, 32, 44, 0.6) 0%,
+    rgba(139, 92, 246, 0.3) 50%,
+    rgba(26, 32, 44, 0.6) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Slide In Right Animation */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.invite-section {
+  animation: slideInRight 0.6s ease-out;
+}
+
+/* Enhanced Card Hover Effect */
+.member-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.member-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(139, 92, 246, 0.4);
+}
+
+.permission-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.permission-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(139, 92, 246, 0.4);
+}
+
+/* Gradient Border Animation for Role Badge */
+@keyframes gradientRotate {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+.role-badge {
+  animation: gradientRotate 3s linear infinite;
+}
+
+/* Success/Error Banner Animation */
+.error-banner,
+.success-banner {
+  animation: slideDown 0.5s ease-out;
+}
+
+/* Input Focus Glow */
+@keyframes inputGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+  }
+}
+
+.invite-input:focus,
+.invite-select:focus,
+.role-select:focus {
+  animation: inputGlow 2s ease-in-out infinite;
+}

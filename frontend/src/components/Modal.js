@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import './Modal.css';
 
-function Modal({ isOpen, title, message, onConfirm, onCancel, onThird, confirmText = 'Confirm', cancelText = 'Cancel', thirdText = 'Cancel', type = 'confirm' }) {
+function Modal({ isOpen, title, message, customContent, onConfirm, onCancel, onThird, confirmText = 'Confirm', cancelText = 'Cancel', thirdText = 'Cancel', type = 'confirm' }) {
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen && onCancel) {
@@ -37,37 +37,43 @@ function Modal({ isOpen, title, message, onConfirm, onCancel, onThird, confirmTe
           )}
         </div>
 
-        <div className="modal-body">
-          <p>{message}</p>
-        </div>
+        {customContent ? (
+          customContent
+        ) : (
+          <>
+            <div className="modal-body">
+              <p>{message}</p>
+            </div>
 
-        <div className="modal-footer">
-          {onCancel && (
-            <button
-              className="modal-btn modal-btn-secondary"
-              onClick={onCancel}
-            >
-              {cancelText}
-            </button>
-          )}
-          {onThird && (
-            <button
-              className="modal-btn modal-btn-tertiary"
-              onClick={onThird}
-            >
-              {thirdText}
-            </button>
-          )}
-          {onConfirm && (
-            <button
-              className="modal-btn modal-btn-primary"
-              onClick={onConfirm}
-              autoFocus
-            >
-              {confirmText}
-            </button>
-          )}
-        </div>
+            <div className="modal-footer">
+              {onCancel && (
+                <button
+                  className="modal-btn modal-btn-secondary"
+                  onClick={onCancel}
+                >
+                  {cancelText}
+                </button>
+              )}
+              {onThird && (
+                <button
+                  className="modal-btn modal-btn-tertiary"
+                  onClick={onThird}
+                >
+                  {thirdText}
+                </button>
+              )}
+              {onConfirm && (
+                <button
+                  className="modal-btn modal-btn-primary"
+                  onClick={onConfirm}
+                  autoFocus
+                >
+                  {confirmText}
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
