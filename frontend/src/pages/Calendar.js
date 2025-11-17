@@ -42,8 +42,21 @@ function Calendar() {
     }
   };
 
-  const connectCalendar = () => {
-    window.location.href = `${API_URL}/api/calendar/auth`;
+  const connectCalendar = async () => {
+    try {
+      const token = localStorage.getItem('leadsync_token');
+      const response = await axios.get(`${API_URL}/api/calendar/auth`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Redirect to Google OAuth URL
+      if (response.data.authUrl) {
+        window.location.href = response.data.authUrl;
+      }
+    } catch (error) {
+      console.error('Failed to connect calendar:', error);
+      alert('Failed to connect calendar. Please try again.');
+    }
   };
 
   if (loading) {
