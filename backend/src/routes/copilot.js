@@ -757,27 +757,29 @@ If your JSON contains "REPLACE THIS" or any instruction text, START OVER!
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
 
-    console.log('🤖 Generating professional AI strategy for:', businessName);
+    console.log('🤖 Generating professional AI strategy using Claude for:', businessName);
 
-    const response = await groqService.groq.chat.completions.create({
+    // Use Claude API for better quality strategy generation
+    const Anthropic = require('@anthropic-ai/sdk');
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 8000,
+      temperature: 1,
+      system: 'You are an expert at creating comprehensive AI agent strategies. You write detailed, professional content using all available data. Never use placeholders - write complete, real content.',
       messages: [
-        {
-          role: 'system',
-          content: 'You write professional AI agent strategies. Write real, complete content - never use placeholders or brackets. All FAQ answers must be 4-5 full sentences with specific details. Company information must be 300-500 words.'
-        },
         {
           role: 'user',
           content: prompt
         }
-      ],
-      model: 'llama-3.1-70b-versatile',
-      temperature: 0.9,
-      max_tokens: 8000,
-      response_format: { type: "json_object" }
+      ]
     });
 
     let strategy;
-    const aiResponse = response.choices[0].message.content;
+    const aiResponse = response.content[0].text;
 
     try {
       strategy = JSON.parse(aiResponse);
