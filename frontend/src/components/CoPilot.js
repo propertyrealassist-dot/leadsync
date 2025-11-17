@@ -47,6 +47,27 @@ function CoPilot() {
     try {
       const token = localStorage.getItem('token');
 
+      console.log('🤖 Calling AI to generate strategy...');
+
+      // Step 1: Generate AI strategy
+      const aiStrategyResponse = await axios.post(
+        `${API_URL}/api/copilot/generate-strategy`,
+        {
+          businessName: data.businessName,
+          websiteData: websiteData,
+          services: data.services,
+          goal: data.goal
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      console.log('✅ AI strategy generated:', aiStrategyResponse.data);
+
+      const aiStrategy = aiStrategyResponse.data.strategy || {};
+
+      // Step 2: Create the template with AI-generated content
       const strategyData = {
         name: `${data.businessName} AI Agent`,
         tag: data.businessName.toLowerCase().replace(/\s+/g, '-') + '-ai',
@@ -61,12 +82,22 @@ function CoPilot() {
         turnOffFollowUps: data.postBooking === 'turnOffFollowUps',
         faqs: generateFAQs(),
         qualificationQuestions: generateQuestions(),
-        followUps: generateFollowUps()
+        followUps: generateFollowUps(),
+        // Add AI-generated 5-step strategy
+        step1_role: aiStrategy.step1_role || generateBrief(),
+        step2_objectives: aiStrategy.step2_objectives || '- Qualify leads\n- Book appointments\n- Answer questions',
+        step3_conversation_flow: aiStrategy.step3_conversation_flow || '1. Greet\n2. Qualify\n3. Book',
+        step4_guidelines: aiStrategy.step4_guidelines || '- Be professional\n- Keep responses concise',
+        step5_handling: aiStrategy.step5_handling || '- Handle objections professionally\n- Stay positive'
       };
+
+      console.log('📤 Creating template with AI strategy...');
 
       const response = await axios.post(`${API_URL}/api/templates`, strategyData, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      console.log('✅ Template created successfully');
 
       setStep('complete');
       setTimeout(() => {
