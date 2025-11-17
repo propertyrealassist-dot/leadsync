@@ -163,12 +163,12 @@ function CoPilot() {
       const token = localStorage.getItem('token');
 
       console.log('🌐 Scanning website:', url);
-      console.log('📝 API URL:', `${API_URL}/api/copilot/scan`);
+      console.log('📝 API URL:', `${API_URL}/api/copilot/scan-website`);
       console.log('🔑 Token exists:', !!token);
 
       // Call backend to scrape website
       const response = await axios.post(
-        `${API_URL}/api/copilot/scan`,
+        `${API_URL}/api/copilot/scan-website`,
         { url },
         {
           headers: {
