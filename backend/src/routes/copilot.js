@@ -599,7 +599,7 @@ ${websiteData.ctas?.map(c => `🎯 ${c}`).join('\n') || 'None'}
 
 **CREATE A PROFESSIONAL AI AGENT STRATEGY:**
 
-**CRITICAL REQUIREMENTS - READ CAREFULLY:**
+**⚠️ ABSOLUTE REQUIREMENTS - FAILURE TO COMPLY WILL RESULT IN REJECTION:**
 1. **USE ALL THE DATA ABOVE** - I've given you comprehensive information from ${websiteData.pagesScanned || 1} pages. USE IT ALL!
 2. **Company Information MUST be 300-500 words** - Use the headings, paragraphs, value props, services, features, benefits, and stats to write a COMPLETE description
 3. **FAQs MUST be detailed** - Each answer should be 3-5 sentences using SPECIFIC information from the data above
@@ -618,47 +618,49 @@ ${websiteData.ctas?.map(c => `🎯 ${c}`).join('\n') || 'None'}
   "tone": "Professional/Friendly/Consultative (choose based on industry)",
   "brief": "**${businessName.toUpperCase()} AI AGENT**\\n\\n[3-4 sentence professional brief describing role, personality, and approach. NO cookie policy text, NO sign-in prompts.]",
   "objective": "${goal === 'book_appointments' ? 'Schedule appointments and demos' : 'Qualify leads and share information'}",
-  "companyInformation": "[CRITICAL: This MUST be 300-500 words. Structure it as follows:
+  "companyInformation": "[⚠️ CRITICAL: Write 300-500 words using ALL the data I provided above. Do NOT write generic text. Use the ACTUAL services, stats, and content from the scan.
 
-PARAGRAPH 1 (100-150 words): Start with the tagline/description. Explain what ${businessName} does and who they serve (use target audience). Include the main value proposition.
+Write 4 detailed paragraphs:
 
-PARAGRAPH 2 (100-150 words): List ALL the key services/products they offer. Be SPECIFIC - don't say 'various services', list them: 'including [service 1], [service 2], [service 3]...'
+PARAGRAPH 1: ${websiteData.tagline || websiteData.description} [Continue explaining what they do, who they serve (${websiteData.targetAudience}), and their main value proposition using the VALUE PROPOSITIONS section above]
 
-PARAGRAPH 3 (100-150 words): Include ALL stats and proof points. Every number builds credibility. Also weave in 1-2 testimonials if available.
+PARAGRAPH 2: Our comprehensive offerings include [LIST EVERY SERVICE from the SERVICES/PRODUCTS section - don't summarize, LISTALL OF THEM]. [Add details about each service using FEATURES section]
 
-PARAGRAPH 4 (50-100 words): Close with benefits and what makes them unique (features).
+PARAGRAPH 3: [Write about results - USE EVERY STAT from STATS & PROOF POINTS section]. [If testimonials exist, quote 1-2 directly: 'As one client shared, \"[exact testimonial]\"']
 
-Use the actual content from the comprehensive scan above. This is NOT a summary - use the REAL data.]",
+PARAGRAPH 4: [Explain what makes them unique using BENEFITS and KEY FEATURES sections]
+
+WORD COUNT CHECK: This must be 300-500 words. Count your words before returning!]",
   "initialMessage": "Hey! Thanks for reaching out to ${businessName}. Can you confirm this is {{contact.first_name}}?",
   "faqs": [
     {
       "question": "What does ${businessName} do?",
-      "answer": "[3-5 sentences. Start with the tagline. Explain the main value proposition. Mention 2-3 specific services. Include 1 stat if available. Example: '${businessName} helps [target audience] achieve [outcome]. We specialize in [service 1], [service 2], and [service 3]. Our clients have seen [stat]. We focus on [key benefit].' USE ACTUAL DATA FROM ABOVE!]",
+      "answer": "[WRITE 4-5 FULL SENTENCES using data from above. Sentence 1: ${websiteData.tagline || 'State what they do'}. Sentence 2: Explain who they serve (use ${websiteData.targetAudience}). Sentence 3-4: Mention specific services from SERVICES/PRODUCTS section. Sentence 5: Include a stat if available. NO BRACKETS IN FINAL OUTPUT - write actual content!]",
       "delay": 1
     },
     {
       "question": "Who is ${businessName} for?",
-      "answer": "[3-4 sentences. Start with target audience. Mention specific industries or business types. Include what problems you solve for them. Example: 'We work primarily with [target audience] in [industries]. Our ideal clients are [description] who are looking to [goal]. We're especially effective for [specific use case].' USE ACTUAL DATA!]",
+      "answer": "[WRITE 4 FULL SENTENCES. Sentence 1: We work with ${websiteData.targetAudience || 'businesses'}. Sentence 2-3: Describe their specific needs/pain points using BENEFITS section. Sentence 4: Explain ideal client profile. NO BRACKETS - write real content!]",
       "delay": 1
     },
     {
       "question": "What results can I expect?",
-      "answer": "[3-5 sentences. Include ALL stats. Quote 1-2 testimonials directly if available. Example: 'Our clients typically see [stat 1], [stat 2], and [stat 3]. [Testimonial quote]. We've helped [number] clients achieve [outcome].' If testimonials exist, USE THEM WORD-FOR-WORD!]",
+      "answer": "[WRITE 4-5 FULL SENTENCES. Sentence 1-3: List EVERY stat from STATS & PROOF POINTS section - don't skip any! Sentence 4: If testimonials exist, quote one: 'As one client shared, \"[exact testimonial]\"'. Sentence 5: Add additional proof point. NO BRACKETS - use actual data!]",
       "delay": 1
     },
     {
       "question": "What services do you offer?",
-      "answer": "[List ALL services/products from the data above. Don't summarize - list them all! Example: 'We offer [service 1], [service 2], [service 3], [service 4], and [service 5]. Each service includes [features]. We also provide [additional services].' USE THE ACTUAL LIST!]",
+      "answer": "[WRITE 3-4 FULL SENTENCES. Sentence 1: 'We offer' then LIST EVERY SERVICE from SERVICES/PRODUCTS section above. Don't say 'various services' - name them ALL! Sentence 2-3: Describe what's included in these services using FEATURES section. Sentence 4: Mention any additional offerings. NO BRACKETS!]",
       "delay": 1
     },
     {
       "question": "How much does it cost?",
-      "answer": "[If pricing data exists above, USE IT! List the actual prices. If no pricing: 'Pricing varies based on your specific needs and the scope of work. I can connect you with our team to discuss a customized quote that fits your budget and goals.']",
+      "answer": "[IF PRICING exists in PRICING INFORMATION section, write 2-3 sentences listing actual prices. IF NO PRICING: 'Pricing varies based on your specific needs and the scope of work. I can connect you with our team to discuss a customized quote that fits your budget and goals.' NO BRACKETS!]",
       "delay": 1
     },
     {
       "question": "How does it work?",
-      "answer": "[3-4 sentences. Describe the process/workflow. Mention key features. Example: 'Getting started is simple. [Step 1], [Step 2], [Step 3]. Our platform includes [feature 1], [feature 2], and [feature 3].' USE ACTUAL FEATURES!]",
+      "answer": "[WRITE 4 FULL SENTENCES. Describe getting started process. Mention specific features from KEY FEATURES section. Explain the workflow. Make it conversational and helpful. NO BRACKETS!]",
       "delay": 1
     }
   ],
@@ -715,13 +717,39 @@ Use the actual content from the comprehensive scan above. This is NOT a summary 
 - If pricing exists, use the ACTUAL prices
 - Qualification questions must be specific to the actual services listed
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**BEFORE YOU START WRITING, RE-READ ALL THE DATA ABOVE!**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Now create the JSON strategy following these steps:
+
+**STEP 1:** Read the ALL HEADINGS section - these show what's important on their site
+**STEP 2:** Read the COMPREHENSIVE CONTENT section - this is the real content
+**STEP 3:** List out ALL services from SERVICES/PRODUCTS section - you'll need these
+**STEP 4:** List out ALL stats from STATS & PROOF POINTS - you'll use every one
+**STEP 5:** Note any testimonials - you'll quote these directly
+
+**STEP 6: WRITE THE companyInformation (300-500 words)**
+- Paragraph 1: Start with tagline/description, explain what they do
+- Paragraph 2: "Our comprehensive offerings include [list EVERY service by name]"
+- Paragraph 3: Write about results using EVERY stat. Quote testimonials if available
+- Paragraph 4: What makes them unique
+
+**STEP 7: WRITE EACH FAQ ANSWER (4-5 sentences each)**
+- Use SPECIFIC data, not generic text
+- List actual services by name
+- Include actual stats with numbers
+- Quote testimonials word-for-word
+- NO BRACKETS in your final output
+
 **FINAL CHECK BEFORE RETURNING JSON:**
-1. Did I write 300-500 words for companyInformation? ✓
-2. Did I include ALL the services listed above? ✓
-3. Did I include ALL the stats? ✓
-4. Did I use SPECIFIC information, not generic text? ✓
-5. Are my FAQ answers 3-5 sentences each? ✓
-6. Did I use actual testimonials word-for-word if available? ✓
+1. companyInformation is 300-500 words? (COUNT THE WORDS!) ✓
+2. I listed ALL services by name? ✓
+3. I included ALL stats with numbers? ✓
+4. FAQ answers are 4-5 complete sentences? ✓
+5. I used SPECIFIC data, no generic text? ✓
+6. I quoted testimonials if available? ✓
+7. NO BRACKETS left in my answers? ✓
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
 
