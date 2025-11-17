@@ -763,7 +763,7 @@ Return ONLY valid JSON, no markdown, no code blocks.`;
       messages: [
         {
           role: 'system',
-          content: 'You are an expert AI strategy creator. You create COMPREHENSIVE, DETAILED strategies using ALL available data. Your companyInformation sections are 300-500 words of real content. Your FAQ answers are 4-5 complete sentences each with SPECIFIC details from the data. You REPLACE all placeholders with actual content. You NEVER output placeholder text like "REPLACE THIS" or "[Write here]" - you write the actual content. You use the ACTUAL data provided - real services, real stats, real testimonials. Return ONLY valid JSON. Never include cookie policies, legal jargon, or navigation text.'
+          content: 'You write professional AI agent strategies. Write real, complete content - never use placeholders or brackets. All FAQ answers must be 4-5 full sentences with specific details. Company information must be 300-500 words.'
         },
         {
           role: 'user',
@@ -771,8 +771,8 @@ Return ONLY valid JSON, no markdown, no code blocks.`;
         }
       ],
       model: 'llama-3.1-70b-versatile',
-      temperature: 0.7,
-      max_tokens: 6000,
+      temperature: 0.9,
+      max_tokens: 8000,
       response_format: { type: "json_object" }
     });
 
