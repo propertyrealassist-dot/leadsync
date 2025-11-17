@@ -43,6 +43,7 @@ router.post('/conversation', authenticateToken, async (req, res) => {
     }
 
     console.log('✅ Strategy found:', strategy.name);
+    console.log('📋 Initial message from DB:', strategy.initial_message);
 
     // Build system prompt
     const systemPrompt = aiService.buildComprehensiveSystemPrompt(strategy, userName);
@@ -56,10 +57,13 @@ router.post('/conversation', authenticateToken, async (req, res) => {
     // Add new message
     messages.push({ role: 'user', content: message });
 
-    console.log('📤 Calling Claude API with', messages.length, 'messages');
+    console.log('📤 Calling AI API with', messages.length, 'messages');
 
-    // Get REAL AI response
-    const aiResponse = await aiService.generateResponse(messages, systemPrompt);
+    // Get REAL AI response - pass initial_message and userName for template substitution
+    const aiResponse = await aiService.generateResponse(messages, systemPrompt, {
+      initialMessage: strategy.initial_message,
+      userName: userName
+    });
 
     console.log('✅ AI response generated');
 

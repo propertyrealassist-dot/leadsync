@@ -140,7 +140,9 @@ Remember: Be helpful, professional, and guide the conversation naturally toward 
       const {
         model = 'llama-3.3-70b-versatile', // Latest Groq model
         maxTokens = 2048,
-        temperature = 0.7
+        temperature = 0.7,
+        initialMessage = null,  // Pass the exact initial message from database
+        userName = 'User'       // Pass the user's name for variable substitution
       } = options;
 
       console.log('🚀 Calling Groq API...');
@@ -151,6 +153,22 @@ Remember: Be helpful, professional, and guide the conversation naturally toward 
       const isInitialGreeting = messages.length === 1 &&
                                  messages[0].role === 'user' &&
                                  messages[0].content === '__INIT__';
+
+      if (isInitialGreeting && initialMessage) {
+        console.log('🎯 Using exact initial message from database...');
+        console.log('Initial message template:', initialMessage);
+
+        // Replace template variables with actual values
+        let formattedMessage = initialMessage
+          .replace(/\{\{contact\.first_name\}\}/g, userName)
+          .replace(/\{\{contact\.name\}\}/g, userName)
+          .replace(/\{\{user\.name\}\}/g, userName);
+
+        console.log('✅ Formatted initial message:', formattedMessage);
+
+        // Return the exact initial message without calling AI
+        return formattedMessage;
+      }
 
       let chatMessages;
       if (isInitialGreeting) {

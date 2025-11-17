@@ -21,6 +21,7 @@ const testAIRoutes = require('./routes/test-ai');
 const leadsRoutes = require('./routes/leads');
 const bookingRoutes = require('./routes/booking');
 const analyticsRoutes = require('./routes/analytics');
+const aiRoutes = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -113,6 +114,7 @@ app.use('/api/test-ai', testAIRoutes); // Test AI conversations
 app.use('/api/leads', leadsRoutes); // Lead management
 app.use('/api/booking', bookingRoutes); // Public booking widget
 app.use('/api/analytics', analyticsRoutes); // Analytics dashboard
+app.use('/api/ai', aiRoutes); // AI chat endpoint for Make.com
 
 // Health check
 app.get('/api/health', (req, res) => {
