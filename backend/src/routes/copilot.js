@@ -526,81 +526,139 @@ router.post('/generate-strategy', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Build SMART prompt with clean data
+    // Build ULTRA-COMPREHENSIVE prompt with ALL available data
     const prompt = `You are an expert AI strategy architect. Create a professional, high-quality AI agent strategy.
 
+I'm providing you with COMPREHENSIVE data from a deep scan of ${websiteData.pagesScanned || 1} pages. Use ALL this information to create an extremely detailed and accurate strategy.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **BUSINESS PROFILE:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Name: ${businessName}
 Industry: ${websiteData.industryKeywords?.join(', ') || 'General'}
 Target Audience: ${websiteData.targetAudience || 'Businesses'}
 Tagline: ${websiteData.tagline || websiteData.title}
+Description: ${websiteData.description || 'Not available'}
 Pages Analyzed: ${websiteData.pagesScanned || 1}
 
-**VALUE PROPOSITIONS:**
-${websiteData.valuePropositions?.map(vp => `• ${vp.title}: ${vp.description}`).join('\n') || 'Not specified'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**ALL HEADINGS FROM WEBSITE (${websiteData.allHeadings?.length || 0} total):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.allHeadings?.slice(0, 30).map(h => `[${h.level.toUpperCase()}] ${h.text}`).join('\n') || 'None'}
 
-**SERVICES/PRODUCTS:**
-${websiteData.services?.slice(0, 8).join('\n') || 'Not specified'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**COMPREHENSIVE CONTENT (${websiteData.allParagraphs?.length || 0} paragraphs):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.allParagraphs?.slice(0, 20).join('\n\n') || 'None'}
 
-**KEY FEATURES:**
-${websiteData.features?.slice(0, 10).join('\n') || 'Not specified'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**VALUE PROPOSITIONS (${websiteData.valuePropositions?.length || 0} total):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.valuePropositions?.map(vp => `• **${vp.title}**\n  ${vp.description}`).join('\n\n') || 'Not specified'}
 
-**KEY BENEFITS:**
-${websiteData.benefits?.slice(0, 5).join('\n') || 'Not specified'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**SERVICES/PRODUCTS (${websiteData.services?.length || 0} total):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.services?.map(s => `• ${s}`).join('\n') || 'Not specified'}
 
-**STATS & PROOF:**
-${websiteData.stats?.slice(0, 8).join('\n') || 'None available'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**KEY FEATURES (${websiteData.features?.length || 0} total):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.features?.map(f => `• ${f}`).join('\n') || 'Not specified'}
 
-**TESTIMONIALS:**
-${websiteData.testimonials?.slice(0, 3).join('\n\n') || 'None available'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**KEY BENEFITS (${websiteData.benefits?.length || 0} total):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.benefits?.map(b => `• ${b}`).join('\n') || 'Not specified'}
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**STATS & PROOF POINTS (${websiteData.stats?.length || 0} total):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.stats?.map(s => `📊 ${s}`).join('\n') || 'None available'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**TESTIMONIALS & REVIEWS (${websiteData.testimonials?.length || 0} total):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.testimonials?.map(t => `💬 "${t}"`).join('\n\n') || 'None available'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**PRICING INFORMATION (${websiteData.pricing?.length || 0} total):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.pricing?.map(p => `💰 ${p}`).join('\n') || 'Not available'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**CALL-TO-ACTIONS (${websiteData.ctas?.length || 0} total):**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${websiteData.ctas?.map(c => `🎯 ${c}`).join('\n') || 'None'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 **GOAL:** ${goal || 'Generate and qualify leads'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ---
 
 **CREATE A PROFESSIONAL AI AGENT STRATEGY:**
 
-**REQUIREMENTS:**
-1. Use ONLY the clean, valuable information provided above
-2. Do NOT include: cookie policies, sign-in prompts, legal jargon, or navigation text
-3. Make FAQs specific and valuable (use stats and testimonials)
-4. Create industry-specific qualification questions
-5. Write natural, helpful follow-up messages
-6. Settings should match industry norms
+**CRITICAL REQUIREMENTS - READ CAREFULLY:**
+1. **USE ALL THE DATA ABOVE** - I've given you comprehensive information from ${websiteData.pagesScanned || 1} pages. USE IT ALL!
+2. **Company Information MUST be 300-500 words** - Use the headings, paragraphs, value props, services, features, benefits, and stats to write a COMPLETE description
+3. **FAQs MUST be detailed** - Each answer should be 3-5 sentences using SPECIFIC information from the data above
+4. **Include ALL services/products** - Don't just say "we offer services" - LIST THEM ALL specifically
+5. **Include ALL stats** - Numbers build credibility. Use every stat I provided
+6. **Include testimonials in FAQs** - Use the exact testimonials to answer "What results can I expect?"
+7. **Pricing FAQ must use actual pricing** - If pricing data exists, USE IT in the FAQ answer
+8. **Qualification questions must be industry-specific** - Based on the actual services/features listed
+9. **NO generic answers** - Every answer must reference SPECIFIC information from the scan
+10. **NO cookie policies, sign-in prompts, legal jargon** - Only valuable content
 
 **OUTPUT JSON STRUCTURE:**
 {
   "name": "${businessName} AI Agent",
-  "tag": "business-name-ai",
+  "tag": "${businessName.toLowerCase().replace(/\s+/g, '-')}-ai",
   "tone": "Professional/Friendly/Consultative (choose based on industry)",
   "brief": "**${businessName.toUpperCase()} AI AGENT**\\n\\n[3-4 sentence professional brief describing role, personality, and approach. NO cookie policy text, NO sign-in prompts.]",
   "objective": "${goal === 'book_appointments' ? 'Schedule appointments and demos' : 'Qualify leads and share information'}",
-  "companyInformation": "[Professional description using value propositions, stats, and benefits. 200-400 words. Focus on RESULTS and VALUE. Include specific services, features, and proof points.]",
+  "companyInformation": "[CRITICAL: This MUST be 300-500 words. Structure it as follows:
+
+PARAGRAPH 1 (100-150 words): Start with the tagline/description. Explain what ${businessName} does and who they serve (use target audience). Include the main value proposition.
+
+PARAGRAPH 2 (100-150 words): List ALL the key services/products they offer. Be SPECIFIC - don't say 'various services', list them: 'including [service 1], [service 2], [service 3]...'
+
+PARAGRAPH 3 (100-150 words): Include ALL stats and proof points. Every number builds credibility. Also weave in 1-2 testimonials if available.
+
+PARAGRAPH 4 (50-100 words): Close with benefits and what makes them unique (features).
+
+Use the actual content from the comprehensive scan above. This is NOT a summary - use the REAL data.]",
   "initialMessage": "Hey! Thanks for reaching out to ${businessName}. Can you confirm this is {{contact.first_name}}?",
   "faqs": [
     {
       "question": "What does ${businessName} do?",
-      "answer": "[Use value propositions, services, and stats - be specific and compelling]",
+      "answer": "[3-5 sentences. Start with the tagline. Explain the main value proposition. Mention 2-3 specific services. Include 1 stat if available. Example: '${businessName} helps [target audience] achieve [outcome]. We specialize in [service 1], [service 2], and [service 3]. Our clients have seen [stat]. We focus on [key benefit].' USE ACTUAL DATA FROM ABOVE!]",
       "delay": 1
     },
     {
       "question": "Who is ${businessName} for?",
-      "answer": "[Based on target audience and services]",
+      "answer": "[3-4 sentences. Start with target audience. Mention specific industries or business types. Include what problems you solve for them. Example: 'We work primarily with [target audience] in [industries]. Our ideal clients are [description] who are looking to [goal]. We're especially effective for [specific use case].' USE ACTUAL DATA!]",
       "delay": 1
     },
     {
       "question": "What results can I expect?",
-      "answer": "[Use stats and testimonials if available]",
+      "answer": "[3-5 sentences. Include ALL stats. Quote 1-2 testimonials directly if available. Example: 'Our clients typically see [stat 1], [stat 2], and [stat 3]. [Testimonial quote]. We've helped [number] clients achieve [outcome].' If testimonials exist, USE THEM WORD-FOR-WORD!]",
       "delay": 1
     },
     {
       "question": "What services do you offer?",
-      "answer": "[List key services/features from the data]",
+      "answer": "[List ALL services/products from the data above. Don't summarize - list them all! Example: 'We offer [service 1], [service 2], [service 3], [service 4], and [service 5]. Each service includes [features]. We also provide [additional services].' USE THE ACTUAL LIST!]",
       "delay": 1
     },
     {
       "question": "How much does it cost?",
-      "answer": "[If pricing available use it, otherwise: 'Pricing varies based on your needs. I can connect you with our team to discuss options.']",
+      "answer": "[If pricing data exists above, USE IT! List the actual prices. If no pricing: 'Pricing varies based on your specific needs and the scope of work. I can connect you with our team to discuss a customized quote that fits your budget and goals.']",
+      "delay": 1
+    },
+    {
+      "question": "How does it work?",
+      "answer": "[3-4 sentences. Describe the process/workflow. Mention key features. Example: 'Getting started is simple. [Step 1], [Step 2], [Step 3]. Our platform includes [feature 1], [feature 2], and [feature 3].' USE ACTUAL FEATURES!]",
       "delay": 1
     }
   ],
@@ -648,12 +706,22 @@ ${websiteData.testimonials?.slice(0, 3).join('\n\n') || 'None available'}
 - NO cookie policies, privacy policies, or legal text
 - NO "sign in" or "create account" messages
 - NO navigation instructions
-- ONLY use valuable, professional content
-- Include actual stats when available (e.g., "500+ clients", "30% increase")
-- Use testimonials to add credibility
-- Make FAQs answer real customer questions
-- Qualification questions should be natural and relevant
-- Company information should be comprehensive (200-400 words) using all available data
+- NO generic answers - EVERY answer must use SPECIFIC data from above
+- Company Information: 300-500 words minimum
+- FAQ Answers: 3-5 sentences each with SPECIFIC details
+- Include EVERY stat I provided above
+- Include EVERY service/product I listed above
+- If testimonials exist, quote them DIRECTLY
+- If pricing exists, use the ACTUAL prices
+- Qualification questions must be specific to the actual services listed
+
+**FINAL CHECK BEFORE RETURNING JSON:**
+1. Did I write 300-500 words for companyInformation? ✓
+2. Did I include ALL the services listed above? ✓
+3. Did I include ALL the stats? ✓
+4. Did I use SPECIFIC information, not generic text? ✓
+5. Are my FAQ answers 3-5 sentences each? ✓
+6. Did I use actual testimonials word-for-word if available? ✓
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
 
@@ -663,7 +731,7 @@ Return ONLY valid JSON, no markdown, no code blocks.`;
       messages: [
         {
           role: 'system',
-          content: 'You are an expert AI strategy creator. Return ONLY valid JSON with clean, professional content. Never include cookie policies, legal jargon, or navigation text.'
+          content: 'You are an expert AI strategy creator. You create COMPREHENSIVE, DETAILED strategies using ALL available data. Your companyInformation sections are 300-500 words. Your FAQ answers are 3-5 sentences each with SPECIFIC details. You NEVER use generic text - you use the ACTUAL data provided. Return ONLY valid JSON with clean, professional content. Never include cookie policies, legal jargon, or navigation text.'
         },
         {
           role: 'user',
@@ -671,8 +739,8 @@ Return ONLY valid JSON, no markdown, no code blocks.`;
         }
       ],
       model: 'llama-3.1-70b-versatile',
-      temperature: 0.6,
-      max_tokens: 4000,
+      temperature: 0.7,
+      max_tokens: 6000,
       response_format: { type: "json_object" }
     });
 
