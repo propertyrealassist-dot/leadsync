@@ -611,56 +611,50 @@ ${websiteData.ctas?.map(c => `🎯 ${c}`).join('\n') || 'None'}
 9. **NO generic answers** - Every answer must reference SPECIFIC information from the scan
 10. **NO cookie policies, sign-in prompts, legal jargon** - Only valuable content
 
-**OUTPUT JSON STRUCTURE:**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT: The values I show below are PLACEHOLDERS showing what TYPE of content to write.
+You must REPLACE them with actual content from the data I provided above.
+DO NOT copy these placeholder strings - REPLACE them with real data!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OUTPUT JSON STRUCTURE:
 {
   "name": "${businessName} AI Agent",
   "tag": "${businessName.toLowerCase().replace(/\s+/g, '-')}-ai",
-  "tone": "Professional/Friendly/Consultative (choose based on industry)",
-  "brief": "**${businessName.toUpperCase()} AI AGENT**\\n\\n[3-4 sentence professional brief describing role, personality, and approach. NO cookie policy text, NO sign-in prompts.]",
-  "objective": "${goal === 'book_appointments' ? 'Schedule appointments and demos' : 'Qualify leads and share information'}",
-  "companyInformation": "[⚠️ CRITICAL: Write 300-500 words using ALL the data I provided above. Do NOT write generic text. Use the ACTUAL services, stats, and content from the scan.
-
-Write 4 detailed paragraphs:
-
-PARAGRAPH 1: ${websiteData.tagline || websiteData.description} [Continue explaining what they do, who they serve (${websiteData.targetAudience}), and their main value proposition using the VALUE PROPOSITIONS section above]
-
-PARAGRAPH 2: Our comprehensive offerings include [LIST EVERY SERVICE from the SERVICES/PRODUCTS section - don't summarize, LISTALL OF THEM]. [Add details about each service using FEATURES section]
-
-PARAGRAPH 3: [Write about results - USE EVERY STAT from STATS & PROOF POINTS section]. [If testimonials exist, quote 1-2 directly: 'As one client shared, \"[exact testimonial]\"']
-
-PARAGRAPH 4: [Explain what makes them unique using BENEFITS and KEY FEATURES sections]
-
-WORD COUNT CHECK: This must be 300-500 words. Count your words before returning!]",
+  "tone": "Professional and Helpful",
+  "brief": "**${businessName.toUpperCase()} AI AGENT**\\n\\nYou are the AI assistant for ${businessName}. Your role is to engage potential clients professionally, understand their needs, and guide them toward the right solution. Be helpful, knowledgeable, and consultative.",
+  "objective": "${goal === 'book_appointments' ? 'Schedule qualified appointments and demos' : 'Qualify leads and share valuable information'}",
+  "companyInformation": "REPLACE THIS: Write a comprehensive 300-500 word description of ${businessName}. Include: their tagline/description, who they serve, ALL services by name from the SERVICES section, ALL stats from the STATS section, testimonials if available, and what makes them unique from the BENEFITS section. Write 4 detailed paragraphs.",
   "initialMessage": "Hey! Thanks for reaching out to ${businessName}. Can you confirm this is {{contact.first_name}}?",
   "faqs": [
     {
       "question": "What does ${businessName} do?",
-      "answer": "[WRITE 4-5 FULL SENTENCES using data from above. Sentence 1: ${websiteData.tagline || 'State what they do'}. Sentence 2: Explain who they serve (use ${websiteData.targetAudience}). Sentence 3-4: Mention specific services from SERVICES/PRODUCTS section. Sentence 5: Include a stat if available. NO BRACKETS IN FINAL OUTPUT - write actual content!]",
+      "answer": "REPLACE THIS: 4-5 sentences explaining what they do, who they serve, specific services, and a stat.",
       "delay": 1
     },
     {
       "question": "Who is ${businessName} for?",
-      "answer": "[WRITE 4 FULL SENTENCES. Sentence 1: We work with ${websiteData.targetAudience || 'businesses'}. Sentence 2-3: Describe their specific needs/pain points using BENEFITS section. Sentence 4: Explain ideal client profile. NO BRACKETS - write real content!]",
+      "answer": "REPLACE THIS: 4 sentences about target audience, problems they solve, and ideal client.",
       "delay": 1
     },
     {
       "question": "What results can I expect?",
-      "answer": "[WRITE 4-5 FULL SENTENCES. Sentence 1-3: List EVERY stat from STATS & PROOF POINTS section - don't skip any! Sentence 4: If testimonials exist, quote one: 'As one client shared, \"[exact testimonial]\"'. Sentence 5: Add additional proof point. NO BRACKETS - use actual data!]",
+      "answer": "REPLACE THIS: 4-5 sentences listing ALL stats and quoting a testimonial if available.",
       "delay": 1
     },
     {
       "question": "What services do you offer?",
-      "answer": "[WRITE 3-4 FULL SENTENCES. Sentence 1: 'We offer' then LIST EVERY SERVICE from SERVICES/PRODUCTS section above. Don't say 'various services' - name them ALL! Sentence 2-3: Describe what's included in these services using FEATURES section. Sentence 4: Mention any additional offerings. NO BRACKETS!]",
+      "answer": "REPLACE THIS: 3-4 sentences listing EVERY service by name and describing what is included.",
       "delay": 1
     },
     {
       "question": "How much does it cost?",
-      "answer": "[IF PRICING exists in PRICING INFORMATION section, write 2-3 sentences listing actual prices. IF NO PRICING: 'Pricing varies based on your specific needs and the scope of work. I can connect you with our team to discuss a customized quote that fits your budget and goals.' NO BRACKETS!]",
+      "answer": "REPLACE THIS: List actual prices if available, otherwise explain pricing varies.",
       "delay": 1
     },
     {
       "question": "How does it work?",
-      "answer": "[WRITE 4 FULL SENTENCES. Describe getting started process. Mention specific features from KEY FEATURES section. Explain the workflow. Make it conversational and helpful. NO BRACKETS!]",
+      "answer": "REPLACE THIS: 4 sentences describing the process and specific features.",
       "delay": 1
     }
   ],
@@ -749,7 +743,17 @@ Now create the JSON strategy following these steps:
 4. FAQ answers are 4-5 complete sentences? ✓
 5. I used SPECIFIC data, no generic text? ✓
 6. I quoted testimonials if available? ✓
-7. NO BRACKETS left in my answers? ✓
+7. NO "REPLACE THIS" or placeholder text remains? ✓
+8. I wrote REAL CONTENT, not instructions? ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ CRITICAL REMINDER:
+Your JSON must contain REAL CONTENT, not placeholder instructions!
+Example of WRONG output: "answer": "REPLACE THIS: Write 4-5 sentences..."
+Example of CORRECT output: "answer": "${businessName} provides comprehensive logistics solutions..."
+
+If your JSON contains "REPLACE THIS" or any instruction text, START OVER!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
 
@@ -759,7 +763,7 @@ Return ONLY valid JSON, no markdown, no code blocks.`;
       messages: [
         {
           role: 'system',
-          content: 'You are an expert AI strategy creator. You create COMPREHENSIVE, DETAILED strategies using ALL available data. Your companyInformation sections are 300-500 words. Your FAQ answers are 3-5 sentences each with SPECIFIC details. You NEVER use generic text - you use the ACTUAL data provided. Return ONLY valid JSON with clean, professional content. Never include cookie policies, legal jargon, or navigation text.'
+          content: 'You are an expert AI strategy creator. You create COMPREHENSIVE, DETAILED strategies using ALL available data. Your companyInformation sections are 300-500 words of real content. Your FAQ answers are 4-5 complete sentences each with SPECIFIC details from the data. You REPLACE all placeholders with actual content. You NEVER output placeholder text like "REPLACE THIS" or "[Write here]" - you write the actual content. You use the ACTUAL data provided - real services, real stats, real testimonials. Return ONLY valid JSON. Never include cookie policies, legal jargon, or navigation text.'
         },
         {
           role: 'user',
