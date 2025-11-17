@@ -72,16 +72,110 @@ function cleanText(text) {
 }
 
 // ============================================
-// ULTRA-SMART WEBSITE SCRAPER
+// DEEP SCAN CONFIGURATION
 // ============================================
-async function scrapeWebsite(url) {
+const PRIORITY_PAGES = [
+  '/about',
+  '/about-us',
+  '/services',
+  '/products',
+  '/pricing',
+  '/features',
+  '/solutions',
+  '/how-it-works',
+  '/our-work',
+  '/portfolio',
+  '/case-studies',
+  '/testimonials',
+  '/reviews',
+  '/contact'
+];
+
+// ============================================
+// EXTRACT INTERNAL LINKS
+// ============================================
+function extractInternalLinks($, baseUrl) {
+  const links = new Set();
+
   try {
-    if (!url.startsWith('http')) {
-      url = 'https://' + url;
+    const baseUrlObj = new URL(baseUrl);
+
+    $('a[href]').each((i, elem) => {
+      try {
+        const href = $(elem).attr('href');
+        if (!href) return;
+
+        // Convert relative URLs to absolute
+        let absoluteUrl;
+        if (href.startsWith('http')) {
+          absoluteUrl = href;
+        } else if (href.startsWith('/')) {
+          absoluteUrl = baseUrlObj.origin + href;
+        } else {
+          return; // Skip relative paths
+        }
+
+        const urlObj = new URL(absoluteUrl);
+
+        // Only include same-domain links
+        if (urlObj.origin === baseUrlObj.origin) {
+          // Remove query params and hash
+          const cleanUrl = urlObj.origin + urlObj.pathname;
+          links.add(cleanUrl);
+        }
+      } catch (e) {
+        // Invalid URL, skip
+      }
+    });
+  } catch (e) {
+    console.error('Error extracting links:', e.message);
+  }
+
+  return Array.from(links);
+}
+
+// ============================================
+// FIND PRIORITY PAGES TO CRAWL
+// ============================================
+function findPriorityPages(allLinks, baseUrl) {
+  const priorityLinks = new Set();
+
+  try {
+    const baseUrlObj = new URL(baseUrl);
+
+    // Add homepage
+    priorityLinks.add(baseUrlObj.origin);
+
+    // Find matching priority pages
+    for (const link of allLinks) {
+      const path = new URL(link).pathname.toLowerCase();
+
+      for (const priority of PRIORITY_PAGES) {
+        if (path.includes(priority) || path === priority) {
+          priorityLinks.add(link);
+          break;
+        }
+      }
+
+      // Limit to 10 pages max (homepage + 9 others)
+      if (priorityLinks.size >= 10) break;
     }
+  } catch (e) {
+    console.error('Error finding priority pages:', e.message);
+  }
+
+  return Array.from(priorityLinks);
+}
+
+// ============================================
+// SCRAPE SINGLE PAGE
+// ============================================
+async function scrapeSinglePage(url) {
+  try {
+    console.log('   📄 Crawling:', url);
 
     const response = await axios.get(url, {
-      timeout: 15000,
+      timeout: 10000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
@@ -92,7 +186,161 @@ async function scrapeWebsite(url) {
     // Remove all noise elements
     $('script, style, noscript, iframe, nav, footer, header, .cookie, .privacy, [class*="cookie"], [class*="gdpr"]').remove();
 
-    const data = {
+    const pageData = {
+      url,
+      headings: [],
+      paragraphs: [],
+      lists: [],
+      valuePropositions: [],
+      stats: [],
+      testimonials: [],
+      pricing: [],
+      ctas: [],
+      links: []
+    };
+
+    // Extract ALL headings (H1-H6)
+    $('h1, h2, h3, h4, h5, h6').each((i, elem) => {
+      const text = cleanText($(elem).text());
+      if (text && text.length > 10 && text.length < 200 && !isNoise(text)) {
+        const tag = $(elem).prop('tagName').toLowerCase();
+        pageData.headings.push({
+          level: tag,
+          text: text
+        });
+
+        // Check if next element is a paragraph describing this heading
+        const nextP = $(elem).next('p').text().trim();
+        if (nextP && nextP.length > 30 && nextP.length < 800) {
+          pageData.valuePropositions.push({
+            title: text,
+            description: cleanText(nextP)
+          });
+        }
+      }
+    });
+
+    // Extract ALL meaningful paragraphs
+    $('p').each((i, elem) => {
+      const text = cleanText($(elem).text());
+      if (text.length > 40 && text.length < 1000 && !isNoise(text)) {
+        pageData.paragraphs.push(text);
+      }
+    });
+
+    // Extract ALL lists
+    $('ul, ol').each((i, elem) => {
+      const listItems = [];
+      $(elem).find('li').each((j, li) => {
+        const text = cleanText($(li).text());
+        if (text && text.length > 15 && text.length < 500 && !isNoise(text)) {
+          listItems.push(text);
+        }
+      });
+      if (listItems.length > 0) {
+        pageData.lists.push(listItems);
+      }
+    });
+
+    // Extract STATS & METRICS
+    $('*').each((i, elem) => {
+      const text = $(elem).text().trim();
+      if (text.length > 5 && text.length < 150) {
+        // Look for numbers with context
+        const statMatch = text.match(/(\d+[k|m|%+]*)\s*([a-z\s]{3,50})/gi);
+        if (statMatch && !isNoise(text)) {
+          statMatch.forEach(stat => {
+            const clean = cleanText(stat);
+            if (clean.length > 8 && clean.length < 100) {
+              pageData.stats.push(clean);
+            }
+          });
+        }
+      }
+    });
+
+    // Extract TESTIMONIALS
+    $('blockquote, [class*="testimonial"], [class*="review"], [class*="quote"]').each((i, elem) => {
+      const text = cleanText($(elem).text());
+      if (text.length > 30 && text.length < 1000 && !isNoise(text)) {
+        pageData.testimonials.push(text);
+      }
+    });
+
+    // Extract PRICING
+    $('[class*="price"], [class*="pricing"]').each((i, elem) => {
+      const text = cleanText($(elem).text());
+      if (text && /\$|€|£|\d+/.test(text) && text.length < 200) {
+        pageData.pricing.push(text);
+      }
+    });
+
+    // Extract CTAs
+    $('a[class*="cta"], a[class*="button"], button').each((i, elem) => {
+      const text = cleanText($(elem).text());
+      if (text && text.length > 3 && text.length < 50 && !isNoise(text)) {
+        if (!text.toLowerCase().includes('sign in') &&
+            !text.toLowerCase().includes('log in')) {
+          pageData.ctas.push(text);
+        }
+      }
+    });
+
+    // Extract internal links for crawling
+    pageData.links = extractInternalLinks($, url);
+
+    console.log(`   ✅ Extracted: ${pageData.headings.length} headings, ${pageData.paragraphs.length} paragraphs, ${pageData.stats.length} stats`);
+
+    return pageData;
+
+  } catch (error) {
+    console.error(`   ❌ Failed to scrape ${url}:`, error.message);
+    return null;
+  }
+}
+
+// ============================================
+// DEEP SCRAPE WEBSITE (CRAWL MULTIPLE PAGES)
+// ============================================
+async function scrapeWebsite(url) {
+  try {
+    if (!url.startsWith('http')) {
+      url = 'https://' + url;
+    }
+
+    console.log('🔍 DEEP SCAN starting for:', url);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // STEP 1: Scrape homepage
+    const homepageData = await scrapeSinglePage(url);
+
+    if (!homepageData) {
+      throw new Error('Failed to scrape homepage');
+    }
+
+    // STEP 2: Find priority pages to crawl
+    const allLinks = homepageData.links;
+    const priorityPages = findPriorityPages(allLinks, url);
+
+    console.log(`\n📊 Found ${priorityPages.length} priority pages to crawl`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    // STEP 3: Scrape all priority pages in parallel
+    const scrapePromises = priorityPages
+      .filter(pageUrl => pageUrl !== url) // Exclude homepage (already scraped)
+      .slice(0, 9) // Max 9 additional pages
+      .map(pageUrl => scrapeSinglePage(pageUrl));
+
+    const pagesData = await Promise.all(scrapePromises);
+
+    // Add homepage data
+    const allPagesData = [homepageData, ...pagesData.filter(p => p !== null)];
+
+    console.log(`\n✅ Successfully crawled ${allPagesData.length} pages`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    // STEP 4: Aggregate data from all pages
+    const aggregatedData = {
       businessName: '',
       title: '',
       description: '',
@@ -106,110 +354,75 @@ async function scrapeWebsite(url) {
       pricing: [],
       targetAudience: '',
       industryKeywords: [],
-      ctas: []
+      ctas: [],
+      pagesScanned: allPagesData.length,
+      allHeadings: [],
+      allParagraphs: []
     };
 
-    // Extract business name
-    data.businessName = $('meta[property="og:site_name"]').attr('content') ||
-                        $('title').text().split(/[-|]/)[0].trim();
+    // Get business name and description from homepage
+    const $ = cheerio.load((await axios.get(url, {
+      timeout: 10000,
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    })).data);
 
-    // Extract title and description (clean)
-    data.title = cleanText($('title').text());
-    data.description = cleanText(
+    aggregatedData.businessName = $('meta[property="og:site_name"]').attr('content') ||
+                                   $('title').text().split(/[-|]/)[0].trim();
+
+    aggregatedData.title = cleanText($('title').text());
+    aggregatedData.description = cleanText(
       $('meta[name="description"]').attr('content') ||
       $('meta[property="og:description"]').attr('content') || ''
     );
 
-    // Extract tagline (usually first H1 or hero text)
-    const firstH1 = $('h1').first().text().trim();
-    if (firstH1 && !isNoise(firstH1) && firstH1.length < 150) {
-      data.tagline = cleanText(firstH1);
+    // Get tagline from first H1
+    const firstH1 = homepageData.headings.find(h => h.level === 'h1');
+    if (firstH1) {
+      aggregatedData.tagline = firstH1.text;
     }
 
-    // Extract VALUE PROPOSITIONS (H2s that describe benefits)
-    $('h2, h3').each((i, elem) => {
-      const text = cleanText($(elem).text());
-      if (text && text.length > 15 && text.length < 200 && !isNoise(text)) {
-        // Check if next element is a paragraph describing this
-        const nextP = $(elem).next('p').text().trim();
-        if (nextP && nextP.length > 30) {
-          data.valuePropositions.push({
-            title: text,
-            description: cleanText(nextP).slice(0, 300)
-          });
-        }
-      }
-    });
+    // Aggregate all data from all pages
+    for (const pageData of allPagesData) {
+      if (!pageData) continue;
 
-    // Extract SERVICES/PRODUCTS (from lists and sections)
-    $('ul li, ol li').each((i, elem) => {
-      const text = cleanText($(elem).text());
-      if (text && text.length > 20 && text.length < 300 && !isNoise(text)) {
-        // Categorize as service or feature
-        if (text.toLowerCase().includes('service') ||
-            text.toLowerCase().includes('solution') ||
-            text.toLowerCase().includes('product')) {
-          data.services.push(text);
-        } else if (text.length < 150) {
-          data.features.push(text);
-        }
-      }
-    });
+      // Collect all headings
+      aggregatedData.allHeadings.push(...pageData.headings);
 
-    // Extract BENEFITS (paragraphs with value indicators)
-    $('p').each((i, elem) => {
-      const text = cleanText($(elem).text());
-      if (text.length > 50 && text.length < 500 && !isNoise(text)) {
-        if (hasValue(text)) {
-          data.benefits.push(text);
-        }
-      }
-    });
+      // Collect all paragraphs
+      aggregatedData.allParagraphs.push(...pageData.paragraphs);
 
-    // Extract STATS & METRICS (high-value content)
-    $('*').each((i, elem) => {
-      const text = $(elem).text().trim();
-      // Look for numbers with context
-      const statMatch = text.match(/(\d+[k|m|%+]*)\s*([a-z\s]{5,30})/gi);
-      if (statMatch && !isNoise(text)) {
-        statMatch.forEach(stat => {
-          const clean = cleanText(stat);
-          if (clean.length < 100) {
-            data.stats.push(clean);
+      // Collect value propositions
+      aggregatedData.valuePropositions.push(...pageData.valuePropositions);
+
+      // Collect lists as services/features
+      for (const list of pageData.lists) {
+        for (const item of list) {
+          if (item.toLowerCase().includes('service') ||
+              item.toLowerCase().includes('solution') ||
+              item.toLowerCase().includes('product')) {
+            aggregatedData.services.push(item);
+          } else {
+            aggregatedData.features.push(item);
           }
-        });
-      }
-    });
-
-    // Extract TESTIMONIALS (quotes, reviews)
-    $('blockquote, [class*="testimonial"], [class*="review"], [class*="quote"]').each((i, elem) => {
-      const text = cleanText($(elem).text());
-      if (text.length > 30 && text.length < 1000 && !isNoise(text)) {
-        data.testimonials.push(text);
-      }
-    });
-
-    // Extract PRICING (only real pricing info)
-    $('[class*="price"], [class*="pricing"]').each((i, elem) => {
-      const text = cleanText($(elem).text());
-      if (text && /\$|€|£|\d+/.test(text) && text.length < 200) {
-        data.pricing.push(text);
-      }
-    });
-
-    // Extract CTAs (meaningful call-to-actions)
-    $('a[class*="cta"], a[class*="button"], button').each((i, elem) => {
-      const text = cleanText($(elem).text());
-      if (text && text.length > 3 && text.length < 50 && !isNoise(text)) {
-        if (!text.toLowerCase().includes('sign in') &&
-            !text.toLowerCase().includes('log in')) {
-          data.ctas.push(text);
         }
       }
-    });
 
-    // Detect target audience
-    const fullText = $('body').text().toLowerCase();
+      // Collect benefits from valuable paragraphs
+      for (const paragraph of pageData.paragraphs) {
+        if (hasValue(paragraph)) {
+          aggregatedData.benefits.push(paragraph);
+        }
+      }
+
+      // Collect stats, testimonials, pricing, CTAs
+      aggregatedData.stats.push(...pageData.stats);
+      aggregatedData.testimonials.push(...pageData.testimonials);
+      aggregatedData.pricing.push(...pageData.pricing);
+      aggregatedData.ctas.push(...pageData.ctas);
+    }
+
+    // Detect target audience from all collected text
+    const fullText = aggregatedData.allParagraphs.join(' ').toLowerCase();
     const audienceKeywords = {
       'businesses': /\b(businesses|companies|enterprises|organizations)\b/g,
       'agencies': /\b(agencies|marketing agencies|creative agencies)\b/g,
@@ -222,7 +435,7 @@ async function scrapeWebsite(url) {
     for (const [audience, pattern] of Object.entries(audienceKeywords)) {
       const matches = fullText.match(pattern);
       if (matches && matches.length > 2) {
-        data.targetAudience = audience;
+        aggregatedData.targetAudience = audience;
         break;
       }
     }
@@ -238,31 +451,39 @@ async function scrapeWebsite(url) {
       const regex = new RegExp(`\\b${term}\\b`, 'gi');
       const matches = fullText.match(regex);
       if (matches && matches.length > 3) {
-        data.industryKeywords.push(term);
+        aggregatedData.industryKeywords.push(term);
       }
     });
 
     // Remove duplicates and limit arrays
-    data.valuePropositions = [...new Set(data.valuePropositions.map(JSON.stringify))].map(JSON.parse).slice(0, 5);
-    data.services = [...new Set(data.services)].slice(0, 8);
-    data.features = [...new Set(data.features)].slice(0, 10);
-    data.benefits = [...new Set(data.benefits)].slice(0, 5);
-    data.stats = [...new Set(data.stats)].slice(0, 8);
-    data.testimonials = [...new Set(data.testimonials)].slice(0, 3);
-    data.pricing = [...new Set(data.pricing)].slice(0, 3);
-    data.ctas = [...new Set(data.ctas)].slice(0, 5);
+    aggregatedData.valuePropositions = [...new Set(aggregatedData.valuePropositions.map(JSON.stringify))].map(JSON.parse).slice(0, 10);
+    aggregatedData.services = [...new Set(aggregatedData.services)].slice(0, 15);
+    aggregatedData.features = [...new Set(aggregatedData.features)].slice(0, 20);
+    aggregatedData.benefits = [...new Set(aggregatedData.benefits)].slice(0, 10);
+    aggregatedData.stats = [...new Set(aggregatedData.stats)].slice(0, 15);
+    aggregatedData.testimonials = [...new Set(aggregatedData.testimonials)].slice(0, 5);
+    aggregatedData.pricing = [...new Set(aggregatedData.pricing)].slice(0, 5);
+    aggregatedData.ctas = [...new Set(aggregatedData.ctas)].slice(0, 8);
 
-    console.log('📊 Scraped Data Quality:');
-    console.log('  - Value Props:', data.valuePropositions.length);
-    console.log('  - Services:', data.services.length);
-    console.log('  - Benefits:', data.benefits.length);
-    console.log('  - Stats:', data.stats.length);
-    console.log('  - Testimonials:', data.testimonials.length);
+    console.log('📊 DEEP SCAN Results:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('  📄 Pages Scanned:', aggregatedData.pagesScanned);
+    console.log('  📝 Headings:', aggregatedData.allHeadings.length);
+    console.log('  📄 Paragraphs:', aggregatedData.allParagraphs.length);
+    console.log('  💎 Value Props:', aggregatedData.valuePropositions.length);
+    console.log('  🛠️  Services:', aggregatedData.services.length);
+    console.log('  ⚡ Features:', aggregatedData.features.length);
+    console.log('  ✨ Benefits:', aggregatedData.benefits.length);
+    console.log('  📊 Stats:', aggregatedData.stats.length);
+    console.log('  💬 Testimonials:', aggregatedData.testimonials.length);
+    console.log('  💰 Pricing:', aggregatedData.pricing.length);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    return data;
+    return aggregatedData;
+
   } catch (error) {
-    console.error('Scraping error:', error.message);
-    throw new Error('Failed to scrape website');
+    console.error('❌ Deep scan error:', error.message);
+    throw new Error('Failed to perform deep scan');
   }
 }
 
@@ -277,7 +498,7 @@ router.post('/scan-website', async (req, res) => {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    console.log('🔍 Scanning website:', url);
+    console.log('🔍 Starting DEEP SCAN for:', url);
     const websiteData = await scrapeWebsite(url);
 
     res.json({
@@ -313,21 +534,25 @@ Name: ${businessName}
 Industry: ${websiteData.industryKeywords?.join(', ') || 'General'}
 Target Audience: ${websiteData.targetAudience || 'Businesses'}
 Tagline: ${websiteData.tagline || websiteData.title}
+Pages Analyzed: ${websiteData.pagesScanned || 1}
 
 **VALUE PROPOSITIONS:**
 ${websiteData.valuePropositions?.map(vp => `• ${vp.title}: ${vp.description}`).join('\n') || 'Not specified'}
 
 **SERVICES/PRODUCTS:**
-${websiteData.services?.slice(0, 5).join('\n') || 'Not specified'}
+${websiteData.services?.slice(0, 8).join('\n') || 'Not specified'}
+
+**KEY FEATURES:**
+${websiteData.features?.slice(0, 10).join('\n') || 'Not specified'}
 
 **KEY BENEFITS:**
-${websiteData.benefits?.slice(0, 3).join('\n') || 'Not specified'}
+${websiteData.benefits?.slice(0, 5).join('\n') || 'Not specified'}
 
 **STATS & PROOF:**
-${websiteData.stats?.slice(0, 5).join('\n') || 'None available'}
+${websiteData.stats?.slice(0, 8).join('\n') || 'None available'}
 
 **TESTIMONIALS:**
-${websiteData.testimonials?.slice(0, 2).join('\n\n') || 'None available'}
+${websiteData.testimonials?.slice(0, 3).join('\n\n') || 'None available'}
 
 **GOAL:** ${goal || 'Generate and qualify leads'}
 
@@ -350,12 +575,12 @@ ${websiteData.testimonials?.slice(0, 2).join('\n\n') || 'None available'}
   "tone": "Professional/Friendly/Consultative (choose based on industry)",
   "brief": "**${businessName.toUpperCase()} AI AGENT**\\n\\n[3-4 sentence professional brief describing role, personality, and approach. NO cookie policy text, NO sign-in prompts.]",
   "objective": "${goal === 'book_appointments' ? 'Schedule appointments and demos' : 'Qualify leads and share information'}",
-  "companyInformation": "[Professional description using value propositions, stats, and benefits. 150-300 words. Focus on RESULTS and VALUE.]",
+  "companyInformation": "[Professional description using value propositions, stats, and benefits. 200-400 words. Focus on RESULTS and VALUE. Include specific services, features, and proof points.]",
   "initialMessage": "Hey! Thanks for reaching out to ${businessName}. Can you confirm this is {{contact.first_name}}?",
   "faqs": [
     {
       "question": "What does ${businessName} do?",
-      "answer": "[Use value propositions and stats - be specific and compelling]",
+      "answer": "[Use value propositions, services, and stats - be specific and compelling]",
       "delay": 1
     },
     {
@@ -366,6 +591,11 @@ ${websiteData.testimonials?.slice(0, 2).join('\n\n') || 'None available'}
     {
       "question": "What results can I expect?",
       "answer": "[Use stats and testimonials if available]",
+      "delay": 1
+    },
+    {
+      "question": "What services do you offer?",
+      "answer": "[List key services/features from the data]",
       "delay": 1
     },
     {
@@ -423,6 +653,7 @@ ${websiteData.testimonials?.slice(0, 2).join('\n\n') || 'None available'}
 - Use testimonials to add credibility
 - Make FAQs answer real customer questions
 - Qualification questions should be natural and relevant
+- Company information should be comprehensive (200-400 words) using all available data
 
 Return ONLY valid JSON, no markdown, no code blocks.`;
 
@@ -441,7 +672,7 @@ Return ONLY valid JSON, no markdown, no code blocks.`;
       ],
       model: 'llama-3.1-70b-versatile',
       temperature: 0.6,
-      max_tokens: 3500,
+      max_tokens: 4000,
       response_format: { type: "json_object" }
     });
 
@@ -529,6 +760,7 @@ function createProfessionalFallback(businessName, websiteData, goal) {
 
   const stats = websiteData.stats?.slice(0, 3).join('. ') || '';
   const benefits = websiteData.benefits?.slice(0, 2).join(' ') || '';
+  const services = websiteData.services?.slice(0, 5).join(', ') || '';
 
   return {
     name: `${businessName} AI Agent`,
@@ -536,7 +768,7 @@ function createProfessionalFallback(businessName, websiteData, goal) {
     tone: 'Professional and Helpful',
     brief: `**${businessName.toUpperCase()} AI AGENT**\n\nYou are the AI assistant for ${businessName}. Your role is to engage potential clients professionally, understand their needs, and guide them toward the right solution.\n\nBe helpful, knowledgeable, and consultative. Ask thoughtful questions and provide value in every interaction.`,
     objective: goal === 'book_appointments' ? 'Schedule qualified appointments' : 'Qualify and nurture leads',
-    companyInformation: `${description}\n\n${stats ? stats + '\n\n' : ''}${benefits || ''}`.trim(),
+    companyInformation: `${description}\n\n${services ? 'We offer: ' + services + '.\n\n' : ''}${stats ? stats + '\n\n' : ''}${benefits || ''}`.trim(),
     initialMessage: `Hey! Thanks for reaching out to ${businessName}. Can you confirm this is {{contact.first_name}}?`,
     faqs: [
       {
