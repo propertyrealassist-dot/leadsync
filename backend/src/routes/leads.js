@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { authenticateToken } = require('../middleware/auth');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 // Get all leads
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status, search, limit = 50 } = req.query;
 
@@ -26,7 +26,7 @@ router.get('/', authenticateToken, (req, res) => {
     query += ' ORDER BY created_at DESC LIMIT ?';
     params.push(parseInt(limit));
 
-    const leads = db.prepare(query).all(...params);
+    const leads = await db.all(query, params);
 
     res.json({
       success: true,
@@ -42,11 +42,11 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Get single lead with activities
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const lead = db.prepare(`
+    const lead = await db.get(`
       SELECT * FROM leads WHERE id = ? AND user_id = ?
-    `).get(req.params.id, req.user.id);
+    `, [req.params.id, req.user.id]);
 
     if (!lead) {
       return res.status(404).json({
@@ -56,9 +56,9 @@ router.get('/:id', authenticateToken, (req, res) => {
     }
 
     // Get activities
-    const activities = db.prepare(`
+    const activities = await db.all(`
       SELECT * FROM lead_activities WHERE lead_id = ? ORDER BY created_at DESC
-    `).all(lead.id);
+    `, [lead.id]);
 
     res.json({
       success: true,
@@ -77,7 +77,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 });
 
 // Create lead
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, email, phone, company, source, template_id, custom_fields } = req.body;
 
@@ -91,25 +91,24 @@ router.post('/', authenticateToken, (req, res) => {
     const id = uuidv4();
     const now = new Date().toISOString();
 
-    db.prepare(`
+    await db.run(`
       INSERT INTO leads (
         id, user_id, template_id, name, email, phone, company,
         source, custom_fields, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      id, req.user.id, template_id || null, name, email || null,
+    `, [id, req.user.id, template_id || null, name, email || null,
       phone || null, company || null, source || 'manual',
       custom_fields ? JSON.stringify(custom_fields) : null,
       now, now
-    );
+    ]);
 
     // Log activity
-    db.prepare(`
+    await db.run(`
       INSERT INTO lead_activities (id, lead_id, activity_type, description, created_at)
       VALUES (?, ?, ?, ?, ?)
-    `).run(uuidv4(), id, 'created', 'Lead created', now);
+    `, [uuidv4(), id, 'created', 'Lead created', now]);
 
-    const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(id);
+    const lead = await db.get('SELECT * FROM leads WHERE id = ?', [id]);
 
     res.status(201).json({
       success: true,
@@ -125,13 +124,13 @@ router.post('/', authenticateToken, (req, res) => {
 });
 
 // Update lead
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { status, notes, tags, assigned_to, custom_fields, score } = req.body;
 
-    const lead = db.prepare(`
+    const lead = await db.get(`
       SELECT id FROM leads WHERE id = ? AND user_id = ?
-    `).get(req.params.id, req.user.id);
+    `, [req.params.id, req.user.id]);
 
     if (!lead) {
       return res.status(404).json({
@@ -172,19 +171,19 @@ router.put('/:id', authenticateToken, (req, res) => {
     params.push(new Date().toISOString());
     params.push(req.params.id);
 
-    db.prepare(`
+    await db.run(`
       UPDATE leads SET ${updates.join(', ')} WHERE id = ?
-    `).run(...params);
+    `, [...params]);
 
     // Log activity if status changed
     if (status) {
-      db.prepare(`
+      await db.run(`
         INSERT INTO lead_activities (id, lead_id, activity_type, description, created_at)
         VALUES (?, ?, ?, ?, ?)
-      `).run(uuidv4(), req.params.id, 'status_changed', `Status changed to ${status}`, new Date().toISOString());
+      `, [uuidv4(), req.params.id, 'status_changed', `Status changed to ${status}`, new Date().toISOString()]);
     }
 
-    const updated = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+    const updated = await db.get('SELECT * FROM leads WHERE id = ?', [req.params.id]);
 
     res.json({
       success: true,
@@ -200,11 +199,11 @@ router.put('/:id', authenticateToken, (req, res) => {
 });
 
 // Delete lead
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const result = db.prepare(`
+    const result = await db.run(`
       DELETE FROM leads WHERE id = ? AND user_id = ?
-    `).run(req.params.id, req.user.id);
+    `, [req.params.id, req.user.id]);
 
     if (result.changes === 0) {
       return res.status(404).json({
@@ -227,9 +226,9 @@ router.delete('/:id', authenticateToken, (req, res) => {
 });
 
 // Lead stats overview
-router.get('/stats/overview', authenticateToken, (req, res) => {
+router.get('/stats/overview', authenticateToken, async (req, res) => {
   try {
-    const stats = db.prepare(`
+    const stats = await db.get(`
       SELECT
         COUNT(*) as total,
         SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) as new,
@@ -239,7 +238,7 @@ router.get('/stats/overview', authenticateToken, (req, res) => {
         SUM(CASE WHEN status = 'won' THEN 1 ELSE 0 END) as won,
         SUM(CASE WHEN status = 'lost' THEN 1 ELSE 0 END) as lost
       FROM leads WHERE user_id = ?
-    `).get(req.user.id);
+    `, [req.user.id]);
 
     res.json({
       success: true,
@@ -255,14 +254,14 @@ router.get('/stats/overview', authenticateToken, (req, res) => {
 });
 
 // Add activity to lead
-router.post('/:id/activities', authenticateToken, (req, res) => {
+router.post('/:id/activities', authenticateToken, async (req, res) => {
   try {
     const { activity_type, description, metadata } = req.body;
 
     // Verify lead ownership
-    const lead = db.prepare(`
+    const lead = await db.get(`
       SELECT id FROM leads WHERE id = ? AND user_id = ?
-    `).get(req.params.id, req.user.id);
+    `, [req.params.id, req.user.id]);
 
     if (!lead) {
       return res.status(404).json({
@@ -274,19 +273,18 @@ router.post('/:id/activities', authenticateToken, (req, res) => {
     const id = uuidv4();
     const now = new Date().toISOString();
 
-    db.prepare(`
+    await db.run(`
       INSERT INTO lead_activities (id, lead_id, activity_type, description, metadata, created_at)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      id,
+    `, [id,
       req.params.id,
       activity_type,
       description || null,
       metadata ? JSON.stringify(metadata) : null,
       now
-    );
+    ]);
 
-    const activity = db.prepare('SELECT * FROM lead_activities WHERE id = ?').get(id);
+    const activity = await db.get('SELECT * FROM lead_activities WHERE id = ?', [id]);
 
     res.status(201).json({
       success: true,

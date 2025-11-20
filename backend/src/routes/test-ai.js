@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const aiService = require('../services/aiServiceRouter');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 // Test AI conversation endpoint
 router.post('/conversation', authenticateToken, async (req, res) => {
@@ -16,14 +16,14 @@ router.post('/conversation', authenticateToken, async (req, res) => {
     console.log('Message:', message);
 
     // DEBUG: Show ALL strategies in database
-    const allStrategies = db.prepare('SELECT id, user_id, name FROM templates').all();
+    const allStrategies = await db.all('SELECT id, user_id, name FROM templates', []);
     console.log('\n📊 ALL STRATEGIES IN DATABASE:');
     allStrategies.forEach(s => {
       console.log(`   - ${s.name} | ID: ${s.id} | user_id: ${s.user_id}`);
     });
 
     // DEBUG: Check if this specific strategy ID exists at all (any user)
-    const strategyAny = db.prepare('SELECT * FROM templates WHERE id = ?').get(strategyId);
+    const strategyAny = await db.get('SELECT * FROM templates WHERE id = ?', [strategyId]);
     console.log('\n📊 Strategy exists (any user)?', strategyAny ? 'YES' : 'NO');
     if (strategyAny) {
       console.log('   Found with user_id:', strategyAny.user_id);
@@ -32,8 +32,7 @@ router.post('/conversation', authenticateToken, async (req, res) => {
     }
 
     // Get strategy with proper user_id check
-    const strategy = db.prepare('SELECT * FROM templates WHERE id = ? AND user_id = ?')
-      .get(strategyId, req.user.id);
+    const strategy = await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ?', [strategyId, req.user.id]);
 
     if (!strategy) {
       console.log('\n❌ Strategy not found for this user');

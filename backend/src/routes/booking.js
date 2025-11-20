@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const emailService = require('../services/emailService');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 // Get available time slots (PUBLIC - no auth required)
 router.get('/availability/:templateId', async (req, res) => {
   try {
     const { date } = req.query;
-    const template = db.prepare('SELECT * FROM templates WHERE id = ?').get(req.params.templateId);
+    const template = await db.get('SELECT * FROM templates WHERE id = ?', [req.params.templateId]);
 
     if (!template) {
       return res.status(404).json({ error: 'Strategy not found' });
@@ -34,13 +34,13 @@ router.get('/availability/:templateId', async (req, res) => {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const bookedSlots = db.prepare(`
+    const bookedSlots = await db.all(`
       SELECT start_time, end_time FROM appointments
       WHERE template_id = ?
       AND start_time >= ?
       AND start_time <= ?
       AND status != 'cancelled'
-    `).all(req.params.templateId, startOfDay.toISOString(), endOfDay.toISOString());
+    `, [req.params.templateId, startOfDay.toISOString(), endOfDay.toISOString()]);
 
     // Generate available slots (30min intervals)
     const slots = [];
@@ -94,7 +94,7 @@ router.post('/book/:templateId', async (req, res) => {
       return res.status(400).json({ error: 'Name, email, and time are required' });
     }
 
-    const template = db.prepare('SELECT * FROM templates WHERE id = ?').get(req.params.templateId);
+    const template = await db.get('SELECT * FROM templates WHERE id = ?', [req.params.templateId]);
     if (!template) {
       return res.status(404).json({ error: 'Strategy not found' });
     }
@@ -103,13 +103,13 @@ router.post('/book/:templateId', async (req, res) => {
     const start = new Date(startTime);
     const end = new Date(start.getTime() + 30 * 60000); // 30 min default
 
-    const existingBooking = db.prepare(`
+    const existingBooking = await db.get(`
       SELECT id FROM appointments
       WHERE template_id = ?
       AND start_time < ?
       AND end_time > ?
       AND status != 'cancelled'
-    `).get(req.params.templateId, end.toISOString(), start.toISOString());
+    `, [req.params.templateId, end.toISOString(), start.toISOString()]);
 
     if (existingBooking) {
       return res.status(409).json({ error: 'This time slot is no longer available' });
@@ -119,13 +119,12 @@ router.post('/book/:templateId', async (req, res) => {
     const appointmentId = uuidv4();
     const now = new Date().toISOString();
 
-    db.prepare(`
+    await db.run(`
       INSERT INTO appointments (
         id, user_id, template_id, attendee_name, attendee_email,
         attendee_phone, start_time, end_time, status, notes, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      appointmentId,
+    `, [appointmentId,
       template.user_id,
       template.id,
       name,
@@ -136,17 +135,16 @@ router.post('/book/:templateId', async (req, res) => {
       'scheduled',
       notes || null,
       now
-    );
+    ]);
 
     // Create lead
     const leadId = uuidv4();
-    db.prepare(`
+    await db.run(`
       INSERT INTO leads (
         id, user_id, template_id, name, email, phone,
         source, status, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      leadId,
+    `, [leadId,
       template.user_id,
       template.id,
       name,
@@ -155,8 +153,7 @@ router.post('/book/:templateId', async (req, res) => {
       'booking_widget',
       'contacted',
       now,
-      now
-    );
+      now]);
 
     // Send confirmation email to attendee
     try {
@@ -174,7 +171,7 @@ router.post('/book/:templateId', async (req, res) => {
 
     // Send notification to user
     try {
-      const user = db.prepare('SELECT email, name FROM users WHERE id = ?').get(template.user_id);
+      const user = await db.get('SELECT email, name FROM users WHERE id = ?', [template.user_id]);
       if (user && user.email) {
         await emailService.sendLeadNotification(user.email, {
           name,
@@ -204,11 +201,11 @@ router.post('/book/:templateId', async (req, res) => {
 // Get booking widget info (PUBLIC - for displaying strategy info)
 router.get('/widget/:templateId', async (req, res) => {
   try {
-    const template = db.prepare(`
+    const template = await db.get(`
       SELECT id, name, description, industry
       FROM templates
       WHERE id = ?
-    `).get(req.params.templateId);
+    `, [req.params.templateId]);
 
     if (!template) {
       return res.status(404).json({ error: 'Strategy not found' });

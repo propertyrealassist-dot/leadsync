@@ -1,4 +1,4 @@
-const db = require('../database/db');
+const { db } = require('../config/database');
 const claudeAI = require('./claudeAI');
 const ghlService = require('./ghlSender');
 const crypto = require('crypto');
@@ -38,18 +38,17 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
 
       // Update webhook log
       if (webhookLogId) {
-        db.prepare(`
+        await db.run(`
           UPDATE webhook_logs
           SET status_code = ?, response_body = ?, processing_time_ms = ?,
               error_message = ?
           WHERE id = ?
-        `).run(
-          200,
+        `, [200,
           JSON.stringify({ message: defaultMessage }),
           Date.now() - startTime,
           'No matching strategy found',
           webhookLogId
-        );
+        ]);
       }
 
       return {
@@ -117,20 +116,19 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
 
     // Update webhook log
     if (webhookLogId) {
-      db.prepare(`
+      await db.run(`
         UPDATE webhook_logs
         SET status_code = ?, response_body = ?, processing_time_ms = ?,
             matched_template_id = ?, created_conversation_id = ?, user_id = ?
         WHERE id = ?
-      `).run(
-        200,
+      `, [200,
         JSON.stringify({ message: aiResponse }),
         Date.now() - startTime,
         strategy.id,
         conversation.id,
         user.id,
         webhookLogId
-      );
+      ]);
     }
 
     return {
@@ -160,17 +158,16 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
 
     // Update webhook log with error
     if (webhookLogId) {
-      db.prepare(`
+      await db.run(`
         UPDATE webhook_logs
         SET status_code = ?, error_message = ?, processing_time_ms = ?, user_id = ?
         WHERE id = ?
-      `).run(
-        500,
+      `, [500,
         error.message,
         Date.now() - startTime,
         user.id,
         webhookLogId
-      );
+      ]);
     }
 
     throw error;
@@ -213,25 +210,25 @@ function extractMessageData(payload) {
 /**
  * Find strategy by tag
  */
-function findStrategyByTag(userId, tags) {
+async function findStrategyByTag(userId, tags) {
   try {
     if (!tags || tags.length === 0) {
       console.log('No tags provided, looking for default strategy');
       // Return first strategy for user as default
-      return db.prepare(`
+      return await db.get(`
         SELECT * FROM templates
         WHERE user_id = ?
         ORDER BY created_at DESC
         LIMIT 1
-      `).get(userId);
+      `, [userId]);
     }
 
     // Try to find strategy matching any of the tags
     for (const tag of tags) {
-      const strategy = db.prepare(`
+      const strategy = await db.get(`
         SELECT * FROM templates
         WHERE user_id = ? AND LOWER(tag) = LOWER(?)
-      `).get(userId, tag);
+      `, [userId, tag]);
 
       if (strategy) {
         return strategy;
@@ -239,12 +236,12 @@ function findStrategyByTag(userId, tags) {
     }
 
     // If no match, return first strategy as default
-    return db.prepare(`
+    return await db.get(`
       SELECT * FROM templates
       WHERE user_id = ?
       ORDER BY created_at DESC
       LIMIT 1
-    `).get(userId);
+    `, [userId]);
 
   } catch (error) {
     console.error('Error finding strategy:', error);
@@ -255,12 +252,12 @@ function findStrategyByTag(userId, tags) {
 /**
  * Get existing conversation
  */
-function getConversation(conversationId) {
+async function getConversation(conversationId) {
   try {
-    return db.prepare(`
+    return await db.get(`
       SELECT * FROM conversations
       WHERE id = ?
-    `).get(conversationId);
+    `, [conversationId]);
   } catch (error) {
     console.error('Error getting conversation:', error);
     return null;
@@ -270,16 +267,16 @@ function getConversation(conversationId) {
 /**
  * Create new conversation
  */
-function createConversation({ userId, templateId, contactName, contactPhone, conversationId }) {
+async function createConversation({ userId, templateId, contactName, contactPhone, conversationId }) {
   try {
     const id = conversationId || crypto.randomUUID();
 
-    db.prepare(`
+    await db.run(`
       INSERT INTO conversations (
         id, user_id, template_id, contact_name, contact_phone,
         status, started_at, last_message_at
       ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-    `).run(id, userId, templateId, contactName, contactPhone, 'active');
+    `, [id, userId, templateId, contactName, contactPhone, 'active']);
 
     return { id, user_id: userId, template_id: templateId };
   } catch (error) {
@@ -291,19 +288,19 @@ function createConversation({ userId, templateId, contactName, contactPhone, con
 /**
  * Store message in database
  */
-function storeMessage({ conversationId, sender, content, messageType = 'SMS' }) {
+async function storeMessage({ conversationId, sender, content, messageType = 'SMS' }) {
   try {
-    db.prepare(`
+    await db.run(`
       INSERT INTO messages (conversation_id, sender, content, timestamp)
       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(conversationId, sender, content);
+    `, [conversationId, sender, content]);
 
     // Update conversation's last_message_at
-    db.prepare(`
+    await db.run(`
       UPDATE conversations
       SET last_message_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(conversationId);
+    `, [conversationId]);
 
   } catch (error) {
     console.error('Error storing message:', error);
@@ -314,15 +311,15 @@ function storeMessage({ conversationId, sender, content, messageType = 'SMS' }) 
 /**
  * Get conversation history
  */
-function getConversationHistory(conversationId, limit = 10) {
+async function getConversationHistory(conversationId, limit = 10) {
   try {
-    return db.prepare(`
+    return await db.all(`
       SELECT sender, content, timestamp
       FROM messages
       WHERE conversation_id = ?
       ORDER BY timestamp DESC
       LIMIT ?
-    `).all(conversationId, limit).reverse(); // Reverse to get chronological order
+    `, [conversationId, limit]).reverse(); // Reverse to get chronological order
   } catch (error) {
     console.error('Error getting conversation history:', error);
     return [];

@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../database/db');
+const { db } = require('../config/database');
 const { authenticateClientId } = require('../middleware/auth');
 const webhookProcessor = require('../services/webhookProcessor');
 
@@ -25,19 +25,18 @@ router.post('/ghl', async (req, res) => {
                      req.body.customData?.client_id;
 
     // Log incoming webhook
-    const logResult = db.prepare(`
+    const logResult = await db.run(`
       INSERT INTO webhook_logs (
         client_id, endpoint, method, payload, headers,
         status_code, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(
-      clientId || 'unknown',
+    `, [clientId || 'unknown',
       '/api/webhook/ghl',
       'POST',
       JSON.stringify(req.body),
       JSON.stringify(req.headers),
       null // Will update after processing
-    );
+    ]);
 
     webhookLogId = logResult.lastInsertRowid;
 
@@ -45,11 +44,11 @@ router.post('/ghl', async (req, res) => {
     if (!clientId) {
       console.log('❌ No Client ID provided');
 
-      db.prepare(`
+      await db.run(`
         UPDATE webhook_logs
         SET status_code = ?, error_message = ?, processing_time_ms = ?
         WHERE id = ?
-      `).run(401, 'Client ID required', Date.now() - startTime, webhookLogId);
+      `, [401, 'Client ID required', Date.now() - startTime, webhookLogId]);
 
       return res.status(401).json({
         success: false,
@@ -58,20 +57,20 @@ router.post('/ghl', async (req, res) => {
     }
 
     // Find user by Client ID
-    const user = db.prepare(`
+    const user = await db.get(`
       SELECT id, email, client_id, api_key, account_status
       FROM users
       WHERE client_id = ? AND account_status = 'active'
-    `).get(clientId);
+    `, [clientId]);
 
     if (!user) {
       console.log('❌ Invalid Client ID:', clientId);
 
-      db.prepare(`
+      await db.run(`
         UPDATE webhook_logs
         SET status_code = ?, error_message = ?, processing_time_ms = ?
         WHERE id = ?
-      `).run(401, 'Invalid Client ID', Date.now() - startTime, webhookLogId);
+      `, [401, 'Invalid Client ID', Date.now() - startTime, webhookLogId]);
 
       return res.status(401).json({
         success: false,
@@ -99,11 +98,11 @@ router.post('/ghl', async (req, res) => {
       } catch (error) {
         console.error('❌ Async processing error:', error);
 
-        db.prepare(`
+        await db.run(`
           UPDATE webhook_logs
           SET error_message = ?, processing_time_ms = ?
           WHERE id = ?
-        `).run(error.message, Date.now() - startTime, webhookLogId);
+        `, [error.message, Date.now() - startTime, webhookLogId]);
       }
     });
 
@@ -111,11 +110,11 @@ router.post('/ghl', async (req, res) => {
     console.error('❌ Webhook error:', error);
 
     if (webhookLogId) {
-      db.prepare(`
+      await db.run(`
         UPDATE webhook_logs
         SET status_code = ?, error_message = ?, processing_time_ms = ?
         WHERE id = ?
-      `).run(500, error.message, Date.now() - startTime, webhookLogId);
+      `, [500, error.message, Date.now() - startTime, webhookLogId]);
     }
 
     // If response not sent yet
@@ -178,11 +177,11 @@ router.post('/test', async (req, res) => {
     // Process through the same webhook processor
     const result = await webhookProcessor.processIncomingMessage({
       webhookLogId: null,
-      user: db.prepare(`
+      user: await db.get(`
         SELECT id, email, client_id, api_key, account_status
         FROM users
         WHERE client_id = ?
-      `).get(clientId),
+      `, [clientId]),
       payload: simulatedPayload,
       startTime: Date.now(),
       isTest: true
@@ -224,7 +223,7 @@ router.get('/logs', async (req, res) => {
     query += ' ORDER BY created_at DESC LIMIT ?';
     params.push(parseInt(limit));
 
-    const logs = db.prepare(query).all(...params);
+    const logs = await db.all(query, params);
 
     // Parse JSON fields
     logs.forEach(log => {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const db = require('../database/db');
+const { db } = require('../config/database');
 const webhookService = require('../services/webhookService');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -16,8 +16,7 @@ router.post('/ghl/calendar', async (req, res) => {
     console.log('Received GHL webhook:', type);
 
     // Find user by location ID
-    const userStmt = db.prepare('SELECT user_id FROM ghl_credentials WHERE location_id = ?');
-    const userRecord = userStmt.get(location_id);
+    const userRecord = await db.get('SELECT user_id FROM ghl_credentials WHERE location_id = ?', [location_id]);
 
     if (!userRecord) {
       console.log('No user found for location:', location_id);
@@ -44,11 +43,10 @@ router.post('/ghl/calendar', async (req, res) => {
     }
 
     // Log webhook
-    const logStmt = db.prepare(`
+    await db.run(`
       INSERT INTO sync_logs (user_id, sync_type, entity_type, entity_id, direction, status)
       VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    logStmt.run(userId, 'webhook', 'calendar_event', event?.id || 'unknown', 'inbound', 'success');
+    `, [userId, 'webhook', 'calendar_event', event?.id || 'unknown', 'inbound', 'success']);
 
     res.status(200).json({ success: true });
   } catch (error) {
@@ -68,8 +66,7 @@ router.post('/ghl/contact', async (req, res) => {
     console.log('Received GHL contact webhook:', type);
 
     // Find user by location ID
-    const userStmt = db.prepare('SELECT user_id FROM ghl_credentials WHERE location_id = ?');
-    const userRecord = userStmt.get(location_id);
+    const userRecord = await db.get('SELECT user_id FROM ghl_credentials WHERE location_id = ?', [location_id]);
 
     if (!userRecord) {
       return res.status(200).json({ success: true, message: 'No user found' });
@@ -104,8 +101,7 @@ router.post('/ghl/contact', async (req, res) => {
 async function handleEventCreate(userId, event, calendarId) {
   try {
     // Check if event already exists
-    const checkStmt = db.prepare('SELECT id FROM appointments WHERE ghl_event_id = ?');
-    const existing = checkStmt.get(event.id);
+    const existing = await db.get('SELECT id FROM appointments WHERE ghl_event_id = ?', [event.id]);
 
     if (existing) {
       console.log('Event already exists:', event.id);
@@ -117,16 +113,14 @@ async function handleEventCreate(userId, event, calendarId) {
     const durationMinutes = Math.round((end - start) / (1000 * 60));
 
     // Insert new appointment
-    const stmt = db.prepare(`
+    await db.run(`
       INSERT INTO appointments (
         id, user_id, ghl_event_id, ghl_calendar_id, contact_id,
         contact_name, contact_email, contact_phone, title,
         start_time, end_time, duration_minutes, status, location,
         synced_to_ghl, last_synced_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
+    `, [
       uuidv4(),
       userId,
       event.id,
@@ -143,7 +137,7 @@ async function handleEventCreate(userId, event, calendarId) {
       event.address,
       1,
       new Date().toISOString()
-    );
+    ]);
 
     console.log('Created appointment from webhook:', event.id);
   } catch (error) {
@@ -158,8 +152,7 @@ async function handleEventCreate(userId, event, calendarId) {
 async function handleEventUpdate(userId, event) {
   try {
     // Check if event exists
-    const checkStmt = db.prepare('SELECT id FROM appointments WHERE ghl_event_id = ? AND user_id = ?');
-    const existing = checkStmt.get(event.id, userId);
+    const existing = await db.get('SELECT id FROM appointments WHERE ghl_event_id = ? AND user_id = ?', [event.id, userId]);
 
     if (!existing) {
       console.log('Event not found for update:', event.id);
@@ -171,14 +164,12 @@ async function handleEventUpdate(userId, event) {
     const durationMinutes = Math.round((end - start) / (1000 * 60));
 
     // Update appointment
-    const stmt = db.prepare(`
+    await db.run(`
       UPDATE appointments
       SET title = ?, start_time = ?, end_time = ?, duration_minutes = ?,
           status = ?, location = ?, last_synced_at = ?
       WHERE ghl_event_id = ? AND user_id = ?
-    `);
-
-    stmt.run(
+    `, [
       event.title,
       event.startTime,
       event.endTime,
@@ -188,7 +179,7 @@ async function handleEventUpdate(userId, event) {
       new Date().toISOString(),
       event.id,
       userId
-    );
+    ]);
 
     console.log('Updated appointment from webhook:', event.id);
   } catch (error) {
@@ -202,13 +193,11 @@ async function handleEventUpdate(userId, event) {
  */
 async function handleEventDelete(userId, eventId) {
   try {
-    const stmt = db.prepare(`
+    await db.run(`
       UPDATE appointments
       SET status = 'cancelled', last_synced_at = ?
       WHERE ghl_event_id = ? AND user_id = ?
-    `);
-
-    stmt.run(new Date().toISOString(), eventId, userId);
+    `, [new Date().toISOString(), eventId, userId]);
 
     console.log('Cancelled appointment from webhook:', eventId);
   } catch (error) {
@@ -223,20 +212,17 @@ async function handleEventDelete(userId, eventId) {
 async function handleContactSync(userId, contact) {
   try {
     // Check if contact exists
-    const checkStmt = db.prepare('SELECT id FROM clients WHERE ghl_contact_id = ? AND user_id = ?');
-    const existing = checkStmt.get(contact.id, userId);
+    const existing = await db.get('SELECT id FROM clients WHERE ghl_contact_id = ? AND user_id = ?', [contact.id, userId]);
 
     if (existing) {
       // Update existing contact
-      const updateStmt = db.prepare(`
+      await db.run(`
         UPDATE clients
         SET first_name = ?, last_name = ?, email = ?, phone = ?,
             address = ?, city = ?, state = ?, postal_code = ?,
             last_synced_at = ?
         WHERE ghl_contact_id = ? AND user_id = ?
-      `);
-
-      updateStmt.run(
+      `, [
         contact.firstName,
         contact.lastName,
         contact.email,
@@ -248,18 +234,16 @@ async function handleContactSync(userId, contact) {
         new Date().toISOString(),
         contact.id,
         userId
-      );
+      ]);
     } else {
       // Create new contact
-      const insertStmt = db.prepare(`
+      await db.run(`
         INSERT INTO clients (
           id, user_id, ghl_contact_id, first_name, last_name,
           email, phone, address, city, state, postal_code,
           synced_to_ghl, last_synced_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      insertStmt.run(
+      `, [
         uuidv4(),
         userId,
         contact.id,
@@ -273,7 +257,7 @@ async function handleContactSync(userId, contact) {
         contact.postalCode,
         1,
         new Date().toISOString()
-      );
+      ]);
     }
 
     console.log('Synced contact from webhook:', contact.id);
@@ -288,8 +272,7 @@ async function handleContactSync(userId, contact) {
  */
 async function handleContactDelete(userId, contactId) {
   try {
-    const stmt = db.prepare('DELETE FROM clients WHERE ghl_contact_id = ? AND user_id = ?');
-    stmt.run(contactId, userId);
+    await db.run('DELETE FROM clients WHERE ghl_contact_id = ? AND user_id = ?', [contactId, userId]);
 
     console.log('Deleted contact from webhook:', contactId);
   } catch (error) {
@@ -302,7 +285,7 @@ async function handleContactDelete(userId, contactId) {
  * Test webhook endpoint (for testing webhook configuration)
  * GET /api/webhooks/test
  */
-router.get('/test', (req, res) => {
+router.get('/test', async (req, res) => {
   res.json({
     success: true,
     message: 'Webhook endpoint is working',
@@ -324,7 +307,7 @@ router.post('/incoming/:source/:userId', async (req, res) => {
     console.log('Webhook data:', JSON.stringify(req.body, null, 2));
 
     // Verify user exists
-    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+    const user = await db.get('SELECT id FROM users WHERE id = ?', [userId]);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -356,7 +339,7 @@ router.post('/incoming/:source/:userId', async (req, res) => {
  * Get webhook URLs for user (AUTHENTICATED)
  * GET /api/webhooks/urls
  */
-router.get('/urls', authenticateToken, (req, res) => {
+router.get('/urls', authenticateToken, async (req, res) => {
   try {
     const sources = ['gohighlevel', 'zapier', 'typeform', 'calendly', 'custom'];
 

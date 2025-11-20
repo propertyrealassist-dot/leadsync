@@ -5,7 +5,7 @@ const ConversationEngine = require('../services/conversationEngine');
 const engine = new ConversationEngine();
 
 // Get all conversations
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const conversations = engine.getAllConversations();
     res.json(conversations);
@@ -15,7 +15,7 @@ router.get('/', (req, res) => {
 });
 
 // Get single conversation with messages
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const conversation = engine.getConversation(req.params.id);
     
@@ -35,7 +35,7 @@ router.get('/:id', (req, res) => {
 });
 
 // Start new conversation
-router.post('/start', (req, res) => {
+router.post('/start', async (req, res) => {
   try {
     const { templateId, contactName, contactPhone } = req.body;
 

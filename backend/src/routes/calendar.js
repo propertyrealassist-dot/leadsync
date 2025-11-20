@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database/db');
+const { db } = require('../config/database');
 const calendarService = require('../services/googleCalendarService');
 
 // Middleware to verify authentication
@@ -25,7 +25,7 @@ const authenticateToken = (req, res, next) => {
  * GET /api/calendar/auth
  * Start OAuth flow - returns authorization URL
  */
-router.get('/auth', authenticateToken, (req, res) => {
+router.get('/auth', authenticateToken, async (req, res) => {
   try {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;

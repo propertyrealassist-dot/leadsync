@@ -10,7 +10,7 @@ const stateTokens = new Map();
  * Initiate GHL OAuth flow for LeadSync
  * GET /api/ghl/auth/start
  */
-router.get('/auth/start', (req, res) => {
+router.get('/auth/start', async (req, res) => {
   try {
     // Generate random state token for CSRF protection
     const state = crypto.randomBytes(32).toString('hex');
@@ -122,9 +122,8 @@ router.post('/disconnect', async (req, res) => {
   try {
     const userId = req.body.userId || 'default_user';
 
-    const db = require('../database/db');
-    const stmt = db.prepare('DELETE FROM ghl_credentials WHERE user_id = ?');
-    stmt.run(userId);
+    const { db } = require('../config/database');
+    await db.run('DELETE FROM ghl_credentials WHERE user_id = ?', [userId]);
 
     res.json({
       success: true,

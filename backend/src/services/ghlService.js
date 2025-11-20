@@ -1,5 +1,5 @@
 const axios = require('axios');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 class GHLService {
   constructor() {

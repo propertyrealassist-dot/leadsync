@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const db = require('../database/db');
+const { db } = require('../config/database');
 const ghlService = require('../services/ghlService');
 
 /**
@@ -33,8 +33,7 @@ router.get('/', async (req, res) => {
 
     query += ' ORDER BY start_time ASC';
 
-    const stmt = db.prepare(query);
-    const appointments = stmt.all(...params);
+    const appointments = await db.all(query, params);
 
     res.json({
       success: true,
@@ -58,8 +57,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const userId = req.query.userId || 'default_user';
 
-    const stmt = db.prepare('SELECT * FROM appointments WHERE id = ? AND user_id = ?');
-    const appointment = stmt.get(id, userId);
+    const appointment = await db.get('SELECT * FROM appointments WHERE id = ? AND user_id = ?', [id, userId]);
 
     if (!appointment) {
       return res.status(404).json({
@@ -152,11 +150,10 @@ router.post('/', async (req, res) => {
           syncedToGHL = true;
 
           // Log sync
-          const logStmt = db.prepare(`
+          await db.run(`
             INSERT INTO sync_logs (user_id, sync_type, entity_type, entity_id, direction, status)
             VALUES (?, ?, ?, ?, ?, ?)
-          `);
-          logStmt.run(userId, 'appointment_create', 'appointment', appointmentId, 'outbound', 'success');
+          `, [userId, 'appointment_create', 'appointment', appointmentId, 'outbound', 'success']);
         }
       } catch (syncError) {
         console.error('Error syncing to GHL:', syncError);
@@ -165,16 +162,14 @@ router.post('/', async (req, res) => {
     }
 
     // Insert appointment into database
-    const stmt = db.prepare(`
+    await db.run(`
       INSERT INTO appointments (
         id, user_id, ghl_event_id, ghl_calendar_id, contact_id,
         contact_name, contact_email, contact_phone, title, description,
         start_time, end_time, duration_minutes, status, appointment_type,
         location, notes, synced_to_ghl, last_synced_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    stmt.run(
+    `, [
       appointmentId,
       userId,
       ghlEventId,
@@ -194,32 +189,31 @@ router.post('/', async (req, res) => {
       notes,
       syncedToGHL ? 1 : 0,
       syncedToGHL ? new Date().toISOString() : null
-    );
+    ]);
 
     // Create reminder if needed
-    const settingsStmt = db.prepare('SELECT * FROM calendar_settings WHERE user_id = ?');
-    const settings = settingsStmt.get(userId);
+    const settings = await db.get('SELECT * FROM calendar_settings WHERE user_id = ?', [userId]);
 
     if (settings && (settings.reminder_sms_enabled || settings.reminder_email_enabled)) {
       const reminderTime = new Date(start.getTime() - (settings.reminder_hours_before * 60 * 60 * 1000));
 
-      const reminderStmt = db.prepare(`
-        INSERT INTO appointment_reminders (appointment_id, reminder_type, send_at)
-        VALUES (?, ?, ?)
-      `);
-
       if (settings.reminder_sms_enabled && contactPhone) {
-        reminderStmt.run(appointmentId, 'sms', reminderTime.toISOString());
+        await db.run(`
+          INSERT INTO appointment_reminders (appointment_id, reminder_type, send_at)
+          VALUES (?, ?, ?)
+        `, [appointmentId, 'sms', reminderTime.toISOString()]);
       }
 
       if (settings.reminder_email_enabled && contactEmail) {
-        reminderStmt.run(appointmentId, 'email', reminderTime.toISOString());
+        await db.run(`
+          INSERT INTO appointment_reminders (appointment_id, reminder_type, send_at)
+          VALUES (?, ?, ?)
+        `, [appointmentId, 'email', reminderTime.toISOString()]);
       }
     }
 
     // Get created appointment
-    const getStmt = db.prepare('SELECT * FROM appointments WHERE id = ?');
-    const appointment = getStmt.get(appointmentId);
+    const appointment = await db.get('SELECT * FROM appointments WHERE id = ?', [appointmentId]);
 
     res.status(201).json({
       success: true,
@@ -243,20 +237,20 @@ router.get('/stats/overview', async (req, res) => {
   try {
     const userId = req.query.userId || 'default_user';
 
-    const totalStmt = db.prepare('SELECT COUNT(*) as count FROM appointments WHERE user_id = ?');
-    const total = totalStmt.get(userId).count;
+    const totalResult = await db.get('SELECT COUNT(*) as count FROM appointments WHERE user_id = ?', [userId]);
+    const total = totalResult.count;
 
-    const todayStmt = db.prepare(`
+    const todayResult = await db.get(`
       SELECT COUNT(*) as count FROM appointments
       WHERE user_id = ? AND DATE(start_time) = DATE('now')
-    `);
-    const today = todayStmt.get(userId).count;
+    `, [userId]);
+    const today = todayResult.count;
 
-    const upcomingStmt = db.prepare(`
+    const upcomingResult = await db.get(`
       SELECT COUNT(*) as count FROM appointments
       WHERE user_id = ? AND start_time > datetime('now') AND status != 'cancelled'
-    `);
-    const upcoming = upcomingStmt.get(userId).count;
+    `, [userId]);
+    const upcoming = upcomingResult.count;
 
     res.json({
       success: true,
@@ -278,8 +272,7 @@ router.put('/:id', async (req, res) => {
     const userId = req.body.userId || 'default_user';
 
     // Check if appointment exists
-    const checkStmt = db.prepare('SELECT * FROM appointments WHERE id = ? AND user_id = ?');
-    const existing = checkStmt.get(id, userId);
+    const existing = await db.get('SELECT * FROM appointments WHERE id = ? AND user_id = ?', [id, userId]);
 
     if (!existing) {
       return res.status(404).json({
@@ -331,13 +324,11 @@ router.put('/:id', async (req, res) => {
 
     params.push(id, userId);
 
-    const updateStmt = db.prepare(`
+    await db.run(`
       UPDATE appointments
       SET ${updates.join(', ')}
       WHERE id = ? AND user_id = ?
-    `);
-
-    updateStmt.run(...params);
+    `, params);
 
     // Sync to GHL if connected
     if (existing.ghl_event_id) {
@@ -353,8 +344,7 @@ router.put('/:id', async (req, res) => {
           });
 
           // Update sync timestamp
-          const syncStmt = db.prepare('UPDATE appointments SET last_synced_at = ? WHERE id = ?');
-          syncStmt.run(new Date().toISOString(), id);
+          await db.run('UPDATE appointments SET last_synced_at = ? WHERE id = ?', [new Date().toISOString(), id]);
         }
       } catch (syncError) {
         console.error('Error syncing update to GHL:', syncError);
@@ -362,8 +352,7 @@ router.put('/:id', async (req, res) => {
     }
 
     // Get updated appointment
-    const getStmt = db.prepare('SELECT * FROM appointments WHERE id = ?');
-    const appointment = getStmt.get(id);
+    const appointment = await db.get('SELECT * FROM appointments WHERE id = ?', [id]);
 
     res.json({
       success: true,
@@ -388,8 +377,7 @@ router.delete('/:id', async (req, res) => {
     const userId = req.query.userId || 'default_user';
 
     // Get appointment before deleting
-    const getStmt = db.prepare('SELECT * FROM appointments WHERE id = ? AND user_id = ?');
-    const appointment = getStmt.get(id, userId);
+    const appointment = await db.get('SELECT * FROM appointments WHERE id = ? AND user_id = ?', [id, userId]);
 
     if (!appointment) {
       return res.status(404).json({
@@ -411,8 +399,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Delete from local database
-    const deleteStmt = db.prepare('DELETE FROM appointments WHERE id = ? AND user_id = ?');
-    deleteStmt.run(id, userId);
+    await db.run('DELETE FROM appointments WHERE id = ? AND user_id = ?', [id, userId]);
 
     res.json({
       success: true,
@@ -437,16 +424,14 @@ router.get('/filter/upcoming', async (req, res) => {
     const now = new Date().toISOString();
     const sevenDaysLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const stmt = db.prepare(`
+    const appointments = await db.all(`
       SELECT * FROM appointments
       WHERE user_id = ?
         AND start_time >= ?
         AND start_time <= ?
         AND status NOT IN ('cancelled', 'completed')
       ORDER BY start_time ASC
-    `);
-
-    const appointments = stmt.all(userId, now, sevenDaysLater);
+    `, [userId, now, sevenDaysLater]);
 
     res.json({
       success: true,
@@ -497,8 +482,7 @@ router.post('/sync', async (req, res) => {
 
     for (const event of events) {
       // Check if appointment already exists
-      const checkStmt = db.prepare('SELECT * FROM appointments WHERE ghl_event_id = ? AND user_id = ?');
-      const existing = checkStmt.get(event.id, userId);
+      const existing = await db.get('SELECT * FROM appointments WHERE ghl_event_id = ? AND user_id = ?', [event.id, userId]);
 
       const start = new Date(event.startTime);
       const end = new Date(event.endTime);
@@ -506,14 +490,12 @@ router.post('/sync', async (req, res) => {
 
       if (existing) {
         // Update existing appointment
-        const updateStmt = db.prepare(`
+        await db.run(`
           UPDATE appointments
           SET title = ?, start_time = ?, end_time = ?, duration_minutes = ?,
               status = ?, location = ?, last_synced_at = ?
           WHERE ghl_event_id = ? AND user_id = ?
-        `);
-
-        updateStmt.run(
+        `, [
           event.title,
           event.startTime,
           event.endTime,
@@ -523,21 +505,19 @@ router.post('/sync', async (req, res) => {
           new Date().toISOString(),
           event.id,
           userId
-        );
+        ]);
 
         updatedCount++;
       } else {
         // Create new appointment
-        const insertStmt = db.prepare(`
+        await db.run(`
           INSERT INTO appointments (
             id, user_id, ghl_event_id, ghl_calendar_id, contact_id,
             contact_name, contact_email, contact_phone, title,
             start_time, end_time, duration_minutes, status, location,
             synced_to_ghl, last_synced_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-
-        insertStmt.run(
+        `, [
           uuidv4(),
           userId,
           event.id,
@@ -554,7 +534,7 @@ router.post('/sync', async (req, res) => {
           event.address,
           1,
           new Date().toISOString()
-        );
+        ]);
 
         syncedCount++;
       }

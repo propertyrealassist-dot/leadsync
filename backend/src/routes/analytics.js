@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const analyticsService = require('../services/analyticsService');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 // Get comprehensive analytics
-router.get('/dashboard', authenticateToken, (req, res) => {
+router.get('/dashboard', authenticateToken, async (req, res) => {
   try {
     const { dateRange = 30 } = req.query;
     const analytics = analyticsService.getAnalytics(
@@ -27,7 +27,7 @@ router.get('/dashboard', authenticateToken, (req, res) => {
 });
 
 // Get real-time stats
-router.get('/realtime', authenticateToken, (req, res) => {
+router.get('/realtime', authenticateToken, async (req, res) => {
   try {
     const stats = analyticsService.getRealTimeStats(db, req.user.id);
     res.json({

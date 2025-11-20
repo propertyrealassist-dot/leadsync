@@ -1,5 +1,5 @@
 const axios = require('axios');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 /**
  * Send message to GHL contact
@@ -122,13 +122,13 @@ async function sendViaWebhook({ webhookUrl, payload }) {
 /**
  * Get GHL credentials for user
  */
-function getGHLCredentials(userId) {
+async function getGHLCredentials(userId) {
   try {
-    return db.prepare(`
+    return await db.get(`
       SELECT access_token, refresh_token, location_id, expires_at
       FROM ghl_credentials
       WHERE user_id = ?
-    `).get(userId);
+    `, [userId]);
   } catch (error) {
     console.error('Error getting GHL credentials:', error);
     return null;
@@ -174,14 +174,14 @@ async function refreshToken(userId, refreshToken) {
     const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
 
     // Update credentials in database
-    db.prepare(`
+    await db.run(`
       UPDATE ghl_credentials
       SET access_token = ?,
           refresh_token = ?,
           expires_at = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = ?
-    `).run(access_token, new_refresh_token, expiresAt, userId);
+    `, [access_token, new_refresh_token, expiresAt, userId]);
 
     console.log('✅ Token refreshed successfully');
 
@@ -199,22 +199,21 @@ async function refreshToken(userId, refreshToken) {
 /**
  * Log outgoing message
  */
-function logOutgoingMessage({ userId, contactId, conversationId, message, response, error }) {
+async function logOutgoingMessage({ userId, contactId, conversationId, message, response, error }) {
   try {
-    db.prepare(`
+    await db.run(`
       INSERT INTO webhook_logs (
         user_id, endpoint, method, payload, response_body,
         status_code, error_message, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(
-      userId || null,
+    `, [userId || null,
       'GHL_OUTGOING_MESSAGE',
       'POST',
       JSON.stringify({ contactId, conversationId, message }),
       response ? JSON.stringify(response) : null,
       error ? 500 : 200,
       error || null
-    );
+    ]);
   } catch (err) {
     console.error('Error logging outgoing message:', err);
   }

@@ -2,17 +2,17 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { authenticateToken } = require('../middleware/auth');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 // Get all snapshots for user
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const snapshots = db.prepare(`
+    const snapshots = await db.all(`
       SELECT id, name, description, tags, created_at, updated_at
       FROM snapshots
       WHERE user_id = ?
       ORDER BY created_at DESC
-    `).all(req.user.id);
+    `, [req.user.id]);
 
     res.json(snapshots);
   } catch (error) {
@@ -22,12 +22,12 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Get single snapshot with full data
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const snapshot = db.prepare(`
+    const snapshot = await db.get(`
       SELECT * FROM snapshots
       WHERE id = ? AND user_id = ?
-    `).get(req.params.id, req.user.id);
+    `, [req.params.id, req.user.id]);
 
     if (!snapshot) {
       return res.status(404).json({ error: 'Snapshot not found' });
@@ -44,7 +44,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 });
 
 // Create new snapshot
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, description, template_data, tags } = req.body;
 
@@ -55,11 +55,10 @@ router.post('/', authenticateToken, (req, res) => {
     const id = uuidv4();
     const now = new Date().toISOString();
 
-    db.prepare(`
+    await db.run(`
       INSERT INTO snapshots (id, user_id, name, description, template_data, tags, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      id,
+    `, [id,
       req.user.id,
       name,
       description || null,
@@ -67,9 +66,9 @@ router.post('/', authenticateToken, (req, res) => {
       tags || null,
       now,
       now
-    );
+    ]);
 
-    const snapshot = db.prepare('SELECT * FROM snapshots WHERE id = ?').get(id);
+    const snapshot = await db.get('SELECT * FROM snapshots WHERE id = ?', [id]);
     snapshot.template_data = JSON.parse(snapshot.template_data);
 
     res.status(201).json(snapshot);
@@ -80,14 +79,14 @@ router.post('/', authenticateToken, (req, res) => {
 });
 
 // Deploy snapshot (create new template from snapshot)
-router.post('/:id/deploy', authenticateToken, (req, res) => {
+router.post('/:id/deploy', authenticateToken, async (req, res) => {
   try {
     const { customName } = req.body;
 
-    const snapshot = db.prepare(`
+    const snapshot = await db.get(`
       SELECT * FROM snapshots
       WHERE id = ? AND user_id = ?
-    `).get(req.params.id, req.user.id);
+    `, [req.params.id, req.user.id]);
 
     if (!snapshot) {
       return res.status(404).json({ error: 'Snapshot not found' });
@@ -98,15 +97,14 @@ router.post('/:id/deploy', authenticateToken, (req, res) => {
     const now = new Date().toISOString();
 
     // Create new template from snapshot
-    db.prepare(`
+    await db.run(`
       INSERT INTO templates (
         id, user_id, name, description, tag,
         conversationSteps, intentRecognition, bookingWorkflow,
         responseStyle, availabilitySettings,
         created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      templateId,
+    `, [templateId,
       req.user.id,
       customName || `${templateData.name} (Copy)`,
       templateData.description,
@@ -118,9 +116,9 @@ router.post('/:id/deploy', authenticateToken, (req, res) => {
       JSON.stringify(templateData.availabilitySettings || {}),
       now,
       now
-    );
+    ]);
 
-    const newTemplate = db.prepare('SELECT * FROM templates WHERE id = ?').get(templateId);
+    const newTemplate = await db.get('SELECT * FROM templates WHERE id = ?', [templateId]);
 
     res.json({
       message: 'Snapshot deployed successfully',
@@ -133,32 +131,31 @@ router.post('/:id/deploy', authenticateToken, (req, res) => {
 });
 
 // Update snapshot
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { name, description, tags } = req.body;
 
-    const snapshot = db.prepare(`
+    const snapshot = await db.get(`
       SELECT id FROM snapshots
       WHERE id = ? AND user_id = ?
-    `).get(req.params.id, req.user.id);
+    `, [req.params.id, req.user.id]);
 
     if (!snapshot) {
       return res.status(404).json({ error: 'Snapshot not found' });
     }
 
-    db.prepare(`
+    await db.run(`
       UPDATE snapshots
       SET name = ?, description = ?, tags = ?, updated_at = ?
       WHERE id = ?
-    `).run(
-      name,
+    `, [name,
       description || null,
       tags || null,
       new Date().toISOString(),
       req.params.id
-    );
+    ]);
 
-    const updated = db.prepare('SELECT * FROM snapshots WHERE id = ?').get(req.params.id);
+    const updated = await db.get('SELECT * FROM snapshots WHERE id = ?', [req.params.id]);
     updated.template_data = JSON.parse(updated.template_data);
 
     res.json(updated);
@@ -169,12 +166,12 @@ router.put('/:id', authenticateToken, (req, res) => {
 });
 
 // Delete snapshot
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const result = db.prepare(`
+    const result = await db.run(`
       DELETE FROM snapshots
       WHERE id = ? AND user_id = ?
-    `).run(req.params.id, req.user.id);
+    `, [req.params.id, req.user.id]);
 
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Snapshot not found' });

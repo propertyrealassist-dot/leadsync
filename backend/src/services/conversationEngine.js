@@ -1,4 +1,4 @@
-const db = require('../database/db');
+const { db } = require('../config/database');
 const MockAIService = require('./mockAI');
 const ClaudeAIService = require('./claudeAI');
 const { v4: uuidv4 } = require('uuid');
@@ -9,25 +9,23 @@ class ConversationEngine {
   }
 
   // Start a new conversation
-  startConversation(templateId, contactName, contactPhone) {
+  async startConversation(templateId, contactName, contactPhone) {
     const conversationId = uuidv4();
-    
-    const stmt = db.prepare(`
+
+    await db.run(`
       INSERT INTO conversations (id, template_id, contact_name, contact_phone)
       VALUES (?, ?, ?, ?)
-    `);
-    
-    stmt.run(conversationId, templateId, contactName, contactPhone);
+    `, [conversationId, templateId, contactName, contactPhone]);
 
     // Get template to send initial message
-    const template = this.getTemplate(templateId);
-    
+    const template = await this.getTemplate(templateId);
+
     if (template && template.initial_message) {
       // Replace variables in initial message
       let message = template.initial_message
         .replace('{{contact.first_name}}', contactName || 'there');
-      
-      this.addMessage(conversationId, 'bot', message);
+
+      await this.addMessage(conversationId, 'bot', message);
     }
 
     return conversationId;
@@ -36,17 +34,17 @@ class ConversationEngine {
   // Process incoming message
   async processMessage(conversationId, userMessage) {
     // Save user message
-    this.addMessage(conversationId, 'user', userMessage);
+    await this.addMessage(conversationId, 'user', userMessage);
 
     // Get conversation details
-    const conversation = this.getConversation(conversationId);
-    const template = this.getTemplate(conversation.template_id);
-    const history = this.getMessages(conversationId);
+    const conversation = await this.getConversation(conversationId);
+    const template = await this.getTemplate(conversation.template_id);
+    const history = await this.getMessages(conversationId);
 
     // Generate AI response
     let aiResponse;
     let aiService;
-    
+
     if (this.useMockAI) {
       console.log('Using Mock AI');
       aiService = new MockAIService(template);
@@ -59,53 +57,52 @@ class ConversationEngine {
 
     // Check for action triggers
     if (aiService.shouldTriggerBooking(userMessage)) {
-      this.triggerAction(conversationId, 'APPOINTMENT_BOOKED');
+      await this.triggerAction(conversationId, 'APPOINTMENT_BOOKED');
     }
     if (aiService.shouldTriggerLost(userMessage)) {
-      this.triggerAction(conversationId, 'LEAD_LOST');
+      await this.triggerAction(conversationId, 'LEAD_LOST');
     }
 
     // Save AI response
-    this.addMessage(conversationId, 'bot', aiResponse);
+    await this.addMessage(conversationId, 'bot', aiResponse);
 
     // Update conversation timestamp
-    db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?')
-      .run(conversationId);
+    await db.run('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?', [conversationId]);
 
     return aiResponse;
   }
 
   // Trigger custom action
-  triggerAction(conversationId, actionType) {
-    const conversation = this.getConversation(conversationId);
+  async triggerAction(conversationId, actionType) {
+    const conversation = await this.getConversation(conversationId);
     
     // Get action configuration
-    const action = db.prepare(`
+    const action = await db.get(`
       SELECT * FROM custom_actions 
       WHERE template_id = ? AND action = ?
-    `).get(conversation.template_id, actionType);
+    `, [conversation.template_id, actionType]);
 
     if (!action) return;
 
     // Get action chains
-    const chains = db.prepare(`
+    const chains = await db.all(`
       SELECT * FROM action_chains 
       WHERE custom_action_id = ?
       ORDER BY chain_order
-    `).all(action.id);
+    `, [action.id]);
 
     // Execute each chain
-    chains.forEach(chain => {
-      const steps = db.prepare(`
-        SELECT * FROM chain_steps 
+    for (const chain of chains) {
+      const steps = await db.all(`
+        SELECT * FROM chain_steps
         WHERE chain_id = ?
         ORDER BY step_order
-      `).all(chain.id);
+      `, [chain.id]);
 
-      steps.forEach(step => {
+      for (const step of steps) {
         this.executeStep(conversationId, step);
-      });
-    });
+      }
+    }
   }
 
   // Execute workflow step
@@ -141,53 +138,53 @@ class ConversationEngine {
   }
 
   // Helper methods
-  addMessage(conversationId, sender, content) {
-    db.prepare(`
+  async addMessage(conversationId, sender, content) {
+    await db.run(`
       INSERT INTO messages (conversation_id, sender, content)
       VALUES (?, ?, ?)
-    `).run(conversationId, sender, content);
+    `, [conversationId, sender, content]);
   }
 
-  getConversation(conversationId) {
-    return db.prepare('SELECT * FROM conversations WHERE id = ?').get(conversationId);
+  async getConversation(conversationId) {
+    return await db.get('SELECT * FROM conversations WHERE id = ?', [conversationId]);
   }
 
-  getTemplate(templateId) {
-    const template = db.prepare('SELECT * FROM templates WHERE id = ?').get(templateId);
-    
+  async getTemplate(templateId) {
+    const template = await db.get('SELECT * FROM templates WHERE id = ?', [templateId]);
+
     if (template) {
       // Attach related data
-      template.qualificationQuestions = db.prepare(
-        'SELECT * FROM qualification_questions WHERE template_id = ?'
-      ).all(templateId);
-      
-      template.faqs = db.prepare(
-        'SELECT * FROM faqs WHERE template_id = ?'
-      ).all(templateId);
-      
-      template.followUps = db.prepare(
-        'SELECT * FROM follow_ups WHERE template_id = ?'
-      ).all(templateId);
+      template.qualificationQuestions = await db.all(
+        'SELECT * FROM qualification_questions WHERE template_id = ?', [templateId]
+      );
+
+      template.faqs = await db.all(
+        'SELECT * FROM faqs WHERE template_id = ?', [templateId]
+      );
+
+      template.followUps = await db.all(
+        'SELECT * FROM follow_ups WHERE template_id = ?', [templateId]
+      );
     }
-    
+
     return template;
   }
 
-  getMessages(conversationId) {
-    return db.prepare(`
-      SELECT * FROM messages 
-      WHERE conversation_id = ? 
+  async getMessages(conversationId) {
+    return await db.all(`
+      SELECT * FROM messages
+      WHERE conversation_id = ?
       ORDER BY timestamp ASC
-    `).all(conversationId);
+    `, [conversationId]);
   }
 
-  getAllConversations() {
-    return db.prepare(`
+  async getAllConversations() {
+    return await db.all(`
       SELECT c.*, t.name as template_name
       FROM conversations c
       LEFT JOIN templates t ON c.template_id = t.id
       ORDER BY c.last_message_at DESC
-    `).all();
+    `, []);
   }
 }
 

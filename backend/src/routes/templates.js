@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database/db');
+const { db } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 const { authenticateToken } = require('../middleware/auth');
 
 // Get all templates
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     console.log('📋 Loading templates for user:', req.user.id);
 
-    const templates = db.prepare('SELECT * FROM templates WHERE user_id = ? ORDER BY created_at DESC').all(req.user.id);
+    const templates = await db.all('SELECT * FROM templates WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
 
     console.log('✅ Found', templates.length, 'templates');
     res.json(templates);
@@ -19,19 +19,19 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Get single template with all related data
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const template = db.prepare('SELECT * FROM templates WHERE id = ? AND user_id = ?').get(req.params.id, req.user.id);
+    const template = await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
 
     if (!template) {
       return res.status(404).json({ error: 'Template not found' });
     }
 
     // Fetch nested data
-    const faqs = db.prepare('SELECT * FROM faqs WHERE template_id = ?').all(req.params.id);
-    const qualificationQuestions = db.prepare('SELECT * FROM qualification_questions WHERE template_id = ?').all(req.params.id);
-    const followUps = db.prepare('SELECT * FROM follow_ups WHERE template_id = ?').all(req.params.id);
-    const customActions = db.prepare('SELECT * FROM custom_actions WHERE template_id = ?').all(req.params.id);
+    const faqs = await db.all('SELECT * FROM faqs WHERE template_id = ?', [req.params.id]);
+    const qualificationQuestions = await db.all('SELECT * FROM qualification_questions WHERE template_id = ?', [req.params.id]);
+    const followUps = await db.all('SELECT * FROM follow_ups WHERE template_id = ?', [req.params.id]);
+    const customActions = await db.all('SELECT * FROM custom_actions WHERE template_id = ?', [req.params.id]);
 
     console.log(`📥 GET /api/templates/${req.params.id}`);
     console.log('  FAQs:', faqs.length);
@@ -87,7 +87,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 });
 
 // Create new template
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   console.log('🔥 POST /api/templates HIT');
   console.log('📝 Creating template for user:', req.user.id);
   console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
@@ -123,21 +123,18 @@ router.post('/', authenticateToken, (req, res) => {
     const mappedMessageDelayStandard = messageDelayStandard || settings?.message_delay || 5;
     const mappedTag = tag || name.toLowerCase().replace(/\s+/g, '-');
 
-    // Use a transaction to ensure all or nothing
-    const insertTemplate = db.transaction(() => {
-      const stmt = db.prepare(`
-        INSERT INTO templates (
-          id, user_id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
-          tone, initial_message, objective, company_information,
-          message_delay_initial, message_delay_standard, cta
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      stmt.run(
+    // Insert template with async operations
+    await db.run(`
+      INSERT INTO templates (
+        id, user_id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
+        tone, initial_message, objective, company_information,
+        message_delay_initial, message_delay_standard, cta
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
       id, req.user.id, name, mappedTag, botTemperature || 0.4, mappedBrief, resiliancy || 3, bookingReadiness || 2,
       tone || 'Friendly and Casual', mappedInitialMessage, mappedObjective, mappedCompanyInfo,
       messageDelayInitial || 30, mappedMessageDelayStandard, mappedCta
-    );
+    ]);
     console.log('✅ Template record inserted');
 
     console.log('📋 Processing nested data...');
@@ -148,8 +145,7 @@ router.post('/', authenticateToken, (req, res) => {
 
     if (mappedFaqs && mappedFaqs.length > 0) {
       console.log('  Inserting', mappedFaqs.length, 'FAQs...');
-      const faqStmt = db.prepare('INSERT INTO faqs (template_id, question, answer, delay) VALUES (?, ?, ?, ?)');
-      mappedFaqs.forEach(faq => {
+      for (const faq of mappedFaqs) {
         let question, answer;
         if (typeof faq.Body === 'string' && faq.Body.startsWith('{')) {
           const parsed = JSON.parse(faq.Body);
@@ -160,15 +156,15 @@ router.post('/', authenticateToken, (req, res) => {
           answer = faq.answer;
         }
         console.log('    FAQ:', question);
-        faqStmt.run(id, question, answer, faq.Delay || faq.delay || 1);
-      });
+        await db.run('INSERT INTO faqs (template_id, question, answer, delay) VALUES (?, ?, ?, ?)',
+          [id, question, answer, faq.Delay || faq.delay || 1]);
+      }
       console.log('  ✅ FAQs inserted');
     }
 
     if (mappedQualificationQuestions && mappedQualificationQuestions.length > 0) {
       console.log('  Inserting', mappedQualificationQuestions.length, 'qualification questions...');
-      const qStmt = db.prepare('INSERT INTO qualification_questions (template_id, text, conditions, delay) VALUES (?, ?, ?, ?)');
-      mappedQualificationQuestions.forEach(q => {
+      for (const q of mappedQualificationQuestions) {
         let text;
         if (typeof q.Body === 'string' && q.Body.startsWith('{')) {
           const parsed = JSON.parse(q.Body);
@@ -177,20 +173,21 @@ router.post('/', authenticateToken, (req, res) => {
           text = q.text || q.Body;
         }
         console.log('    Question:', text);
-        qStmt.run(id, text, JSON.stringify(q.conditions || []), q.Delay || q.delay || 1);
-      });
+        await db.run('INSERT INTO qualification_questions (template_id, text, conditions, delay) VALUES (?, ?, ?, ?)',
+          [id, text, JSON.stringify(q.conditions || []), q.Delay || q.delay || 1]);
+      }
       console.log('  ✅ Questions inserted');
     }
 
     if (mappedFollowUps && mappedFollowUps.length > 0) {
       console.log('  Inserting', mappedFollowUps.length, 'follow-ups...');
-      const fStmt = db.prepare('INSERT INTO follow_ups (template_id, body, delay) VALUES (?, ?, ?)');
-      mappedFollowUps.forEach(f => {
+      for (const f of mappedFollowUps) {
         const body = f.Body || f.message || '';
         const delay = f.Delay || f.delay || 1;
         console.log('    Follow-up:', body.substring(0, 50) + '...');
-        fStmt.run(id, body, delay);
-      });
+        await db.run('INSERT INTO follow_ups (template_id, body, delay) VALUES (?, ?, ?)',
+          [id, body, delay]);
+      }
       console.log('  ✅ Follow-ups inserted');
     }
 
@@ -199,80 +196,72 @@ router.post('/', authenticateToken, (req, res) => {
       // Handle both object format (old) and array format (new)
       if (Array.isArray(mappedCustomActions)) {
         // New format: array of action objects
-        mappedCustomActions.forEach(action => {
-          const actionStmt = db.prepare(`
-            INSERT INTO custom_actions (template_id, action, rule_condition, description)
-            VALUES (?, ?, ?, ?)
-          `);
+        for (const action of mappedCustomActions) {
           const actionType = action.type || action.action || 'unknown';
           const ruleCondition = action.rule_condition || action.config?.rule_condition || '';
           const description = action.description || action.config?.description || '';
-          const result = actionStmt.run(id, actionType, ruleCondition, description);
-          const actionId = result.lastInsertRowid;
+          const result = await db.run(`
+            INSERT INTO custom_actions (template_id, action, rule_condition, description)
+            VALUES (?, ?, ?, ?)
+          `, [id, actionType, ruleCondition, description]);
+          const actionId = result.lastID || result.lastInsertRowid;
 
           // Handle chains if present
           const chains = action.chains || action.config?.chains;
           if (chains) {
-            chains.forEach(chain => {
-              const chainStmt = db.prepare(`
+            for (const chain of chains) {
+              const chainResult = await db.run(`
                 INSERT INTO action_chains (custom_action_id, chain_name, chain_order)
                 VALUES (?, ?, ?)
-              `);
-              const chainResult = chainStmt.run(actionId, chain.chain_name, chain.chain_order);
-              const chainId = chainResult.lastInsertRowid;
+              `, [actionId, chain.chain_name, chain.chain_order]);
+              const chainId = chainResult.lastID || chainResult.lastInsertRowid;
 
               if (chain.steps) {
-                chain.steps.forEach(step => {
-                  db.prepare(`
+                for (const step of chain.steps) {
+                  await db.run(`
                     INSERT INTO chain_steps (chain_id, step_order, function, parameters)
                     VALUES (?, ?, ?, ?)
-                  `).run(chainId, step.step_order, step.function, JSON.stringify(step.parameters || {}));
-                });
+                  `, [chainId, step.step_order, step.function, JSON.stringify(step.parameters || {})]);
+                }
               }
-            });
+            }
           }
-        });
+        }
       } else {
         // Old format: object with action types as keys
-        Object.keys(mappedCustomActions).forEach(actionType => {
+        for (const actionType of Object.keys(mappedCustomActions)) {
           const actions = mappedCustomActions[actionType];
           const actionArray = Array.isArray(actions) ? actions : [actions];
-          actionArray.forEach(action => {
-            const actionStmt = db.prepare(`
+          for (const action of actionArray) {
+            const result = await db.run(`
               INSERT INTO custom_actions (template_id, action, rule_condition, description)
               VALUES (?, ?, ?, ?)
-            `);
-            const result = actionStmt.run(id, actionType, action.rule_condition, action.description || '');
-            const actionId = result.lastInsertRowid;
+            `, [id, actionType, action.rule_condition, action.description || '']);
+            const actionId = result.lastID || result.lastInsertRowid;
 
             if (action.chains) {
-              action.chains.forEach(chain => {
-                const chainStmt = db.prepare(`
+              for (const chain of action.chains) {
+                const chainResult = await db.run(`
                   INSERT INTO action_chains (custom_action_id, chain_name, chain_order)
                   VALUES (?, ?, ?)
-                `);
-                const chainResult = chainStmt.run(actionId, chain.chain_name, chain.chain_order);
-                const chainId = chainResult.lastInsertRowid;
+                `, [actionId, chain.chain_name, chain.chain_order]);
+                const chainId = chainResult.lastID || chainResult.lastInsertRowid;
 
                 if (chain.steps) {
-                  chain.steps.forEach(step => {
-                    db.prepare(`
+                  for (const step of chain.steps) {
+                    await db.run(`
                       INSERT INTO chain_steps (chain_id, step_order, function, parameters)
                       VALUES (?, ?, ?, ?)
-                    `).run(chainId, step.step_order, step.function, JSON.stringify(step.parameters || {}));
-                  });
+                    `, [chainId, step.step_order, step.function, JSON.stringify(step.parameters || {})]);
+                  }
                 }
-              });
+              }
             }
-          });
-        });
+          }
+        }
       }
       console.log('  ✅ Custom actions inserted');
     }
-    });
-
-    // Execute the transaction
-    insertTemplate();
 
     console.log('✅ Template created successfully with ID:', id);
     res.status(201).json({ id, message: 'Template created successfully' });
@@ -284,7 +273,7 @@ router.post('/', authenticateToken, (req, res) => {
 });
 
 // Update template
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   console.log('🔄 PUT /api/templates/:id HIT');
   console.log('♻️ Updating template for user:', req.user.id);
   console.log('📦 Request body keys:', Object.keys(req.body));
@@ -301,72 +290,68 @@ router.put('/:id', authenticateToken, (req, res) => {
       faqs, qualificationQuestions, followUps
     } = req.body;
 
-    const updateTemplate = db.transaction(() => {
-      // Update main template fields (only if owned by user)
-      db.prepare(`
-        UPDATE templates
-        SET name = ?, brief = ?, tone = ?, initial_message = ?, objective = ?, tag = ?,
-            bot_temperature = ?, company_information = ?, cta = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ? AND user_id = ?
-      `).run(name, brief, tone, initialMessage, objective, tag, botTemperature, companyInformation, cta, req.params.id, req.user.id);
-      console.log('  ✅ Template fields updated');
+    // Update main template fields (only if owned by user)
+    await db.run(`
+      UPDATE templates
+      SET name = ?, brief = ?, tone = ?, initial_message = ?, objective = ?, tag = ?,
+          bot_temperature = ?, company_information = ?, cta = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND user_id = ?
+    `, [name, brief, tone, initialMessage, objective, tag, botTemperature, companyInformation, cta, req.params.id, req.user.id]);
+    console.log('  ✅ Template fields updated');
 
-      // Update nested data if provided
-      if (faqs !== undefined) {
-        console.log('  Updating', faqs.length, 'FAQs...');
-        // Delete existing FAQs
-        db.prepare('DELETE FROM faqs WHERE template_id = ?').run(req.params.id);
-        // Insert new FAQs
-        if (faqs.length > 0) {
-          const faqStmt = db.prepare('INSERT INTO faqs (template_id, question, answer, delay) VALUES (?, ?, ?, ?)');
-          faqs.forEach(faq => {
-            const question = faq.question || '';
-            const answer = faq.answer || '';
-            const delay = faq.delay || faq.Delay || 1;
-            console.log('    Inserting FAQ:', question);
-            faqStmt.run(req.params.id, question, answer, delay);
-          });
+    // Update nested data if provided
+    if (faqs !== undefined) {
+      console.log('  Updating', faqs.length, 'FAQs...');
+      // Delete existing FAQs
+      await db.run('DELETE FROM faqs WHERE template_id = ?', [req.params.id]);
+      // Insert new FAQs
+      if (faqs.length > 0) {
+        for (const faq of faqs) {
+          const question = faq.question || '';
+          const answer = faq.answer || '';
+          const delay = faq.delay || faq.Delay || 1;
+          console.log('    Inserting FAQ:', question);
+          await db.run('INSERT INTO faqs (template_id, question, answer, delay) VALUES (?, ?, ?, ?)',
+            [req.params.id, question, answer, delay]);
         }
-        console.log('  ✅ FAQs updated');
       }
+      console.log('  ✅ FAQs updated');
+    }
 
-      if (qualificationQuestions !== undefined) {
-        console.log('  Updating', qualificationQuestions.length, 'questions...');
-        // Delete existing questions
-        db.prepare('DELETE FROM qualification_questions WHERE template_id = ?').run(req.params.id);
-        // Insert new questions
-        if (qualificationQuestions.length > 0) {
-          const qStmt = db.prepare('INSERT INTO qualification_questions (template_id, text, conditions, delay) VALUES (?, ?, ?, ?)');
-          qualificationQuestions.forEach(q => {
-            const text = q.text || q.Body || '';
-            const conditions = q.conditions || [];
-            const delay = q.delay || q.Delay || 1;
-            console.log('    Inserting question:', text);
-            qStmt.run(req.params.id, text, JSON.stringify(conditions), delay);
-          });
+    if (qualificationQuestions !== undefined) {
+      console.log('  Updating', qualificationQuestions.length, 'questions...');
+      // Delete existing questions
+      await db.run('DELETE FROM qualification_questions WHERE template_id = ?', [req.params.id]);
+      // Insert new questions
+      if (qualificationQuestions.length > 0) {
+        for (const q of qualificationQuestions) {
+          const text = q.text || q.Body || '';
+          const conditions = q.conditions || [];
+          const delay = q.delay || q.Delay || 1;
+          console.log('    Inserting question:', text);
+          await db.run('INSERT INTO qualification_questions (template_id, text, conditions, delay) VALUES (?, ?, ?, ?)',
+            [req.params.id, text, JSON.stringify(conditions), delay]);
         }
-        console.log('  ✅ Questions updated');
       }
+      console.log('  ✅ Questions updated');
+    }
 
-      if (followUps !== undefined) {
-        console.log('  Updating', followUps.length, 'follow-ups...');
-        // Delete existing follow-ups
-        db.prepare('DELETE FROM follow_ups WHERE template_id = ?').run(req.params.id);
-        // Insert new follow-ups
-        if (followUps.length > 0) {
-          const fStmt = db.prepare('INSERT INTO follow_ups (template_id, body, delay) VALUES (?, ?, ?)');
-          followUps.forEach(f => {
-            const body = f.body || f.text || f.Body || '';
-            const delay = f.delay || f.Delay || 180;
-            console.log('    Inserting follow-up:', body.substring(0, 50) + '...', 'delay:', delay);
-            fStmt.run(req.params.id, body, delay);
-          });
+    if (followUps !== undefined) {
+      console.log('  Updating', followUps.length, 'follow-ups...');
+      // Delete existing follow-ups
+      await db.run('DELETE FROM follow_ups WHERE template_id = ?', [req.params.id]);
+      // Insert new follow-ups
+      if (followUps.length > 0) {
+        for (const f of followUps) {
+          const body = f.body || f.text || f.Body || '';
+          const delay = f.delay || f.Delay || 180;
+          console.log('    Inserting follow-up:', body.substring(0, 50) + '...', 'delay:', delay);
+          await db.run('INSERT INTO follow_ups (template_id, body, delay) VALUES (?, ?, ?)',
+            [req.params.id, body, delay]);
         }
-        console.log('  ✅ Follow-ups updated');
       }
-    });
-
-    updateTemplate();
+      console.log('  ✅ Follow-ups updated');
+    }
     console.log('✅ Template updated successfully');
 
     res.json({ message: 'Template updated successfully' });
@@ -377,7 +362,7 @@ router.put('/:id', authenticateToken, (req, res) => {
 });
 
 // Duplicate a strategy
-router.post('/:id/duplicate', authenticateToken, (req, res) => {
+router.post('/:id/duplicate', authenticateToken, async (req, res) => {
   console.log('📋 POST /api/templates/:id/duplicate HIT');
   console.log('📝 Template ID:', req.params.id);
   console.log('📝 User ID:', req.user.id);
@@ -388,7 +373,7 @@ router.post('/:id/duplicate', authenticateToken, (req, res) => {
     const originalId = req.params.id;
 
     // Get the original strategy with all its data
-    const original = db.prepare('SELECT * FROM templates WHERE id = ?').get(originalId);
+    const original = await db.get('SELECT * FROM templates WHERE id = ?', [originalId]);
 
     if (!original) {
       console.log('❌ Original template not found');
@@ -402,111 +387,102 @@ router.post('/:id/duplicate', authenticateToken, (req, res) => {
     console.log('✨ Creating duplicate with ID:', newId);
     console.log('📝 New name:', newName);
 
-    const duplicateTemplate = db.transaction(() => {
-      // Create duplicate template
-      db.prepare(`
-        INSERT INTO templates (
-          id, user_id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
-          tone, initial_message, objective, company_information,
-          message_delay_initial, message_delay_standard, cta, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        newId,
-        req.user.id,
-        newName,
-        `${original.tag}-copy`,
-        original.bot_temperature,
-        original.brief,
-        original.resiliancy,
-        original.booking_readiness,
-        original.tone,
-        original.initial_message,
-        original.objective,
-        original.company_information,
-        original.message_delay_initial,
-        original.message_delay_standard,
-        original.cta,
-        now,
-        now
-      );
-      console.log('  ✅ Template record duplicated');
+    // Create duplicate template
+    await db.run(`
+      INSERT INTO templates (
+        id, user_id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
+        tone, initial_message, objective, company_information,
+        message_delay_initial, message_delay_standard, cta, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [newId,
+      req.user.id,
+      newName,
+      `${original.tag}-copy`,
+      original.bot_temperature,
+      original.brief,
+      original.resiliancy,
+      original.booking_readiness,
+      original.tone,
+      original.initial_message,
+      original.objective,
+      original.company_information,
+      original.message_delay_initial,
+      original.message_delay_standard,
+      original.cta,
+      now,
+      now]);
+    console.log('  ✅ Template record duplicated');
 
-      // Duplicate FAQs
-      const faqs = db.prepare('SELECT * FROM faqs WHERE template_id = ?').all(originalId);
-      if (faqs.length > 0) {
-        console.log('  Duplicating', faqs.length, 'FAQs...');
-        const faqStmt = db.prepare('INSERT INTO faqs (template_id, question, answer, delay) VALUES (?, ?, ?, ?)');
-        faqs.forEach(faq => {
-          faqStmt.run(newId, faq.question, faq.answer, faq.delay);
-        });
-        console.log('  ✅ FAQs duplicated');
+    // Duplicate FAQs
+    const faqs = await db.all('SELECT * FROM faqs WHERE template_id = ?', [originalId]);
+    if (faqs.length > 0) {
+      console.log('  Duplicating', faqs.length, 'FAQs...');
+      for (const faq of faqs) {
+        await db.run('INSERT INTO faqs (template_id, question, answer, delay) VALUES (?, ?, ?, ?)',
+          [newId, faq.question, faq.answer, faq.delay]);
       }
+      console.log('  ✅ FAQs duplicated');
+    }
 
-      // Duplicate qualification questions
-      const questions = db.prepare('SELECT * FROM qualification_questions WHERE template_id = ?').all(originalId);
-      if (questions.length > 0) {
-        console.log('  Duplicating', questions.length, 'questions...');
-        const qStmt = db.prepare('INSERT INTO qualification_questions (template_id, text, conditions, delay) VALUES (?, ?, ?, ?)');
-        questions.forEach(q => {
-          qStmt.run(newId, q.text, q.conditions, q.delay);
-        });
-        console.log('  ✅ Questions duplicated');
+    // Duplicate qualification questions
+    const questions = await db.all('SELECT * FROM qualification_questions WHERE template_id = ?', [originalId]);
+    if (questions.length > 0) {
+      console.log('  Duplicating', questions.length, 'questions...');
+      for (const q of questions) {
+        await db.run('INSERT INTO qualification_questions (template_id, text, conditions, delay) VALUES (?, ?, ?, ?)',
+          [newId, q.text, q.conditions, q.delay]);
       }
+      console.log('  ✅ Questions duplicated');
+    }
 
-      // Duplicate follow-ups
-      const followUps = db.prepare('SELECT * FROM follow_ups WHERE template_id = ?').all(originalId);
-      if (followUps.length > 0) {
-        console.log('  Duplicating', followUps.length, 'follow-ups...');
-        const fStmt = db.prepare('INSERT INTO follow_ups (template_id, body, delay) VALUES (?, ?, ?)');
-        followUps.forEach(f => {
-          fStmt.run(newId, f.body, f.delay);
-        });
-        console.log('  ✅ Follow-ups duplicated');
+    // Duplicate follow-ups
+    const followUps = await db.all('SELECT * FROM follow_ups WHERE template_id = ?', [originalId]);
+    if (followUps.length > 0) {
+      console.log('  Duplicating', followUps.length, 'follow-ups...');
+      for (const f of followUps) {
+        await db.run('INSERT INTO follow_ups (template_id, body, delay) VALUES (?, ?, ?)',
+          [newId, f.body, f.delay]);
       }
+      console.log('  ✅ Follow-ups duplicated');
+    }
 
-      // Duplicate custom actions
-      const customActions = db.prepare('SELECT * FROM custom_actions WHERE template_id = ?').all(originalId);
-      if (customActions.length > 0) {
-        console.log('  Duplicating', customActions.length, 'custom actions...');
-        customActions.forEach(action => {
-          const actionStmt = db.prepare(`
-            INSERT INTO custom_actions (template_id, action, rule_condition, description)
-            VALUES (?, ?, ?, ?)
-          `);
-          const result = actionStmt.run(newId, action.action, action.rule_condition, action.description);
-          const newActionId = result.lastInsertRowid;
-          const oldActionId = action.id;
+    // Duplicate custom actions
+    const customActions = await db.all('SELECT * FROM custom_actions WHERE template_id = ?', [originalId]);
+    if (customActions.length > 0) {
+      console.log('  Duplicating', customActions.length, 'custom actions...');
+      for (const action of customActions) {
+        const result = await db.run(`
+          INSERT INTO custom_actions (template_id, action, rule_condition, description)
+          VALUES (?, ?, ?, ?)
+        `, [newId, action.action, action.rule_condition, action.description]);
+        const newActionId = result.lastID || result.lastInsertRowid;
+        const oldActionId = action.id;
 
-          // Duplicate action chains
-          const chains = db.prepare('SELECT * FROM action_chains WHERE custom_action_id = ?').all(oldActionId);
-          chains.forEach(chain => {
-            const chainStmt = db.prepare(`
-              INSERT INTO action_chains (custom_action_id, chain_name, chain_order)
-              VALUES (?, ?, ?)
-            `);
-            const chainResult = chainStmt.run(newActionId, chain.chain_name, chain.chain_order);
-            const newChainId = chainResult.lastInsertRowid;
-            const oldChainId = chain.id;
+        // Duplicate action chains
+        const chains = await db.all('SELECT * FROM action_chains WHERE custom_action_id = ?', [oldActionId]);
+        for (const chain of chains) {
+          const chainResult = await db.run(`
+            INSERT INTO action_chains (custom_action_id, chain_name, chain_order)
+            VALUES (?, ?, ?)
+          `, [newActionId, chain.chain_name, chain.chain_order]);
+          const newChainId = chainResult.lastID || chainResult.lastInsertRowid;
+          const oldChainId = chain.id;
 
-            // Duplicate chain steps
-            const steps = db.prepare('SELECT * FROM chain_steps WHERE chain_id = ?').all(oldChainId);
-            steps.forEach(step => {
-              db.prepare(`
-                INSERT INTO chain_steps (chain_id, step_order, function, parameters)
-                VALUES (?, ?, ?, ?)
-              `).run(newChainId, step.step_order, step.function, step.parameters);
-            });
-          });
-        });
-        console.log('  ✅ Custom actions duplicated');
+          // Duplicate chain steps
+          const steps = await db.all('SELECT * FROM chain_steps WHERE chain_id = ?', [oldChainId]);
+          for (const step of steps) {
+            await db.run(`
+              INSERT INTO chain_steps (chain_id, step_order, function, parameters)
+              VALUES (?, ?, ?, ?)
+            `, [newChainId, step.step_order, step.function, step.parameters]);
+          }
+        }
       }
-    });
-
-    // Execute the transaction
-    duplicateTemplate();
+      console.log('  ✅ Custom actions duplicated');
+    }
 
     // Get the complete duplicate with all nested data
-    const duplicate = db.prepare('SELECT * FROM templates WHERE id = ?').get(newId);
+    const duplicate = await db.get('SELECT * FROM templates WHERE id = ?', [newId]);
 
     console.log('✅ Strategy duplicated successfully');
     res.status(201).json({
@@ -522,64 +498,50 @@ router.post('/:id/duplicate', authenticateToken, (req, res) => {
 });
 
 // Delete template with proper cascade
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   console.log('🗑️ DELETE /api/templates/:id HIT');
   console.log('🗑️ Deleting template for user:', req.user.id);
   console.log('📝 Template ID:', req.params.id);
   console.log('📝 ID type:', typeof req.params.id);
 
-  const deleteTemplate = db.transaction((templateId) => {
-    console.log('  🔄 Transaction started - Deleting template:', templateId);
-    
-    // Temporarily disable foreign keys
-    db.pragma('foreign_keys = OFF');
-    
-    try {
-      // Delete all conversations and related data
-      const conversations = db.prepare('SELECT id FROM conversations WHERE template_id = ?').all(templateId);
-      
-      conversations.forEach(conv => {
-        db.prepare('DELETE FROM messages WHERE conversation_id = ?').run(conv.id);
-        db.prepare('DELETE FROM scheduled_messages WHERE conversation_id = ?').run(conv.id);
-      });
-      
-      db.prepare('DELETE FROM conversations WHERE template_id = ?').run(templateId);
-      
-      // Delete custom actions and chains
-      const customActions = db.prepare('SELECT id FROM custom_actions WHERE template_id = ?').all(templateId);
-      
-      customActions.forEach(action => {
-        const chains = db.prepare('SELECT id FROM action_chains WHERE custom_action_id = ?').all(action.id);
-        
-        chains.forEach(chain => {
-          db.prepare('DELETE FROM chain_steps WHERE chain_id = ?').run(chain.id);
-        });
-        
-        db.prepare('DELETE FROM action_chains WHERE custom_action_id = ?').run(action.id);
-      });
-      
-      db.prepare('DELETE FROM custom_actions WHERE template_id = ?').run(templateId);
-      
-      // Delete template-related data
-      db.prepare('DELETE FROM faqs WHERE template_id = ?').run(templateId);
-      db.prepare('DELETE FROM qualification_questions WHERE template_id = ?').run(templateId);
-      db.prepare('DELETE FROM follow_ups WHERE template_id = ?').run(templateId);
-      
-      // Delete the template (only if owned by user)
-      const result = db.prepare('DELETE FROM templates WHERE id = ? AND user_id = ?').run(templateId, req.user.id);
-
-      console.log('  ✅ Delete result:', result);
-      console.log('  📊 Rows affected:', result.changes);
-
-      return result;
-    } finally {
-      // Re-enable foreign keys
-      db.pragma('foreign_keys = ON');
-    }
-  });
-  
   try {
-    const result = deleteTemplate(req.params.id);
+    console.log('  🔄 Deleting template:', req.params.id);
+
+    // Delete all conversations and related data
+    const conversations = await db.all('SELECT id FROM conversations WHERE template_id = ?', [req.params.id]);
+
+    for (const conv of conversations) {
+      await db.run('DELETE FROM messages WHERE conversation_id = ?', [conv.id]);
+      await db.run('DELETE FROM scheduled_messages WHERE conversation_id = ?', [conv.id]);
+    }
+
+    await db.run('DELETE FROM conversations WHERE template_id = ?', [req.params.id]);
+
+    // Delete custom actions and chains
+    const customActions = await db.all('SELECT id FROM custom_actions WHERE template_id = ?', [req.params.id]);
+
+    for (const action of customActions) {
+      const chains = await db.all('SELECT id FROM action_chains WHERE custom_action_id = ?', [action.id]);
+
+      for (const chain of chains) {
+        await db.run('DELETE FROM chain_steps WHERE chain_id = ?', [chain.id]);
+      }
+
+      await db.run('DELETE FROM action_chains WHERE custom_action_id = ?', [action.id]);
+    }
+
+    await db.run('DELETE FROM custom_actions WHERE template_id = ?', [req.params.id]);
+
+    // Delete template-related data
+    await db.run('DELETE FROM faqs WHERE template_id = ?', [req.params.id]);
+    await db.run('DELETE FROM qualification_questions WHERE template_id = ?', [req.params.id]);
+    await db.run('DELETE FROM follow_ups WHERE template_id = ?', [req.params.id]);
+
+    // Delete the template (only if owned by user)
+    const result = await db.run('DELETE FROM templates WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+
+    console.log('  ✅ Delete result:', result);
+    console.log('  📊 Rows affected:', result.changes);
 
     if (result.changes === 0) {
       console.log('⚠️ Template not found or already deleted');

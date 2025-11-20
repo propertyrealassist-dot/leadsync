@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const groqService = require('../services/groqService');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 // ============================================
 // AI CHAT ENDPOINT FOR MAKE.COM
@@ -48,9 +48,9 @@ router.post('/chat', async (req, res) => {
     // Find strategy by ID or tag
     let strategy;
     if (strategyId) {
-      strategy = db.prepare('SELECT * FROM templates WHERE id = ?').get(strategyId);
+      strategy = await db.get('SELECT * FROM templates WHERE id = ?', [strategyId]);
     } else if (strategyTag) {
-      strategy = db.prepare('SELECT * FROM templates WHERE tag = ?').get(strategyTag);
+      strategy = await db.get('SELECT * FROM templates WHERE tag = ?', [strategyTag]);
     }
 
     // If no strategy found, use default
@@ -117,7 +117,7 @@ router.post('/chat', async (req, res) => {
 // ============================================
 // HEALTH CHECK
 // ============================================
-router.get('/health', (req, res) => {
+router.get('/health', async (req, res) => {
   res.json({
     success: true,
     status: 'AI service is running',

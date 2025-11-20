@@ -1,5 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
-const db = require('../database/db');
+const { db } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 class AppointmentAI {

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 // JWT Secret - In production, use environment variable
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
@@ -23,7 +23,7 @@ const authenticateToken = (req, res, next) => {
     }
 
     // Verify token
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, JWT_SECRET, async (err, decoded) => {
       if (err) {
         console.error('JWT verification failed:', err.message);
         return res.status(403).json({
@@ -45,28 +45,36 @@ const authenticateToken = (req, res, next) => {
         });
       }
 
-      // Get user from database
-      const user = db.prepare(`
-        SELECT id, email, first_name, last_name, company_name,
-               client_id, api_key, account_status, plan_type
-        FROM users
-        WHERE id = ?
-      `).get(userId);
+      try {
+        // Get user from database
+        const user = await db.get(`
+          SELECT id, email, first_name, last_name, company_name,
+                 client_id, api_key, account_status, plan_type
+          FROM users
+          WHERE id = ?
+        `, [userId]);
 
-      if (!user) {
-        console.error('User not found for id:', userId);
-        return res.status(404).json({
+        if (!user) {
+          console.error('User not found for id:', userId);
+          return res.status(404).json({
+            success: false,
+            error: 'User not found or account is inactive.'
+          });
+        }
+
+        console.log('Auth successful for user:', user.email);
+
+        // Attach user to request object
+        req.user = user;
+        req.user.id = user.id; // Ensure id is always available
+        next();
+      } catch (dbError) {
+        console.error('Database error in auth middleware:', dbError);
+        return res.status(500).json({
           success: false,
-          error: 'User not found or account is inactive.'
+          error: 'Authentication failed.'
         });
       }
-
-      console.log('Auth successful for user:', user.email);
-
-      // Attach user to request object
-      req.user = user;
-      req.user.id = user.id; // Ensure id is always available
-      next();
     });
   } catch (error) {
     console.error('Auth middleware error:', error);
@@ -80,7 +88,7 @@ const authenticateToken = (req, res, next) => {
 /**
  * Middleware to verify API key (for webhook endpoints)
  */
-const authenticateApiKey = (req, res, next) => {
+const authenticateApiKey = async (req, res, next) => {
   try {
     // Get API key from header or query param
     const apiKey = req.headers['x-api-key'] || req.query.api_key;
@@ -93,12 +101,12 @@ const authenticateApiKey = (req, res, next) => {
     }
 
     // Find user by API key
-    const user = db.prepare(`
+    const user = await db.get(`
       SELECT id, email, first_name, last_name, company_name,
              client_id, api_key, account_status, plan_type
       FROM users
       WHERE api_key = ? AND account_status = 'active'
-    `).get(apiKey);
+    `, [apiKey]);
 
     if (!user) {
       return res.status(403).json({
@@ -122,7 +130,7 @@ const authenticateApiKey = (req, res, next) => {
 /**
  * Middleware to verify Client ID (for webhook identification)
  */
-const authenticateClientId = (req, res, next) => {
+const authenticateClientId = async (req, res, next) => {
   try {
     // Get client ID from header, query param, or request body
     const clientId = req.headers['x-client-id'] ||
@@ -137,12 +145,12 @@ const authenticateClientId = (req, res, next) => {
     }
 
     // Find user by client ID
-    const user = db.prepare(`
+    const user = await db.get(`
       SELECT id, email, first_name, last_name, company_name,
              client_id, api_key, account_status, plan_type
       FROM users
       WHERE client_id = ? AND account_status = 'active'
-    `).get(clientId);
+    `, [clientId]);
 
     if (!user) {
       return res.status(403).json({

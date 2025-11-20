@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const emailService = require('../services/emailService');
-const db = require('../database/db');
+const { db } = require('../config/database');
 
 /**
  * Password Reset Routes
@@ -34,7 +34,7 @@ router.post('/forgot-password', async (req, res) => {
     console.log('  Looking for user with email:', email);
 
     // Find user
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
 
     // Security best practice: Always return success message even if user doesn't exist
     // This prevents email enumeration attacks
@@ -56,10 +56,10 @@ router.post('/forgot-password', async (req, res) => {
     console.log('  ⏰ Expires at:', expiresAt);
 
     // Save reset token to database
-    db.prepare(`
+    await db.run(`
       INSERT INTO password_resets (id, user_id, token, expires_at)
       VALUES (?, ?, ?, ?)
-    `).run(resetId, user.id, resetToken, expiresAt);
+    `, [resetId, user.id, resetToken, expiresAt]);
 
     console.log('  💾 Reset token saved to database');
 
@@ -103,14 +103,14 @@ router.get('/verify-reset-token/:token', async (req, res) => {
     console.log('  Verifying token...');
 
     // Find valid, unused, non-expired reset token
-    const reset = db.prepare(`
+    const reset = await db.get(`
       SELECT pr.*, u.email, u.username
       FROM password_resets pr
       JOIN users u ON pr.user_id = u.id
       WHERE pr.token = ?
       AND pr.used = 0
       AND pr.expires_at > datetime('now')
-    `).get(token);
+    `, [token]);
 
     if (!reset) {
       console.log('  ❌ Token invalid, used, or expired');
@@ -163,12 +163,12 @@ router.post('/reset-password', async (req, res) => {
     console.log('  Validating reset token...');
 
     // Find valid reset token
-    const reset = db.prepare(`
+    const reset = await db.get(`
       SELECT * FROM password_resets
       WHERE token = ?
       AND used = 0
       AND expires_at > datetime('now')
-    `).get(token);
+    `, [token]);
 
     if (!reset) {
       console.log('  ❌ Invalid or expired token');
@@ -186,16 +186,16 @@ router.post('/reset-password', async (req, res) => {
     console.log('  💾 Updating user password...');
 
     // Update user's password
-    db.prepare(`
+    await db.run(`
       UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
-    `).run(hashedPassword, reset.user_id);
+    `, [hashedPassword, reset.user_id]);
 
     console.log('  🔒 Marking token as used...');
 
     // Mark token as used to prevent reuse
-    db.prepare(`
+    await db.run(`
       UPDATE password_resets SET used = 1 WHERE id = ?
-    `).run(reset.id);
+    `, [reset.id]);
 
     console.log('  ✅ Password reset successful!');
 
