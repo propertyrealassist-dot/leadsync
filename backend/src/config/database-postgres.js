@@ -9,7 +9,7 @@ const pool = new Pool({
   } : false,
   max: 20, // Maximum pool connections
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000
+  connectionTimeoutMillis: 15000 // Increased to 15s for cluster wake-up
 });
 
 // Test connection
@@ -40,11 +40,14 @@ function hashApiKey(apiKey) {
   return crypto.createHash('sha256').update(apiKey).digest('hex');
 }
 
-// Initialize database tables
-async function initializeDatabase() {
-  const client = await pool.connect();
+// Initialize database tables with retry logic for CockroachDB cluster wake-up
+async function initializeDatabase(retries = 3) {
+  let client;
 
   try {
+    console.log('🔧 Connecting to CockroachDB...');
+    client = await pool.connect();
+    console.log('✅ Connection established');
     console.log('🔧 Initializing CockroachDB schema...');
 
     // ==========================================
@@ -421,10 +424,44 @@ async function initializeDatabase() {
     console.log('✅ CockroachDB schema initialized successfully');
 
   } catch (error) {
-    console.error('❌ Error initializing database:', error);
+    console.error('❌ Error initializing database:', error.message);
+
+    // Check if it's a connection timeout and we have retries left
+    const isTimeout = error.message && (
+      error.message.includes('timeout') ||
+      error.message.includes('Connection terminated') ||
+      error.message.includes('ECONNREFUSED')
+    );
+
+    if (retries > 0 && isTimeout) {
+      console.log(`⏳ CockroachDB cluster may be waking up...`);
+      console.log(`⏳ Retrying connection in 5 seconds... (${retries} attempts left)`);
+
+      // Release client if it exists
+      if (client) {
+        try {
+          client.release();
+        } catch (releaseError) {
+          // Ignore release errors
+        }
+      }
+
+      // Wait 5 seconds before retry
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      // Recursive retry
+      return initializeDatabase(retries - 1);
+    }
+
     throw error;
   } finally {
-    client.release();
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        // Ignore release errors during cleanup
+      }
+    }
   }
 }
 
