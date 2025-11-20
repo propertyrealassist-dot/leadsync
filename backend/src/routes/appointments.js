@@ -3,14 +3,22 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { db } = require('../config/database');
 const ghlService = require('../services/ghlService');
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * Get all appointments for user
  * GET /api/appointments
  */
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
     const { status, startDate, endDate } = req.query;
 
     let query = 'SELECT * FROM appointments WHERE user_id = ?';
@@ -52,10 +60,17 @@ router.get('/', async (req, res) => {
  * Get single appointment
  * GET /api/appointments/:id
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
 
     const appointment = await db.get('SELECT * FROM appointments WHERE id = ? AND user_id = ?', [id, userId]);
 
@@ -83,9 +98,16 @@ router.get('/:id', async (req, res) => {
  * Create new appointment
  * POST /api/appointments
  */
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
-    const userId = req.body.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
     const {
       contactName,
       contactEmail,
@@ -233,9 +255,16 @@ router.post('/', async (req, res) => {
  * Get appointment statistics
  * GET /api/appointments/stats
  */
-router.get('/stats/overview', async (req, res) => {
+router.get('/stats/overview', authenticateToken, async (req, res) => {
   try {
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
 
     const totalResult = await db.get('SELECT COUNT(*) as count FROM appointments WHERE user_id = ?', [userId]);
     const total = totalResult.count;
@@ -266,10 +295,17 @@ router.get('/stats/overview', async (req, res) => {
  * Update appointment
  * PUT /api/appointments/:id
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.body.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
 
     // Check if appointment exists
     const existing = await db.get('SELECT * FROM appointments WHERE id = ? AND user_id = ?', [id, userId]);
@@ -371,10 +407,17 @@ router.put('/:id', async (req, res) => {
  * Delete appointment
  * DELETE /api/appointments/:id
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
 
     // Get appointment before deleting
     const appointment = await db.get('SELECT * FROM appointments WHERE id = ? AND user_id = ?', [id, userId]);
@@ -418,9 +461,16 @@ router.delete('/:id', async (req, res) => {
  * Get upcoming appointments (next 7 days)
  * GET /api/appointments/upcoming
  */
-router.get('/filter/upcoming', async (req, res) => {
+router.get('/filter/upcoming', authenticateToken, async (req, res) => {
   try {
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
     const now = new Date().toISOString();
     const sevenDaysLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -450,9 +500,16 @@ router.get('/filter/upcoming', async (req, res) => {
  * Sync appointments from GHL
  * POST /api/appointments/sync
  */
-router.post('/sync', async (req, res) => {
+router.post('/sync', authenticateToken, async (req, res) => {
   try {
-    const userId = req.body.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
     const { calendarId } = req.body;
 
     if (!calendarId) {

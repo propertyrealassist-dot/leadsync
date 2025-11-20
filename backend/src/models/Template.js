@@ -99,7 +99,7 @@ class Template {
       return result.rows;
     } else {
       return this.db.prepare(
-        "SELECT * FROM templates WHERE user_id = ? OR user_id = 'default_user' ORDER BY created_at DESC"
+        "SELECT * FROM templates WHERE user_id = ? OR user_id IS NULL ORDER BY created_at DESC"
       ).all(userId);
     }
   }

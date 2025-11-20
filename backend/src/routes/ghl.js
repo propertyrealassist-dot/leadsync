@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const ghlService = require('../services/ghlService');
 const crypto = require('crypto');
+const { authenticateToken } = require('../middleware/auth');
 
 // Store state tokens temporarily (in production, use Redis or similar)
 const stateTokens = new Map();
@@ -10,11 +11,18 @@ const stateTokens = new Map();
  * Initiate GHL OAuth flow for LeadSync
  * GET /api/ghl/auth/start
  */
-router.get('/auth/start', async (req, res) => {
+router.get('/auth/start', authenticateToken, async (req, res) => {
   try {
     // Generate random state token for CSRF protection
     const state = crypto.randomBytes(32).toString('hex');
-    const userId = req.query.userId || 'default_user'; // In production, get from session
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
 
     // Store state with user ID
     stateTokens.set(state, { userId, timestamp: Date.now() });
@@ -90,9 +98,16 @@ router.get('/auth/callback', async (req, res) => {
  * Get GHL connection status
  * GET /api/ghl/status
  */
-router.get('/status', async (req, res) => {
+router.get('/status', authenticateToken, async (req, res) => {
   try {
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
     const isConnected = await ghlService.isConnected(userId);
 
     let locationId = null;
@@ -118,9 +133,16 @@ router.get('/status', async (req, res) => {
  * Disconnect GHL
  * POST /api/ghl/disconnect
  */
-router.post('/disconnect', async (req, res) => {
+router.post('/disconnect', authenticateToken, async (req, res) => {
   try {
-    const userId = req.body.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
 
     const { db } = require('../config/database');
     await db.run('DELETE FROM ghl_credentials WHERE user_id = ?', [userId]);
@@ -142,9 +164,16 @@ router.post('/disconnect', async (req, res) => {
  * Get calendars
  * GET /api/ghl/calendars
  */
-router.get('/calendars', async (req, res) => {
+router.get('/calendars', authenticateToken, async (req, res) => {
   try {
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
     const calendars = await ghlService.getCalendars(userId);
 
     res.json({
@@ -164,9 +193,16 @@ router.get('/calendars', async (req, res) => {
  * Get calendar events
  * GET /api/ghl/calendars/:calendarId/events
  */
-router.get('/calendars/:calendarId/events', async (req, res) => {
+router.get('/calendars/:calendarId/events', authenticateToken, async (req, res) => {
   try {
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
     const { calendarId } = req.params;
     const { startTime, endTime } = req.query;
 
@@ -189,9 +225,16 @@ router.get('/calendars/:calendarId/events', async (req, res) => {
  * Search contacts
  * GET /api/ghl/contacts/search
  */
-router.get('/contacts/search', async (req, res) => {
+router.get('/contacts/search', authenticateToken, async (req, res) => {
   try {
-    const userId = req.query.userId || 'default_user';
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
     const { query } = req.query;
 
     if (!query) {

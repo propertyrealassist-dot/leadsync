@@ -75,7 +75,9 @@
       "Bash(powershell -Command \"(Get-Content ''C:\\Users\\Kurtv\\Desktop\\leadsync\\backend\\src\\routes\\templates.js'').Length\")",
       "Bash(python convert-db.py:*)",
       "Bash(python fix-all-brackets.py:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(set DATABASE_URL=postgresql://leadsync:RYUN2rpGsOPvDArZidoMVg@spicy-egret-18515.j77.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full:*)",
+      "Bash(DATABASE_URL=\"postgresql://leadsync:RYUN2rpGsOPvDArZidoMVg@spicy-egret-18515.j77.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full\" node:*)"
     ],
     "deny": [],
     "ask": []

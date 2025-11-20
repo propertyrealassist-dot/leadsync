@@ -26,6 +26,9 @@ const aiRoutes = require('./routes/ai');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust first proxy (required for Render, Railway, etc.)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors());
 

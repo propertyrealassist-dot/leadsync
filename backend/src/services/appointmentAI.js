@@ -160,9 +160,9 @@ readyToBook should be true only if you have at least: name, phone OR email, and 
 
       // Get available slots if date is specified
       let availableSlots = [];
-      if (appointmentInfo?.preferredDate) {
+      if (appointmentInfo?.preferredDate && context.userId) {
         availableSlots = this.getAvailableSlots(
-          context.userId || 'default_user',
+          context.userId,
           appointmentInfo.preferredDate
         );
       }
