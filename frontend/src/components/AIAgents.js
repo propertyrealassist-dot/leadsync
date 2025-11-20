@@ -66,12 +66,19 @@ function AIAgents() {
         })
       ]);
 
-      setAgents(agentsRes.data);
-      setConversations(conversationsRes.data);
-      console.log('✅ Loaded', agentsRes.data.length, 'agents');
+      // Ensure we have valid arrays
+      const agentsData = Array.isArray(agentsRes.data) ? agentsRes.data : [];
+      const conversationsData = Array.isArray(conversationsRes.data) ? conversationsRes.data : [];
+
+      setAgents(agentsData);
+      setConversations(conversationsData);
+      console.log('✅ Loaded', agentsData.length, 'agents');
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Failed to load strategies');
+      // Set empty arrays on error to prevent filter errors
+      setAgents([]);
+      setConversations([]);
     } finally {
       setLoading(false);
     }
@@ -775,10 +782,12 @@ function AIAgents() {
     }
   };
 
-  const filteredAgents = agents.filter(agent =>
-    agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.tag.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAgents = Array.isArray(agents)
+    ? agents.filter(agent =>
+        agent?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        agent?.tag?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   if (loading) {
     return <div className="loading">Loading AI agents...</div>;
