@@ -56,9 +56,9 @@ const authenticateToken = (req, res, next) => {
 
         if (!user) {
           console.error('User not found for id:', userId);
-          return res.status(404).json({
+          return res.status(401).json({
             success: false,
-            error: 'User not found or account is inactive.'
+            error: 'User not found or account is inactive. Please login again.'
           });
         }
 

@@ -17,6 +17,46 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Logout function (defined early so we can use it in interceptor)
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
+    setUser(null);
+    console.log('✅ Logged out successfully');
+  };
+
+  // Setup axios interceptor to handle auth errors
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        // If we get 401, 403, or 404 with user not found, logout
+        if (error.response) {
+          const status = error.response.status;
+          const errorMsg = error.response.data?.error || '';
+
+          if (
+            status === 401 ||
+            status === 403 ||
+            (status === 404 && errorMsg.includes('User not found'))
+          ) {
+            console.warn('⚠️ Auth token invalid or user not found - logging out');
+            handleLogout();
+            // Redirect to login
+            window.location.href = '/login';
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptor on unmount
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
+
   // Initialize auth on mount
   useEffect(() => {
     const initAuth = () => {
@@ -163,17 +203,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout user
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-
-    // CRITICAL: Clear axios header
-    delete axios.defaults.headers.common['Authorization'];
-
-    setUser(null);
-    console.log('✅ Logged out successfully');
-  };
+  // Logout user (use the handleLogout function)
+  const logout = handleLogout;
 
   // Update user data (for API key regeneration, etc.)
   const updateUser = (updatedData) => {
