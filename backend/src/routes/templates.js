@@ -203,8 +203,15 @@ router.post('/', authenticateToken, async (req, res) => {
           const result = await db.run(`
             INSERT INTO custom_actions (template_id, action, rule_condition, description)
             VALUES (?, ?, ?, ?)
+            RETURNING id
           `, [id, actionType, ruleCondition, description]);
-          const actionId = result.lastID || result.lastInsertRowid;
+          const actionId = result.lastID || result.lastInsertRowid || result.id;
+          console.log('    Custom action insert result:', result);
+          console.log('    Extracted actionId:', actionId);
+
+          if (!actionId) {
+            throw new Error('Failed to get custom action ID after insert');
+          }
 
           // Handle chains if present
           const chains = action.chains || action.config?.chains;
@@ -236,8 +243,15 @@ router.post('/', authenticateToken, async (req, res) => {
             const result = await db.run(`
               INSERT INTO custom_actions (template_id, action, rule_condition, description)
               VALUES (?, ?, ?, ?)
+              RETURNING id
             `, [id, actionType, action.rule_condition, action.description || '']);
-            const actionId = result.lastID || result.lastInsertRowid;
+            const actionId = result.lastID || result.lastInsertRowid || result.id;
+            console.log('    Custom action insert result (object format):', result);
+            console.log('    Extracted actionId (object format):', actionId);
+
+            if (!actionId) {
+              throw new Error('Failed to get custom action ID after insert');
+            }
 
             if (action.chains) {
               for (const chain of action.chains) {
