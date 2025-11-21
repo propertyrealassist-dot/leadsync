@@ -8,9 +8,13 @@ const { db } = require('../config/database');
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status, search, limit = 50 } = req.query;
+    const orgId = req.user.currentOrganizationId;
 
-    let query = 'SELECT * FROM leads WHERE user_id = ?';
-    const params = [req.user.id];
+    // Filter by organization_id if available, otherwise by user_id
+    let query = orgId
+      ? 'SELECT * FROM leads WHERE organization_id = ?'
+      : 'SELECT * FROM leads WHERE user_id = ?';
+    const params = [orgId || req.user.id];
 
     if (status) {
       query += ' AND status = ?';
@@ -44,9 +48,12 @@ router.get('/', authenticateToken, async (req, res) => {
 // Get single lead with activities
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const lead = await db.get(`
-      SELECT * FROM leads WHERE id = ? AND user_id = ?
-    `, [req.params.id, req.user.id]);
+    const orgId = req.user.currentOrganizationId;
+
+    // Filter by organization_id if available, otherwise by user_id
+    const lead = orgId
+      ? await db.get('SELECT * FROM leads WHERE id = ? AND organization_id = ?', [req.params.id, orgId])
+      : await db.get('SELECT * FROM leads WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
 
     if (!lead) {
       return res.status(404).json({
@@ -90,13 +97,14 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const id = uuidv4();
     const now = new Date().toISOString();
+    const orgId = req.user.currentOrganizationId;
 
     await db.run(`
       INSERT INTO leads (
-        id, user_id, template_id, name, email, phone, company,
+        id, user_id, organization_id, template_id, name, email, phone, company,
         source, custom_fields, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [id, req.user.id, template_id || null, name, email || null,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [id, req.user.id, orgId, template_id || null, name, email || null,
       phone || null, company || null, source || 'manual',
       custom_fields ? JSON.stringify(custom_fields) : null,
       now, now

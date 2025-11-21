@@ -50,6 +50,8 @@ export function OrganizationProvider({ children }) {
     if (org) {
       setCurrentOrganization(org);
       localStorage.setItem('currentOrganizationId', org.id);
+      // Force page reload to refresh all data for the new organization
+      window.location.reload();
     }
   };
 

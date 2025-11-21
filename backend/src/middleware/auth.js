@@ -80,11 +80,23 @@ const authenticateToken = (req, res, next) => {
 
         console.log('Auth successful for user:', user.email);
 
+        // Get organization ID from header or use first available
+        const requestedOrgId = req.headers['x-organization-id'];
+        let currentOrganizationId = null;
+
+        if (requestedOrgId && organizations.some(org => org.id === requestedOrgId)) {
+          // Use the requested organization if user is a member
+          currentOrganizationId = requestedOrgId;
+        } else if (organizations.length > 0) {
+          // Default to first organization
+          currentOrganizationId = organizations[0].id;
+        }
+
         // Attach user and organizations to request object
         req.user = user;
         req.user.id = user.id; // Ensure id is always available
         req.user.organizations = organizations;
-        req.user.currentOrganizationId = organizations.length > 0 ? organizations[0].id : null;
+        req.user.currentOrganizationId = currentOrganizationId;
         next();
       } catch (dbError) {
         console.error('Database error in auth middleware:', dbError);

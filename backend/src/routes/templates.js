@@ -7,9 +7,13 @@ const { authenticateToken } = require('../middleware/auth');
 // Get all templates
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    console.log('📋 Loading templates for user:', req.user.id);
+    const orgId = req.user.currentOrganizationId;
+    console.log('📋 Loading templates for organization:', orgId);
 
-    const templates = await db.all('SELECT * FROM templates WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+    // Filter by organization_id if available, otherwise by user_id (backward compatibility)
+    const templates = orgId
+      ? await db.all('SELECT * FROM templates WHERE organization_id = ? ORDER BY created_at DESC', [orgId])
+      : await db.all('SELECT * FROM templates WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
 
     console.log('✅ Found', templates.length, 'templates');
     res.json(templates);
@@ -21,7 +25,12 @@ router.get('/', authenticateToken, async (req, res) => {
 // Get single template with all related data
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const template = await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    const orgId = req.user.currentOrganizationId;
+
+    // Filter by organization_id if available, otherwise by user_id
+    const template = orgId
+      ? await db.get('SELECT * FROM templates WHERE id = ? AND organization_id = ?', [req.params.id, orgId])
+      : await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
 
     if (!template) {
       return res.status(404).json({ error: 'Template not found' });
@@ -124,18 +133,19 @@ router.post('/', authenticateToken, async (req, res) => {
     const mappedTag = tag || name.toLowerCase().replace(/\s+/g, '-');
 
     // Insert template with async operations
+    const orgId = req.user.currentOrganizationId;
     await db.run(`
       INSERT INTO templates (
-        id, user_id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
+        id, user_id, organization_id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
         tone, initial_message, objective, company_information,
         message_delay_initial, message_delay_standard, cta
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      id, req.user.id, name, mappedTag, botTemperature || 0.4, mappedBrief, resiliancy || 3, bookingReadiness || 2,
+      id, req.user.id, orgId, name, mappedTag, botTemperature || 0.4, mappedBrief, resiliancy || 3, bookingReadiness || 2,
       tone || 'Friendly and Casual', mappedInitialMessage, mappedObjective, mappedCompanyInfo,
       messageDelayInitial || 30, mappedMessageDelayStandard, mappedCta
     ]);
-    console.log('✅ Template record inserted');
+    console.log('✅ Template record inserted with organization:', orgId);
 
     console.log('📋 Processing nested data...');
     console.log('  FAQs:', mappedFaqs?.length || 0);
