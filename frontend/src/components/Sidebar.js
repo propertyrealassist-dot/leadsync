@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icons from './Icons';
+import OrganizationSwitcher from './OrganizationSwitcher';
 import './Sidebar.css';
 
 function Sidebar() {
@@ -85,6 +86,11 @@ function Sidebar() {
         }}>
           LeadSync
         </div>
+      </div>
+
+      {/* Organization Switcher */}
+      <div style={{ padding: '0 20px 20px 20px', borderBottom: '1px solid rgba(139, 92, 246, 0.2)' }}>
+        <OrganizationSwitcher />
       </div>
 
       {/* Scrollable Menu */}

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NavigationProvider } from './context/NavigationContext';
+import { OrganizationProvider } from './context/OrganizationContext';
 import Sidebar from './components/Sidebar';
 import Home from './components/Home';
 import AIAgents from './components/AIAgents';
@@ -189,23 +190,25 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <ToastProvider>
-          <NavigationProvider>
-            <AppContent />
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop={true}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="dark"
-            />
-          </NavigationProvider>
-        </ToastProvider>
+        <OrganizationProvider>
+          <ToastProvider>
+            <NavigationProvider>
+              <AppContent />
+              <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="dark"
+              />
+            </NavigationProvider>
+          </ToastProvider>
+        </OrganizationProvider>
       </AuthProvider>
     </Router>
   );
