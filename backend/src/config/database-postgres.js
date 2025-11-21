@@ -62,6 +62,13 @@ async function initializeDatabase(retries = 3) {
         last_name VARCHAR(255),
         company_name VARCHAR(255),
 
+        -- Profile Information
+        phone VARCHAR(50),
+        timezone VARCHAR(100) DEFAULT 'America/New_York',
+        language VARCHAR(10) DEFAULT 'en',
+        profile_image TEXT,
+        banner_image TEXT,
+
         -- API Authentication
         client_id VARCHAR(255) UNIQUE NOT NULL,
         api_key VARCHAR(255) UNIQUE NOT NULL,
@@ -83,6 +90,19 @@ async function initializeDatabase(retries = 3) {
         last_login_at TIMESTAMP
       )
     `);
+
+    // Add missing columns to existing users table if they don't exist
+    try {
+      await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50)`);
+      await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(100) DEFAULT 'America/New_York'`);
+      await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS language VARCHAR(10) DEFAULT 'en'`);
+      await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image TEXT`);
+      await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS banner_image TEXT`);
+      console.log('✅ Added missing profile columns to users table');
+    } catch (err) {
+      // Columns might already exist, that's okay
+      console.log('ℹ️ Profile columns migration: ', err.message);
+    }
 
     await client.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_users_client_id ON users(client_id)`);

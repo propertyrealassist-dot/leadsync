@@ -63,14 +63,20 @@ const authenticateToken = (req, res, next) => {
           });
         }
 
-        // Get user's organizations
-        const organizations = await db.all(`
-          SELECT o.id, o.name, om.role
-          FROM organizations o
-          INNER JOIN organization_members om ON o.id = om.organization_id
-          WHERE om.user_id = ? AND om.status = 'active'
-          ORDER BY om.joined_at DESC
-        `, [userId]);
+        // Get user's organizations (if table exists)
+        let organizations = [];
+        try {
+          organizations = await db.all(`
+            SELECT o.id, o.name, om.role
+            FROM organizations o
+            INNER JOIN organization_members om ON o.id = om.organization_id
+            WHERE om.user_id = ? AND om.status = 'active'
+            ORDER BY om.joined_at DESC
+          `, [userId]);
+        } catch (orgError) {
+          // Organizations table might not exist yet, that's okay
+          console.log('ℹ️ Organizations not available:', orgError.message);
+        }
 
         console.log('Auth successful for user:', user.email);
 
