@@ -148,6 +148,33 @@ router.post('/register', async (req, res) => {
       lastName: parsedLastName
     });
 
+    // Create default organization for the user
+    try {
+      const orgId = generateUUID();
+      const orgName = companyName || `${parsedFirstName || 'My'}'s Workspace`;
+      const orgSlug = orgName.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        + '-' + Date.now();
+
+      await db.run(`
+        INSERT INTO organizations (id, name, slug, owner_id, plan_type, subscription_status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, 'free', 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      `, [orgId, orgName, orgSlug, userId]);
+
+      // Add user as owner/member of the organization
+      const memberId = generateUUID();
+      await db.run(`
+        INSERT INTO organization_members (id, organization_id, user_id, role, joined_at, status, created_at)
+        VALUES (?, ?, ?, 'owner', CURRENT_TIMESTAMP, 'active', CURRENT_TIMESTAMP)
+      `, [memberId, orgId, userId]);
+
+      console.log('Default organization created:', { orgId, orgName, orgSlug });
+    } catch (orgError) {
+      console.error('Failed to create default organization:', orgError);
+      // Don't fail registration if org creation fails
+    }
+
     // Generate JWT token
     const token = generateToken(userId);
 

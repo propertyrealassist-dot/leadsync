@@ -11,7 +11,7 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const organizations = await db.all(`
+    let organizations = await db.all(`
       SELECT
         o.*,
         om.role,
@@ -22,6 +22,48 @@ router.get('/', authenticateToken, async (req, res) => {
       WHERE om.user_id = ? AND om.status = 'active'
       ORDER BY om.joined_at DESC
     `, [userId]);
+
+    // If user has no organizations, create a default one
+    if (organizations.length === 0) {
+      console.log('User has no organizations, creating default one...');
+      try {
+        const orgId = generateUUID();
+        const userName = req.user.first_name || req.user.email.split('@')[0];
+        const orgName = req.user.company_name || `${userName}'s Workspace`;
+        const orgSlug = orgName.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          + '-' + Date.now();
+
+        await db.run(`
+          INSERT INTO organizations (id, name, slug, owner_id, plan_type, subscription_status, created_at, updated_at)
+          VALUES (?, ?, ?, ?, 'free', 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `, [orgId, orgName, orgSlug, userId]);
+
+        const memberId = generateUUID();
+        await db.run(`
+          INSERT INTO organization_members (id, organization_id, user_id, role, joined_at, status, created_at)
+          VALUES (?, ?, ?, 'owner', CURRENT_TIMESTAMP, 'active', CURRENT_TIMESTAMP)
+        `, [memberId, orgId, userId]);
+
+        console.log('Default organization created:', { orgId, orgName });
+
+        // Fetch the newly created organization
+        organizations = await db.all(`
+          SELECT
+            o.*,
+            om.role,
+            om.status as member_status,
+            om.joined_at
+          FROM organizations o
+          INNER JOIN organization_members om ON o.id = om.organization_id
+          WHERE om.user_id = ? AND om.status = 'active'
+          ORDER BY om.joined_at DESC
+        `, [userId]);
+      } catch (createError) {
+        console.error('Failed to create default organization:', createError);
+      }
+    }
 
     res.json(organizations);
   } catch (error) {

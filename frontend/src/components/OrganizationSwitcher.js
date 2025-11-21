@@ -39,6 +39,68 @@ function OrganizationSwitcher() {
     setCreating(false);
   };
 
+  // If no organizations exist, show create button
+  if (!currentOrganization && organizations.length === 0) {
+    return (
+      <div className="org-switcher" ref={dropdownRef}>
+        <button
+          className="org-switcher-button"
+          onClick={() => setShowDropdown(!showDropdown)}
+        >
+          <div className="org-icon">
+            <span>+</span>
+          </div>
+          <span className="org-name">Create Organization</span>
+          <span className="org-arrow">▼</span>
+        </button>
+
+        {showDropdown && (
+          <div className="org-dropdown">
+            <div className="org-dropdown-header">
+              <span>Get Started</span>
+            </div>
+
+            {showCreateForm ? (
+              <form className="org-create-form" onSubmit={handleCreateOrganization}>
+                <input
+                  type="text"
+                  value={newOrgName}
+                  onChange={(e) => setNewOrgName(e.target.value)}
+                  placeholder="Organization name"
+                  autoFocus
+                  disabled={creating}
+                />
+                <div className="org-create-actions">
+                  <button
+                    type="button"
+                    className="org-cancel-button"
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setNewOrgName('');
+                    }}
+                    disabled={creating}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="org-submit-button" disabled={creating || !newOrgName.trim()}>
+                    {creating ? 'Creating...' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                className="org-create-button"
+                onClick={() => setShowCreateForm(true)}
+              >
+                ➕ Create Your First Organization
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (!currentOrganization) return null;
 
   return (
