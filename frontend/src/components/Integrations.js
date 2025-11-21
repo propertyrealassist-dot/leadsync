@@ -296,41 +296,7 @@ function Integrations() {
           </div>
         </div>
 
-        {/* Card 3: GHL Integration */}
-        <div className="integration-card">
-          <div className="card-icon-wrapper ghl">
-            <span className="card-icon">
-              <Icons.Integrations size={32} color="#8B5CF6" />
-            </span>
-          </div>
-          <h3 className="card-title">GoHighLevel Integration</h3>
-          <p className="card-description">
-            Use the snapshot method below - no connection needed here!
-          </p>
-
-          <div className="connection-status">
-            <div className="status-indicator">
-              <span className="status-dot" style={{ backgroundColor: '#f59e0b' }}></span>
-              <span className="status-text">
-                Use Snapshot Method ⬇️
-              </span>
-            </div>
-            <div className="connection-info">
-              <p className="info-text" style={{ fontSize: '13px', color: '#94a3b8', marginTop: '8px' }}>
-                <Icons.Info size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#f59e0b" />
-                The snapshot method (below) connects GHL via webhooks. No OAuth needed!
-              </p>
-            </div>
-          </div>
-
-          <div className="card-actions" style={{ marginTop: '16px' }}>
-            <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center', margin: 0 }}>
-              👇 Import the snapshot below to connect GHL
-            </p>
-          </div>
-        </div>
-
-        {/* Card 4: Snapshot */}
+        {/* Card 3: GHL Snapshot */}
         <div className="integration-card">
           <div className="card-icon-wrapper snapshot">
             <span className="card-icon">
