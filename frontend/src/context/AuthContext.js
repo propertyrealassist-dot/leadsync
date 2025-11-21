@@ -37,11 +37,22 @@ export const AuthProvider = ({ children }) => {
           const errorMsg = error.response.data?.error || '';
           const errorMessage = error.response.data?.message || '';
 
+          // Debug logging
+          console.log('🔍 Axios interceptor caught error:', {
+            status,
+            errorMsg,
+            errorMessage,
+            url: error.config?.url,
+            fullData: error.response.data
+          });
+
           // Only logout if it's explicitly an auth token or user problem
           const isAuthError =
             (status === 401 && (errorMsg.includes('token') || errorMsg.includes('Token') || errorMsg.includes('Invalid token') || errorMsg.includes('No token'))) ||
             (status === 403 && (errorMsg.includes('token') || errorMsg.includes('Token') || errorMsg.includes('Forbidden'))) ||
             (status === 404 && (errorMsg.includes('User not found') || errorMessage.includes('User not found')));
+
+          console.log('🔍 Is this an auth error?', isAuthError);
 
           if (isAuthError) {
             console.warn('⚠️ Auth token invalid or user not found - logging out');
