@@ -55,8 +55,10 @@ const VALUABLE_CONTENT_INDICATORS = [
 ];
 
 function isNoise(text) {
-  if (!text || text.length < 15) return true;
-  return NOISE_PATTERNS.some(pattern => pattern.test(text));
+  if (!text || text.length < 10) return true;  // Relaxed from 15 to 10
+  // Only filter if it matches noise patterns strongly
+  const noiseMatches = NOISE_PATTERNS.filter(pattern => pattern.test(text));
+  return noiseMatches.length > 1;  // Only if multiple patterns match
 }
 
 function hasValue(text) {
@@ -203,7 +205,7 @@ async function scrapeSinglePage(url) {
     // Extract ALL headings (H1-H6)
     $('h1, h2, h3, h4, h5, h6').each((i, elem) => {
       const text = cleanText($(elem).text());
-      if (text && text.length > 10 && text.length < 200 && !isNoise(text)) {
+      if (text && text.length > 5 && text.length < 300 && !isNoise(text)) {
         const tag = $(elem).prop('tagName').toLowerCase();
         pageData.headings.push({
           level: tag,
@@ -224,8 +226,20 @@ async function scrapeSinglePage(url) {
     // Extract ALL meaningful paragraphs
     $('p').each((i, elem) => {
       const text = cleanText($(elem).text());
-      if (text.length > 40 && text.length < 1000 && !isNoise(text)) {
+      if (text.length > 20 && text.length < 1500 && !isNoise(text)) {
         pageData.paragraphs.push(text);
+      }
+    });
+
+    // Also extract div text for modern websites
+    $('div[class*="content"], div[class*="text"], div[class*="description"], section').each((i, elem) => {
+      const text = cleanText($(elem).text());
+      // Only get direct text, not nested
+      if (text.length > 30 && text.length < 500 && !isNoise(text)) {
+        // Make sure it's not already captured
+        if (!pageData.paragraphs.includes(text)) {
+          pageData.paragraphs.push(text);
+        }
       }
     });
 
@@ -291,6 +305,14 @@ async function scrapeSinglePage(url) {
     pageData.links = extractInternalLinks($, url);
 
     console.log(`   ✅ Extracted: ${pageData.headings.length} headings, ${pageData.paragraphs.length} paragraphs, ${pageData.stats.length} stats`);
+
+    // DEBUG: Log sample data
+    if (pageData.headings.length > 0) {
+      console.log('   📝 Sample headings:', pageData.headings.slice(0, 3).map(h => h.text));
+    }
+    if (pageData.paragraphs.length > 0) {
+      console.log('   📝 Sample paragraphs:', pageData.paragraphs.slice(0, 2).map(p => p.substring(0, 100)));
+    }
 
     return pageData;
 
@@ -478,6 +500,14 @@ async function scrapeWebsite(url) {
     console.log('  📊 Stats:', aggregatedData.stats.length);
     console.log('  💬 Testimonials:', aggregatedData.testimonials.length);
     console.log('  💰 Pricing:', aggregatedData.pricing.length);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📝 Sample Data:');
+    if (aggregatedData.services.length > 0) {
+      console.log('  Services:', aggregatedData.services.slice(0, 3));
+    }
+    if (aggregatedData.allParagraphs.length > 0) {
+      console.log('  First paragraph:', aggregatedData.allParagraphs[0].substring(0, 150) + '...');
+    }
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     return aggregatedData;
