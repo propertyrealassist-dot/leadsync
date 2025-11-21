@@ -26,74 +26,15 @@ export const AuthProvider = ({ children }) => {
     console.log('✅ Logged out successfully');
   };
 
-  // Setup axios interceptor to handle auth errors
-  useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        // Only logout on SPECIFIC auth-related errors, not general 401/403
-        if (error.response) {
-          const status = error.response.status;
-          const errorMsg = error.response.data?.error || '';
-          const errorMessage = error.response.data?.message || '';
-
-          // Persistent debug logging
-          const debugInfo = {
-            timestamp: new Date().toISOString(),
-            status,
-            errorMsg,
-            errorMessage,
-            url: error.config?.url,
-            fullData: error.response.data
-          };
-
-          console.log('🔍 Axios interceptor caught error:', debugInfo);
-
-          // Store in localStorage so it persists across redirects
-          const logs = JSON.parse(localStorage.getItem('AUTH_DEBUG_LOGS') || '[]');
-          logs.push(debugInfo);
-          // Keep only last 10 logs
-          if (logs.length > 10) logs.shift();
-          localStorage.setItem('AUTH_DEBUG_LOGS', JSON.stringify(logs));
-
-          // TEMPORARILY DISABLED - Only logout on explicit token verification failures from /api/auth/me
-          // This prevents unnecessary logouts while we debug the issue
-          const isAuthError =
-            (status === 401 || status === 403) &&
-            error.config?.url?.includes('/api/auth/me');
-
-          console.log('🔍 Is this an auth error?', isAuthError);
-
-          if (isAuthError) {
-            console.warn('⚠️ Auth token invalid or user not found - logging out');
-            localStorage.setItem('LOGOUT_REASON', JSON.stringify(debugInfo));
-            handleLogout();
-            // Redirect to login
-            window.location.href = '/login';
-          }
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    // Cleanup interceptor on unmount
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-    };
-  }, []);
+  // NO AUTO-LOGOUT INTERCEPTOR
+  // Let each page handle its own errors - don't auto-logout
+  // This prevents false positives from feature-specific 401/403 errors
 
   // Initialize auth on mount
   useEffect(() => {
     const initAuth = () => {
       const token = localStorage.getItem('token');
       const userStr = localStorage.getItem('user');
-
-      // Show debug info if available
-      const logoutReason = localStorage.getItem('LOGOUT_REASON');
-      if (logoutReason) {
-        console.log('📋 Last logout reason:', JSON.parse(logoutReason));
-        console.log('📋 To view all auth error logs, run: JSON.parse(localStorage.getItem("AUTH_DEBUG_LOGS"))');
-      }
 
       if (token && userStr) {
         try {
