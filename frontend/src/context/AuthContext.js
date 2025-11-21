@@ -31,16 +31,19 @@ export const AuthProvider = ({ children }) => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
-        // If we get 401, 403, or 404 with user not found, logout
+        // Only logout on SPECIFIC auth-related errors, not general 401/403
         if (error.response) {
           const status = error.response.status;
           const errorMsg = error.response.data?.error || '';
+          const errorMessage = error.response.data?.message || '';
 
-          if (
-            status === 401 ||
-            status === 403 ||
-            (status === 404 && errorMsg.includes('User not found'))
-          ) {
+          // Only logout if it's explicitly an auth token or user problem
+          const isAuthError =
+            (status === 401 && (errorMsg.includes('token') || errorMsg.includes('Token') || errorMsg.includes('Invalid token') || errorMsg.includes('No token'))) ||
+            (status === 403 && (errorMsg.includes('token') || errorMsg.includes('Token') || errorMsg.includes('Forbidden'))) ||
+            (status === 404 && (errorMsg.includes('User not found') || errorMessage.includes('User not found')));
+
+          if (isAuthError) {
             console.warn('⚠️ Auth token invalid or user not found - logging out');
             handleLogout();
             // Redirect to login
