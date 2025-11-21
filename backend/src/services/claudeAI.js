@@ -48,26 +48,17 @@ class ClaudeAIService {
   }
 
   buildSystemPrompt() {
-    let prompt = `You are an AI sales assistant for a company. Your role is to engage leads naturally and qualify them through conversation.\n\n`;
+    let prompt = `You are an AI sales assistant for a company.\n\n`;
 
-    prompt += `BRIEF: ${this.template.brief}\n\n`;
-
-    prompt += `OBJECTIVE: ${this.template.objective}\n\n`;
-
-    if (this.template.company_information) {
-      prompt += `COMPANY INFORMATION:\n${this.template.company_information}\n\n`;
-    }
-
-    prompt += `COMMUNICATION TONE: ${this.template.tone}\n\n`;
-
+    // PUT QUALIFICATION QUESTIONS FIRST - THIS IS THE PRIMARY INSTRUCTION
     if (this.template.qualificationQuestions && this.template.qualificationQuestions.length > 0) {
       prompt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-      prompt += `⚠️ CRITICAL - MANDATORY QUALIFICATION QUESTIONS ⚠️\n`;
+      prompt += `🚨 PRIMARY DIRECTIVE - FOLLOW THIS SCRIPT 🚨\n`;
       prompt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-      prompt += `You MUST ask these EXACT questions IN THIS EXACT ORDER.\n`;
-      prompt += `DO NOT paraphrase. DO NOT skip. DO NOT change the order.\n`;
-      prompt += `Ask question 1 first. Wait for response. Then ask question 2. And so on.\n\n`;
-      prompt += `MANDATORY QUESTIONS (IN ORDER):\n`;
+      prompt += `THIS IS YOUR ONLY JOB: Ask these questions IN ORDER, WORD FOR WORD.\n`;
+      prompt += `DO NOT deviate. DO NOT paraphrase. DO NOT improvise.\n`;
+      prompt += `You are following a SCRIPT. Stick to it.\n\n`;
+      prompt += `YOUR SCRIPT:\n`;
       this.template.qualificationQuestions.forEach((q, idx) => {
         let questionText = q.text;
         if (typeof q.Body === 'string' && q.Body.startsWith('{')) {
@@ -78,15 +69,30 @@ class ClaudeAIService {
             questionText = q.Body;
           }
         }
-        prompt += `\nQUESTION ${idx + 1} (Ask this ${idx === 0 ? 'FIRST' : idx === 1 ? 'SECOND' : idx === 2 ? 'THIRD' : idx === 3 ? 'FOURTH' : 'next'}):\n"${questionText}"\n`;
+        prompt += `\n${idx + 1}. ${questionText}\n`;
       });
-      prompt += `\n⚠️ RULES:\n`;
-      prompt += `- Ask EXACTLY ONE question at a time\n`;
-      prompt += `- Use the EXACT wording provided above\n`;
-      prompt += `- Follow the EXACT order (1, 2, 3, 4...)\n`;
-      prompt += `- Wait for user's answer before moving to next question\n`;
-      prompt += `- Track which question you're on: Start with Q1, then Q2, then Q3, etc.\n`;
-      prompt += `- After answering Q${this.template.qualificationQuestions.length}, you can guide toward booking\n\n`;
+      prompt += `\n🚨 CRITICAL RULES:\n`;
+      prompt += `1. Ask question #1 FIRST. Nothing else.\n`;
+      prompt += `2. After they answer, ask question #2. Exactly as written.\n`;
+      prompt += `3. Continue in order: #3, then #4, etc.\n`;
+      prompt += `4. Copy the EXACT wording. Do not change a single word.\n`;
+      prompt += `5. ONE question per message. Never combine questions.\n`;
+      prompt += `6. Do NOT make small talk or build rapport - just ask the next question.\n`;
+      prompt += `7. After all ${this.template.qualificationQuestions.length} questions are answered, guide toward booking.\n\n`;
+      prompt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    }
+
+    prompt += `COMMUNICATION TONE: ${this.template.tone}\n\n`;
+
+    prompt += `OBJECTIVE: ${this.template.objective}\n\n`;
+
+    if (this.template.company_information) {
+      prompt += `COMPANY INFORMATION:\n${this.template.company_information}\n\n`;
+    }
+
+    // Put brief AFTER questions so it doesn't override
+    if (this.template.brief) {
+      prompt += `BACKGROUND INFO (for context only, not for improvising):\n${this.template.brief}\n\n`;
     }
 
     if (this.template.faqs && this.template.faqs.length > 0) {
@@ -101,14 +107,10 @@ class ClaudeAIService {
     }
 
     prompt += `INTERACTION GUIDELINES:\n`;
-    prompt += `- Be conversational, friendly, and natural like a real human salesperson\n`;
-    prompt += `- Ask qualification questions one at a time, not all at once\n`;
-    prompt += `- Listen to and acknowledge the user's responses before moving to the next question\n`;
-    prompt += `- If the user asks a question, answer it using the FAQ section if available\n`;
     prompt += `- Keep messages concise - aim for under 160 characters when possible\n`;
-    prompt += `- Show genuine interest in helping the user\n`;
-    prompt += `- Build rapport naturally throughout the conversation\n`;
-    prompt += `- After gathering qualification info, guide toward ${this.template.cta || 'booking an appointment'}\n`;
+    prompt += `- Be friendly and professional\n`;
+    prompt += `- If the user asks a question, answer it using the FAQ section if available, then return to your script\n`;
+    prompt += `- After all qualification questions are answered, guide toward ${this.template.cta || 'booking an appointment'}\n`;
 
     return prompt;
   }
