@@ -10,12 +10,12 @@ router.get('/', authenticateToken, async (req, res) => {
     const orgId = req.user.currentOrganizationId;
     console.log('📋 Loading templates for organization:', orgId);
 
-    // Filter by organization_id if available, OR show user's data without org_id (migration fallback)
+    // Strict organization filtering - only show data for current organization
     const templates = orgId
-      ? await db.all('SELECT * FROM templates WHERE (organization_id = ? OR (organization_id IS NULL AND user_id = ?)) ORDER BY created_at DESC', [orgId, req.user.id])
-      : await db.all('SELECT * FROM templates WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+      ? await db.all('SELECT * FROM templates WHERE organization_id = ? ORDER BY created_at DESC', [orgId])
+      : await db.all('SELECT * FROM templates WHERE user_id = ? AND organization_id IS NULL ORDER BY created_at DESC', [req.user.id]);
 
-    console.log('✅ Found', templates.length, 'templates');
+    console.log('✅ Found', templates.length, 'templates for org:', orgId);
     res.json(templates);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -27,10 +27,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const orgId = req.user.currentOrganizationId;
 
-    // Filter by organization_id if available, OR show user's data without org_id (migration fallback)
+    // Strict organization filtering - only show data for current organization
     const template = orgId
-      ? await db.get('SELECT * FROM templates WHERE id = ? AND (organization_id = ? OR (organization_id IS NULL AND user_id = ?))', [req.params.id, orgId, req.user.id])
-      : await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+      ? await db.get('SELECT * FROM templates WHERE id = ? AND organization_id = ?', [req.params.id, orgId])
+      : await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ? AND organization_id IS NULL', [req.params.id, req.user.id]);
 
     if (!template) {
       return res.status(404).json({ error: 'Template not found' });

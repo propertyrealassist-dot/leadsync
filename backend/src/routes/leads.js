@@ -10,11 +10,11 @@ router.get('/', authenticateToken, async (req, res) => {
     const { status, search, limit = 50 } = req.query;
     const orgId = req.user.currentOrganizationId;
 
-    // Filter by organization_id if available, OR show user's data without org_id (migration fallback)
+    // Strict organization filtering - only show data for current organization
     let query = orgId
-      ? 'SELECT * FROM leads WHERE (organization_id = ? OR (organization_id IS NULL AND user_id = ?))'
-      : 'SELECT * FROM leads WHERE user_id = ?';
-    const params = orgId ? [orgId, req.user.id] : [req.user.id];
+      ? 'SELECT * FROM leads WHERE organization_id = ?'
+      : 'SELECT * FROM leads WHERE user_id = ? AND organization_id IS NULL';
+    const params = [orgId || req.user.id];
 
     if (status) {
       query += ' AND status = ?';
@@ -50,10 +50,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const orgId = req.user.currentOrganizationId;
 
-    // Filter by organization_id if available, OR show user's data without org_id (migration fallback)
+    // Strict organization filtering - only show data for current organization
     const lead = orgId
-      ? await db.get('SELECT * FROM leads WHERE id = ? AND (organization_id = ? OR (organization_id IS NULL AND user_id = ?))', [req.params.id, orgId, req.user.id])
-      : await db.get('SELECT * FROM leads WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+      ? await db.get('SELECT * FROM leads WHERE id = ? AND organization_id = ?', [req.params.id, orgId])
+      : await db.get('SELECT * FROM leads WHERE id = ? AND user_id = ? AND organization_id IS NULL', [req.params.id, req.user.id]);
 
     if (!lead) {
       return res.status(404).json({
