@@ -37,14 +37,24 @@ export const AuthProvider = ({ children }) => {
           const errorMsg = error.response.data?.error || '';
           const errorMessage = error.response.data?.message || '';
 
-          // Debug logging
-          console.log('🔍 Axios interceptor caught error:', {
+          // Persistent debug logging
+          const debugInfo = {
+            timestamp: new Date().toISOString(),
             status,
             errorMsg,
             errorMessage,
             url: error.config?.url,
             fullData: error.response.data
-          });
+          };
+
+          console.log('🔍 Axios interceptor caught error:', debugInfo);
+
+          // Store in localStorage so it persists across redirects
+          const logs = JSON.parse(localStorage.getItem('AUTH_DEBUG_LOGS') || '[]');
+          logs.push(debugInfo);
+          // Keep only last 10 logs
+          if (logs.length > 10) logs.shift();
+          localStorage.setItem('AUTH_DEBUG_LOGS', JSON.stringify(logs));
 
           // Only logout if it's explicitly an auth token or user problem
           const isAuthError =
@@ -56,6 +66,7 @@ export const AuthProvider = ({ children }) => {
 
           if (isAuthError) {
             console.warn('⚠️ Auth token invalid or user not found - logging out');
+            localStorage.setItem('LOGOUT_REASON', JSON.stringify(debugInfo));
             handleLogout();
             // Redirect to login
             window.location.href = '/login';
@@ -76,6 +87,13 @@ export const AuthProvider = ({ children }) => {
     const initAuth = () => {
       const token = localStorage.getItem('token');
       const userStr = localStorage.getItem('user');
+
+      // Show debug info if available
+      const logoutReason = localStorage.getItem('LOGOUT_REASON');
+      if (logoutReason) {
+        console.log('📋 Last logout reason:', JSON.parse(logoutReason));
+        console.log('📋 To view all auth error logs, run: JSON.parse(localStorage.getItem("AUTH_DEBUG_LOGS"))');
+      }
 
       if (token && userStr) {
         try {
