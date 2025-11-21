@@ -68,21 +68,19 @@ class GHLService {
    * Store GHL credentials in database
    */
   async storeCredentials(userId, tokenData) {
-    const stmt = db.prepare(`
-      INSERT OR REPLACE INTO ghl_credentials
-      (user_id, access_token, refresh_token, location_id, expires_at)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-
     const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString();
 
-    stmt.run(
-      userId,
-      tokenData.access_token,
-      tokenData.refresh_token,
-      tokenData.locationId,
-      expiresAt
-    );
+    await db.run(`
+      INSERT INTO ghl_credentials
+      (user_id, access_token, refresh_token, location_id, expires_at)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT (user_id) DO UPDATE SET
+        access_token = EXCLUDED.access_token,
+        refresh_token = EXCLUDED.refresh_token,
+        location_id = EXCLUDED.location_id,
+        expires_at = EXCLUDED.expires_at,
+        updated_at = CURRENT_TIMESTAMP
+    `, [userId, tokenData.access_token, tokenData.refresh_token, tokenData.locationId, expiresAt]);
 
     return { success: true };
   }
@@ -91,8 +89,7 @@ class GHLService {
    * Get valid access token (refresh if needed)
    */
   async getValidAccessToken(userId) {
-    const stmt = db.prepare('SELECT * FROM ghl_credentials WHERE user_id = ?');
-    const credentials = stmt.get(userId);
+    const credentials = await db.get('SELECT * FROM ghl_credentials WHERE user_id = ?', [userId]);
 
     if (!credentials) {
       throw new Error('No GHL credentials found for user');
@@ -117,8 +114,7 @@ class GHLService {
    * Get location ID for user
    */
   async getLocationId(userId) {
-    const stmt = db.prepare('SELECT location_id FROM ghl_credentials WHERE user_id = ?');
-    const result = stmt.get(userId);
+    const result = await db.get('SELECT location_id FROM ghl_credentials WHERE user_id = ?', [userId]);
     return result?.location_id;
   }
 
@@ -308,8 +304,7 @@ class GHLService {
    * Check if user has GHL connected
    */
   async isConnected(userId) {
-    const stmt = db.prepare('SELECT COUNT(*) as count FROM ghl_credentials WHERE user_id = ?');
-    const result = stmt.get(userId);
+    const result = await db.get('SELECT COUNT(*) as count FROM ghl_credentials WHERE user_id = ?', [userId]);
     return result.count > 0;
   }
 }

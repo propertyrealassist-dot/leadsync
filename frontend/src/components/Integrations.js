@@ -8,7 +8,7 @@ import './Integrations.css';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function Integrations() {
-  const { user, token, isAuthenticated, updateUser } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
   const navigate = useNavigate();
   const [ghlConnected, setGhlConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -17,6 +17,9 @@ function Integrations() {
   const [regenerating, setRegenerating] = useState(false);
 
   const snapshotUrl = 'https://api.realassistagents.com/public/ghl-snapshot-template.json';
+
+  // Get token from localStorage
+  const getToken = () => localStorage.getItem('token');
 
   useEffect(() => {
     // Don't check auth on initial mount - let ProtectedRoute handle it
@@ -30,7 +33,7 @@ function Integrations() {
   const checkGHLConnection = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/ghl/status`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${getToken()}` }
       });
       setGhlConnected(response.data.connected || false);
     } catch (error) {
@@ -50,7 +53,7 @@ function Integrations() {
         `${API_URL}/auth/regenerate-api-key`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${getToken()}` }
         }
       );
 
@@ -81,9 +84,23 @@ function Integrations() {
     return '•'.repeat(40);
   };
 
-  const handleConnectGHL = () => {
-    // Redirect to GHL OAuth with token
-    window.location.href = `${API_URL}/api/ghl/auth?token=${token}`;
+  const handleConnectGHL = async () => {
+    try {
+      // Get OAuth URL from backend
+      const response = await axios.get(`${API_URL}/api/ghl/auth/start`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+
+      if (response.data.success && response.data.authUrl) {
+        // Redirect to GHL OAuth page
+        window.location.href = response.data.authUrl;
+      } else {
+        alert('Failed to start GHL connection. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error starting GHL auth:', error);
+      alert('Failed to connect to GoHighLevel. Please try again.');
+    }
   };
 
   const handleDisconnectGHL = async () => {
@@ -96,7 +113,7 @@ function Integrations() {
         `${API_URL}/api/ghl/disconnect`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${getToken()}` }
         }
       );
       setGhlConnected(false);
