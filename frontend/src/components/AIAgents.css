@@ -811,7 +811,6 @@
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 8px);
   right: 0;
   background: #1a0a2e;
   border: 1px solid rgba(139, 92, 246, 0.3);
@@ -820,13 +819,33 @@
   min-width: 180px;
   z-index: 1000;
   overflow: hidden;
-  animation: dropdownSlide 0.2s ease;
 }
 
-@keyframes dropdownSlide {
+.dropdown-menu.dropdown-down {
+  top: calc(100% + 8px);
+  animation: dropdownSlideDown 0.2s ease;
+}
+
+.dropdown-menu.dropdown-up {
+  bottom: calc(100% + 8px);
+  animation: dropdownSlideUp 0.2s ease;
+}
+
+@keyframes dropdownSlideDown {
   from {
     opacity: 0;
     transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdownSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
   to {
     opacity: 1;

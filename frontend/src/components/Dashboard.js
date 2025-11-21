@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import StrategyOptionModal from './StrategyOptionModal';
 import './Dashboard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -14,6 +15,7 @@ function Dashboard() {
   });
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showStrategyModal, setShowStrategyModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,7 +61,7 @@ function Dashboard() {
   };
 
   const handleCreateAgent = () => {
-    navigate('/strategies');
+    setShowStrategyModal(true);
   };
 
   if (loading) {
@@ -215,6 +217,12 @@ function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Strategy Option Modal */}
+      <StrategyOptionModal
+        isOpen={showStrategyModal}
+        onClose={() => setShowStrategyModal(false)}
+      />
     </div>
   );
 }

@@ -11,14 +11,73 @@ function Register() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
     firstName: '',
     lastName: '',
-    companyName: ''
+    companyName: '',
+    phone: ''
   });
+
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    label: '',
+    color: ''
+  });
+
+  const calculatePasswordStrength = (password) => {
+    if (!password) {
+      return { score: 0, label: '', color: '' };
+    }
+
+    let score = 0;
+
+    // Length check
+    if (password.length >= 8) score += 1;
+    if (password.length >= 12) score += 1;
+
+    // Character variety checks
+    if (/[a-z]/.test(password)) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^a-zA-Z0-9]/.test(password)) score += 1;
+
+    // Determine label and color
+    let label = '';
+    let color = '';
+
+    if (score <= 2) {
+      label = 'Weak';
+      color = '#ef4444';
+    } else if (score <= 4) {
+      label = 'Fair';
+      color = '#f59e0b';
+    } else if (score <= 5) {
+      label = 'Good';
+      color = '#22c55e';
+    } else {
+      label = 'Strong';
+      color = '#10b981';
+    }
+
+    return { score, label, color };
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    // Validate password strength
+    if (passwordStrength.score < 2) {
+      setError('Password is too weak. Please use a stronger password.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -39,10 +98,17 @@ function Register() {
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+
+    // Update password strength when password changes
+    if (name === 'password') {
+      const strength = calculatePasswordStrength(value);
+      setPasswordStrength(strength);
+    }
   };
 
   return (
@@ -86,18 +152,6 @@ function Register() {
           </div>
 
           <div className="form-group">
-            <label>Company Name (Optional)</label>
-            <input
-              type="text"
-              name="companyName"
-              value={formData.companyName}
-              onChange={handleChange}
-              placeholder="Acme Inc"
-              autoComplete="organization"
-            />
-          </div>
-
-          <div className="form-group">
             <label>Email</label>
             <input
               type="email"
@@ -107,6 +161,30 @@ function Register() {
               placeholder="you@example.com"
               required
               autoComplete="email"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Contact Number</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="+1 (555) 000-0000"
+              autoComplete="tel"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Business Name (Optional)</label>
+            <input
+              type="text"
+              name="companyName"
+              value={formData.companyName}
+              onChange={handleChange}
+              placeholder="Acme Inc"
+              autoComplete="organization"
             />
           </div>
 
@@ -122,9 +200,39 @@ function Register() {
               minLength={8}
               autoComplete="new-password"
             />
+            {formData.password && (
+              <div className="password-strength">
+                <div className="password-strength-bar">
+                  <div
+                    className="password-strength-fill"
+                    style={{
+                      width: `${(passwordStrength.score / 6) * 100}%`,
+                      backgroundColor: passwordStrength.color
+                    }}
+                  ></div>
+                </div>
+                <span className="password-strength-label" style={{ color: passwordStrength.color }}>
+                  {passwordStrength.label}
+                </span>
+              </div>
+            )}
             <span className="help-text">
-              Password must be at least 8 characters long
+              Use 8+ characters with a mix of letters, numbers & symbols
             </span>
+          </div>
+
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Re-enter your password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+            />
           </div>
 
           <button

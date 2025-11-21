@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import Modal from './Modal';
 import Icons from './Icons';
+import StrategyOptionModal from './StrategyOptionModal';
 import './AIAgents.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -16,14 +17,13 @@ function AIAgents() {
   const [loading, setLoading] = useState(true);
   const [selectedAgents, setSelectedAgents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showMenu, setShowMenu] = useState(null);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({});
+  const [showStrategyModal, setShowStrategyModal] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null });
   const fileInputRef = React.useRef(null);
-  const menuButtonRef = React.useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -373,7 +373,7 @@ function AIAgents() {
   };
 
   const handleCreateNew = () => {
-    navigate('/strategy/new');
+    setShowStrategyModal(true);
   };
 
   const handleImportClick = () => {
@@ -951,7 +951,24 @@ function AIAgents() {
                             className="action-btn settings-btn icon-spin"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setOpenDropdown(openDropdown === agent.id ? null : agent.id);
+                              const isOpen = openDropdown === agent.id;
+
+                              if (!isOpen) {
+                                // Calculate dropdown position
+                                const buttonRect = e.currentTarget.getBoundingClientRect();
+                                const dropdownHeight = 250; // Approximate height of dropdown menu
+                                const spaceBelow = window.innerHeight - buttonRect.bottom;
+                                const spaceAbove = buttonRect.top;
+
+                                // Determine if dropdown should open upward or downward
+                                const shouldOpenUpward = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+
+                                setDropdownPosition({
+                                  [agent.id]: shouldOpenUpward ? 'up' : 'down'
+                                });
+                              }
+
+                              setOpenDropdown(isOpen ? null : agent.id);
                             }}
                             title="Settings"
                           >
@@ -959,7 +976,7 @@ function AIAgents() {
                           </button>
 
                           {openDropdown === agent.id && (
-                            <div className="dropdown-menu">
+                            <div className={`dropdown-menu ${dropdownPosition[agent.id] === 'up' ? 'dropdown-up' : 'dropdown-down'}`}>
                               <button
                                 className="dropdown-item"
                                 onClick={(e) => {
@@ -970,6 +987,18 @@ function AIAgents() {
                               >
                                 <Icons.Edit size={16} />
                                 <span>Edit</span>
+                              </button>
+
+                              <button
+                                className="dropdown-item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDuplicateAgent(agent);
+                                  setOpenDropdown(null);
+                                }}
+                              >
+                                <Icons.Copy size={16} />
+                                <span>Duplicate</span>
                               </button>
 
                               <button
@@ -996,73 +1025,6 @@ function AIAgents() {
                               >
                                 <Icons.Trash size={16} />
                                 <span>Delete</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <div className="menu-wrapper">
-                          <button
-                            ref={menuButtonRef}
-                            className="action-btn menu-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const isOpen = showMenu === agent.id;
-                              setShowMenu(isOpen ? null : agent.id);
-
-                              if (!isOpen) {
-                                // Calculate position to keep menu in viewport
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const menuHeight = 200; // Approximate menu height
-                                const menuWidth = 150;
-
-                                let top = rect.bottom + 8;
-                                let left = rect.right - menuWidth;
-
-                                // Adjust if menu goes off bottom of screen
-                                if (top + menuHeight > window.innerHeight) {
-                                  top = rect.top - menuHeight - 8;
-                                }
-
-                                // Adjust if menu goes off left of screen
-                                if (left < 8) {
-                                  left = 8;
-                                }
-
-                                // Adjust if menu goes off right of screen
-                                if (left + menuWidth > window.innerWidth - 8) {
-                                  left = window.innerWidth - menuWidth - 8;
-                                }
-
-                                setMenuPosition({ top, left });
-                              }
-                            }}
-                            title="More options"
-                          >
-                            ⋯
-                          </button>
-                          {showMenu === agent.id && (
-                            <div
-                              className="action-menu"
-                              style={{
-                                top: `${menuPosition.top}px`,
-                                left: `${menuPosition.left}px`
-                              }}
-                            >
-                              <button onClick={() => handleEditAgent(agent.id)}>
-                                <Icons.Edit size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
-                                Edit
-                              </button>
-                              <button onClick={() => handleDuplicateAgent(agent)}>
-                                <Icons.Copy size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
-                                Duplicate
-                              </button>
-                              <button onClick={() => handleExportAgent(agent)} disabled={exporting}>
-                                <Icons.Upload size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
-                                Export
-                              </button>
-                              <button onClick={() => handleDeleteAgent(agent)} className="delete-option">
-                                <Icons.Trash size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ef4444" />
-                                Delete
                               </button>
                             </div>
                           )}
@@ -1117,6 +1079,12 @@ function AIAgents() {
           cancelText={modal.cancelText}
         />
       )}
+
+      {/* Strategy Option Modal */}
+      <StrategyOptionModal
+        isOpen={showStrategyModal}
+        onClose={() => setShowStrategyModal(false)}
+      />
     </div>
   );
 }

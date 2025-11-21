@@ -22,6 +22,7 @@ const leadsRoutes = require('./routes/leads');
 const bookingRoutes = require('./routes/booking');
 const analyticsRoutes = require('./routes/analytics');
 const aiRoutes = require('./routes/ai');
+const organizationRoutes = require('./routes/organizations');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -59,6 +60,9 @@ app.use('/api/auth/register', authLimiter);
 
 // Serve static files from public directory
 app.use('/public', express.static('public'));
+
+// Serve uploaded files (profile pictures, banners, etc.)
+app.use('/uploads', express.static('uploads'));
 
 // Parse JSON bodies with error handling
 app.use(express.json({
@@ -118,6 +122,7 @@ app.use('/api/leads', leadsRoutes); // Lead management
 app.use('/api/booking', bookingRoutes); // Public booking widget
 app.use('/api/analytics', analyticsRoutes); // Analytics dashboard
 app.use('/api/ai', aiRoutes); // AI chat endpoint for Make.com
+app.use('/api/organizations', organizationRoutes); // Multi-tenant organizations
 
 // Health check
 app.get('/api/health', (req, res) => {

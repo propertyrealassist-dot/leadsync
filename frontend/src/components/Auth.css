@@ -179,3 +179,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Password Strength Indicator */
+.password-strength {
+  margin-top: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.password-strength-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.password-strength-fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 2px;
+}
+
+.password-strength-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+}

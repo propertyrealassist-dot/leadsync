@@ -25,6 +25,11 @@ const AccountSettings = () => {
     confirmPassword: ''
   });
 
+  const [profileImage, setProfileImage] = useState(null);
+  const [bannerImage, setBannerImage] = useState(null);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+
   useEffect(() => {
     loadUserData();
   }, []);
@@ -65,6 +70,10 @@ const AccountSettings = () => {
         timezone: userData.timezone || 'America/New_York',
         language: userData.language || 'en'
       });
+
+      // Load images if they exist
+      setProfileImage(userData.profileImage || null);
+      setBannerImage(userData.bannerImage || null);
     } catch (error) {
       console.error('AccountSettings: Failed to load user data:', error);
       console.error('AccountSettings: Error status:', error.response?.status);
@@ -154,6 +163,88 @@ const AccountSettings = () => {
     }
   };
 
+  const handleProfileImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please upload an image file' });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Image must be less than 5MB' });
+      return;
+    }
+
+    setUploadingProfile(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const formData = new FormData();
+      formData.append('profileImage', file);
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/api/auth/upload-profile-image`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setProfileImage(response.data.profileImage);
+      setMessage({ type: 'success', text: 'Profile picture updated!' });
+    } catch (error) {
+      console.error('Failed to upload profile image:', error);
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Failed to upload image' });
+    } finally {
+      setUploadingProfile(false);
+    }
+  };
+
+  const handleBannerImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Please upload an image file' });
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Image must be less than 10MB' });
+      return;
+    }
+
+    setUploadingBanner(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const formData = new FormData();
+      formData.append('bannerImage', file);
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/api/auth/upload-banner-image`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setBannerImage(response.data.bannerImage);
+      setMessage({ type: 'success', text: 'Banner image updated!' });
+    } catch (error) {
+      console.error('Failed to upload banner image:', error);
+      setMessage({ type: 'error', text: error.response?.data?.error || 'Failed to upload image' });
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
   const getInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map(word => word[0]).join('').toUpperCase().substring(0, 2);
@@ -184,16 +275,60 @@ const AccountSettings = () => {
       )}
 
       <div className="settings-grid">
+        {/* Banner Image Section */}
+        {bannerImage && (
+          <div className="settings-card banner-card">
+            <div className="banner-image-container">
+              <img src={bannerImage} alt="Banner" className="banner-image" />
+              <label className="banner-upload-overlay">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerImageUpload}
+                  style={{ display: 'none' }}
+                  disabled={uploadingBanner}
+                />
+                <span>{uploadingBanner ? 'Uploading...' : 'Change Banner'}</span>
+              </label>
+            </div>
+          </div>
+        )}
+
         {/* Profile Picture Section */}
         <div className="settings-card profile-card">
-          <div className="profile-avatar-large">
-            {getInitials(user?.name)}
-          </div>
+          {!bannerImage && (
+            <div className="profile-banner-upload">
+              <label className="banner-upload-button">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerImageUpload}
+                  style={{ display: 'none' }}
+                  disabled={uploadingBanner}
+                />
+                {uploadingBanner ? 'Uploading Banner...' : '📷 Add Banner Image'}
+              </label>
+            </div>
+          )}
+          {profileImage ? (
+            <img src={profileImage} alt="Profile" className="profile-avatar-large" />
+          ) : (
+            <div className="profile-avatar-large">
+              {getInitials(user?.name)}
+            </div>
+          )}
           <h3>{user?.name || 'User'}</h3>
           <p className="profile-email">{user?.email}</p>
-          <button className="btn-secondary" disabled>
-            Upload Photo (Coming Soon)
-          </button>
+          <label className="btn-secondary" style={{ cursor: 'pointer', display: 'inline-block' }}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleProfileImageUpload}
+              style={{ display: 'none' }}
+              disabled={uploadingProfile}
+            />
+            {uploadingProfile ? 'Uploading...' : '📷 Upload Photo'}
+          </label>
         </div>
 
         {/* Personal Information */}

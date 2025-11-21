@@ -1,9 +1,42 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const { db, generateApiKey, generateUUID, hashApiKey } = require('../config/database');
 const { authenticateToken, generateToken } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../../uploads');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB max file size
+  },
+  fileFilter: function (req, file, cb) {
+    // Accept images only
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+      return cb(new Error('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+  }
+});
 
 // ==========================================
 // HELPER FUNCTIONS
@@ -329,7 +362,9 @@ router.get('/me', authenticateToken, async (req, res) => {
       subscriptionPlan: user.plan_type || 'free', // Add subscription plan field
       phone: user.phone || '',
       timezone: user.timezone || 'America/New_York',
-      language: user.language || 'en'
+      language: user.language || 'en',
+      profileImage: user.profile_image || null,
+      bannerImage: user.banner_image || null
     });
 
   } catch (error) {
@@ -491,6 +526,82 @@ router.post('/change-password', authenticateToken, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to change password.'
+    });
+  }
+});
+
+// ==========================================
+// POST /api/auth/upload-profile-image
+// Upload profile picture
+// ==========================================
+router.post('/upload-profile-image', authenticateToken, upload.single('profileImage'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: 'No file uploaded'
+      });
+    }
+
+    const userId = req.user.id;
+    const imageUrl = `/uploads/${req.file.filename}`;
+
+    // Update user profile with image URL
+    await db.run(
+      'UPDATE users SET profile_image = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [imageUrl, userId]
+    );
+
+    console.log('Profile image uploaded:', imageUrl, 'for user:', userId);
+
+    res.json({
+      success: true,
+      profileImage: imageUrl,
+      message: 'Profile image uploaded successfully'
+    });
+  } catch (error) {
+    console.error('Upload profile image error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to upload profile image'
+    });
+  }
+});
+
+// ==========================================
+// POST /api/auth/upload-banner-image
+// Upload banner image
+// ==========================================
+router.post('/upload-banner-image', authenticateToken, upload.single('bannerImage'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: 'No file uploaded'
+      });
+    }
+
+    const userId = req.user.id;
+    const imageUrl = `/uploads/${req.file.filename}`;
+
+    // Update user profile with banner image URL
+    await db.run(
+      'UPDATE users SET banner_image = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [imageUrl, userId]
+    );
+
+    console.log('Banner image uploaded:', imageUrl, 'for user:', userId);
+
+    res.json({
+      success: true,
+      bannerImage: imageUrl,
+      message: 'Banner image uploaded successfully'
+    });
+  } catch (error) {
+    console.error('Upload banner image error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to upload banner image'
     });
   }
 });

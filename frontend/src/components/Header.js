@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -8,6 +9,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 function Header() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [user, setUser] = useState(null);
   const dropdownRef = useRef(null);
@@ -61,10 +63,9 @@ function Header() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    delete axios.defaults.headers.common['Authorization'];
-    navigate('/login');
+    console.log('Logout clicked in Header');
+    setShowDropdown(false);
+    logout();
   };
 
   const getInitials = (name) => {
@@ -81,17 +82,24 @@ function Header() {
     return { text: 'FREE', color: '#6b7280' };
   };
 
+  // Only show search bar on specific pages
+  const showSearchBar = location.pathname === '/conversations' ||
+                        location.pathname === '/strategies' ||
+                        location.pathname.startsWith('/ai-agents');
+
   if (!user) {
     return (
       <div className="header">
-        <div className="header-search">
-          <span className="search-icon">🔍</span>
-          <input
-            type="text"
-            placeholder="Search strategies, conversations..."
-            className="search-input"
-          />
-        </div>
+        {showSearchBar && (
+          <div className="header-search">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search strategies, conversations..."
+              className="search-input"
+            />
+          </div>
+        )}
         <div className="header-actions">
           <div>Loading...</div>
         </div>
@@ -103,14 +111,16 @@ function Header() {
 
   return (
     <div className="header">
-      <div className="header-search">
-        <span className="search-icon">🔍</span>
-        <input
-          type="text"
-          placeholder="Search strategies, conversations..."
-          className="search-input"
-        />
-      </div>
+      {showSearchBar && (
+        <div className="header-search">
+          <span className="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Search strategies, conversations..."
+            className="search-input"
+          />
+        </div>
+      )}
 
       <div className="header-actions">
         <div className="header-user" ref={dropdownRef}>

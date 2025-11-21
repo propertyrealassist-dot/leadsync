@@ -62,11 +62,22 @@ const authenticateToken = (req, res, next) => {
           });
         }
 
+        // Get user's organizations
+        const organizations = await db.all(`
+          SELECT o.id, o.name, om.role
+          FROM organizations o
+          INNER JOIN organization_members om ON o.id = om.organization_id
+          WHERE om.user_id = ? AND om.status = 'active'
+          ORDER BY om.joined_at DESC
+        `, [userId]);
+
         console.log('Auth successful for user:', user.email);
 
-        // Attach user to request object
+        // Attach user and organizations to request object
         req.user = user;
         req.user.id = user.id; // Ensure id is always available
+        req.user.organizations = organizations;
+        req.user.currentOrganizationId = organizations.length > 0 ? organizations[0].id : null;
         next();
       } catch (dbError) {
         console.error('Database error in auth middleware:', dbError);

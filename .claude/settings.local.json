@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(DATABASE_URL=\"postgresql://leadsync:RYUN2rpGsOPvDArZidoMVg@spicy-egret-18515.j77.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full\" node -e:*)"
+      "Bash(DATABASE_URL=\"postgresql://leadsync:RYUN2rpGsOPvDArZidoMVg@spicy-egret-18515.j77.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full\" node -e:*)",
+      "Bash(powershell -Command \"(Get-Content ''src/routes/auth.js'').Length\")",
+      "Bash(DATABASE_URL=\"postgresql://leadsync:RYUN2rpGsOPvDArZidoMVg@spicy-egret-18515.j77.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full\" node:*)",
+      "Bash(powershell -Command \"(Get-Content ''src/components/Auth.css'').Length\")",
+      "Bash(powershell -Command \"(Get-Content ''src/components/AIAgents.js'').Length\")"
     ],
     "deny": [],
     "ask": []
