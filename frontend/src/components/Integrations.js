@@ -15,6 +15,10 @@ function Integrations() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [showClientId, setShowClientId] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [showGHLForm, setShowGHLForm] = useState(false);
+  const [ghlLocationId, setGhlLocationId] = useState('');
+  const [ghlAccessToken, setGhlAccessToken] = useState('');
+  const [connecting, setConnecting] = useState(false);
 
   const snapshotUrl = 'https://api.realassistagents.com/public/ghl-snapshot-template.json';
 
@@ -85,21 +89,36 @@ function Integrations() {
   };
 
   const handleConnectGHL = async () => {
-    try {
-      // Get OAuth URL from backend
-      const response = await axios.get(`${API_URL}/api/ghl/auth/start`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
+    if (!ghlLocationId || !ghlAccessToken) {
+      alert('Please enter both Location ID and Access Token');
+      return;
+    }
 
-      if (response.data.success && response.data.authUrl) {
-        // Redirect to GHL OAuth page
-        window.location.href = response.data.authUrl;
-      } else {
-        alert('Failed to start GHL connection. Please try again.');
+    setConnecting(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ghl/connect`,
+        {
+          locationId: ghlLocationId.trim(),
+          accessToken: ghlAccessToken.trim()
+        },
+        {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        }
+      );
+
+      if (response.data.success) {
+        setGhlConnected(true);
+        setShowGHLForm(false);
+        setGhlLocationId('');
+        setGhlAccessToken('');
+        alert('GoHighLevel connected successfully!');
       }
     } catch (error) {
-      console.error('Error starting GHL auth:', error);
-      alert('Failed to connect to GoHighLevel. Please try again.');
+      console.error('Error connecting GHL:', error);
+      alert(error.response?.data?.error || 'Failed to connect to GoHighLevel. Please check your credentials.');
+    } finally {
+      setConnecting(false);
     }
   };
 
@@ -279,7 +298,32 @@ function Integrations() {
             )}
           </div>
 
-          <div className="card-actions">
+          {!ghlConnected && showGHLForm && (
+            <div className="ghl-form" style={{ marginTop: '16px' }}>
+              <div className="credential-field">
+                <label>GHL Location ID</label>
+                <input
+                  type="text"
+                  value={ghlLocationId}
+                  onChange={(e) => setGhlLocationId(e.target.value)}
+                  placeholder="Enter your GHL Location ID"
+                  className="credential-input"
+                />
+              </div>
+              <div className="credential-field" style={{ marginTop: '12px' }}>
+                <label>GHL Access Token</label>
+                <input
+                  type="password"
+                  value={ghlAccessToken}
+                  onChange={(e) => setGhlAccessToken(e.target.value)}
+                  placeholder="Enter your GHL Access Token"
+                  className="credential-input"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="card-actions" style={{ marginTop: '16px' }}>
             {ghlConnected ? (
               <button
                 className="btn-danger full-width"
@@ -288,10 +332,30 @@ function Integrations() {
                 <Icons.X size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
                 Disconnect
               </button>
+            ) : showGHLForm ? (
+              <>
+                <button
+                  className="btn-primary"
+                  onClick={handleConnectGHL}
+                  disabled={connecting}
+                  style={{ flex: 1 }}
+                >
+                  <Icons.Check size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
+                  {connecting ? 'Connecting...' : 'Connect'}
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => setShowGHLForm(false)}
+                  disabled={connecting}
+                  style={{ flex: 1, marginLeft: '8px' }}
+                >
+                  Cancel
+                </button>
+              </>
             ) : (
               <button
                 className="btn-primary full-width"
-                onClick={handleConnectGHL}
+                onClick={() => setShowGHLForm(true)}
               >
                 <Icons.Integrations size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
                 Connect GHL Account

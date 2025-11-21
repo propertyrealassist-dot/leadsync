@@ -307,6 +307,34 @@ class GHLService {
     const result = await db.get('SELECT COUNT(*) as count FROM ghl_credentials WHERE user_id = ?', [userId]);
     return result.count > 0;
   }
+
+  /**
+   * Test access token validity (for simple token-based auth)
+   */
+  async testAccessToken(accessToken, locationId) {
+    try {
+      const response = await axios.get(
+        `${this.baseURL}/locations/${locationId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Version': '2021-07-28'
+          }
+        }
+      );
+
+      return {
+        success: true,
+        location: response.data
+      };
+    } catch (error) {
+      console.error('Test access token error:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 }
 
 module.exports = new GHLService();

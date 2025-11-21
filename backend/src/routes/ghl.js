@@ -3,6 +3,7 @@ const router = express.Router();
 const ghlService = require('../services/ghlService');
 const crypto = require('crypto');
 const { authenticateToken } = require('../middleware/auth');
+const { db } = require('../config/database');
 
 // Store state tokens temporarily (in production, use Redis or similar)
 const stateTokens = new Map();
@@ -130,6 +131,78 @@ router.get('/status', authenticateToken, async (req, res) => {
 });
 
 /**
+ * Connect GHL using Location Access Token (Simple Method - No OAuth)
+ * POST /api/ghl/connect
+ */
+router.post('/connect', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id || req.query.userId || req.body.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const { locationId, accessToken } = req.body;
+
+    if (!locationId || !accessToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'Location ID and Access Token are required'
+      });
+    }
+
+    // Test the access token by making a simple API call
+    try {
+      const testResponse = await ghlService.testAccessToken(accessToken, locationId);
+
+      if (!testResponse.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid access token or location ID'
+        });
+      }
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        error: 'Failed to verify access token. Please check your credentials.'
+      });
+    }
+
+    // Store credentials in database
+    await db.run(`
+      INSERT INTO ghl_credentials
+      (user_id, access_token, refresh_token, location_id, expires_at)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT (user_id) DO UPDATE SET
+        access_token = EXCLUDED.access_token,
+        location_id = EXCLUDED.location_id,
+        expires_at = EXCLUDED.expires_at,
+        updated_at = CURRENT_TIMESTAMP
+    `, [
+      userId,
+      accessToken,
+      '', // No refresh token for static access tokens
+      locationId,
+      new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year expiry
+    ]);
+
+    res.json({
+      success: true,
+      message: 'GHL account connected successfully'
+    });
+  } catch (error) {
+    console.error('Error connecting GHL:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to connect account'
+    });
+  }
+});
+
+/**
  * Disconnect GHL
  * POST /api/ghl/disconnect
  */
@@ -144,7 +217,6 @@ router.post('/disconnect', authenticateToken, async (req, res) => {
       });
     }
 
-    const { db } = require('../config/database');
     await db.run('DELETE FROM ghl_credentials WHERE user_id = ?', [userId]);
 
     res.json({
