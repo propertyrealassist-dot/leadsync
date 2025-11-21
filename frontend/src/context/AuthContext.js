@@ -56,11 +56,11 @@ export const AuthProvider = ({ children }) => {
           if (logs.length > 10) logs.shift();
           localStorage.setItem('AUTH_DEBUG_LOGS', JSON.stringify(logs));
 
-          // Only logout if it's explicitly an auth token or user problem
+          // TEMPORARILY DISABLED - Only logout on explicit token verification failures from /api/auth/me
+          // This prevents unnecessary logouts while we debug the issue
           const isAuthError =
-            (status === 401 && (errorMsg.includes('token') || errorMsg.includes('Token') || errorMsg.includes('Invalid token') || errorMsg.includes('No token'))) ||
-            (status === 403 && (errorMsg.includes('token') || errorMsg.includes('Token') || errorMsg.includes('Forbidden'))) ||
-            (status === 404 && (errorMsg.includes('User not found') || errorMessage.includes('User not found')));
+            (status === 401 || status === 403) &&
+            error.config?.url?.includes('/api/auth/me');
 
           console.log('🔍 Is this an auth error?', isAuthError);
 
