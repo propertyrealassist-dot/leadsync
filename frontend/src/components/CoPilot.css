@@ -141,6 +141,20 @@
   margin-bottom: 24px;
 }
 
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.manual-form {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
 .input-large {
   width: 100%;
   padding: 16px 20px;
@@ -263,12 +277,22 @@
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .goal-card:hover {
   transform: translateY(-6px);
   border-color: #8B5CF6;
   box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4);
+}
+
+.goal-card.recommended {
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.goal-card.recommended:hover {
+  border-color: #10b981;
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
 }
 
 .goal-card h3 {

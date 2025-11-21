@@ -22,6 +22,14 @@ function CoPilot() {
   const [scanProgress, setScanProgress] = useState(0);
   const [websiteData, setWebsiteData] = useState(null);
   const [keepAIActive, setKeepAIActive] = useState(true);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualInput, setManualInput] = useState({
+    description: '',
+    services: '',
+    targetAudience: '',
+    benefits: '',
+    pricing: ''
+  });
 
   // Generate strategy
   const generateStrategy = async () => {
@@ -369,33 +377,180 @@ function CoPilot() {
         </div>
 
         <h2>Great! "{data.businessName}" - I like it!</h2>
-        <h3>Do you have a website?</h3>
-        <p>I can analyze your website to better understand your business</p>
+        <h3>How would you like to provide information?</h3>
+        <p>Choose the method that works best for you</p>
 
-        <div className="form-group">
-          <input
-            type="url"
-            placeholder="www.example.com"
-            value={data.website}
-            onChange={(e) => setData({ ...data, website: e.target.value })}
-            className="input-large"
-          />
+        <div className="goal-cards" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+          <div
+            className="goal-card"
+            onClick={() => {
+              setManualMode(false);
+            }}
+          >
+            <Icons.Settings size={48} color="#8B5CF6" />
+            <h3>Scan Website</h3>
+            <p>Automatically extract information from your website</p>
+          </div>
+
+          <div
+            className="goal-card recommended"
+            onClick={() => {
+              setManualMode(true);
+              setStep('manual');
+            }}
+          >
+            <Icons.Target size={48} color="#10b981" />
+            <h3>Manual Entry</h3>
+            <p>Paste your business details for best results</p>
+            <span className="badge-recommended" style={{ position: 'absolute', top: '10px', right: '10px' }}>
+              <Icons.CheckCircle size={16} color="#ffffff" />
+              RECOMMENDED
+            </span>
+          </div>
+        </div>
+
+        {!manualMode && (
+          <>
+            <div className="form-group">
+              <input
+                type="url"
+                placeholder="www.example.com"
+                value={data.website}
+                onChange={(e) => setData({ ...data, website: e.target.value })}
+                className="input-large"
+              />
+            </div>
+
+            <div className="button-group">
+              <button onClick={() => setStep('business')} className="btn-secondary">
+                <Icons.ArrowRight size={18} style={{ transform: 'rotate(180deg)' }} />
+                Back
+              </button>
+              <button
+                onClick={() => scanWebsite(data.website)}
+                disabled={!data.website}
+                className="btn-primary"
+              >
+                Scan Website
+                <Icons.ArrowRight size={18} />
+              </button>
+            </div>
+          </>
+        )}
+
+        {manualMode && (
+          <div className="button-group">
+            <button onClick={() => setStep('business')} className="btn-secondary">
+              <Icons.ArrowRight size={18} style={{ transform: 'rotate(180deg)' }} />
+              Back
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // MANUAL ENTRY
+  if (step === 'manual') {
+    return (
+      <div className="copilot-container">
+        <div className="copilot-progress">
+          <div className="progress-bar" style={{ width: '45%' }}></div>
+        </div>
+
+        <h2>Tell me about your business</h2>
+        <p>Provide detailed information for the best AI strategy</p>
+
+        <div className="manual-form">
+          <div className="form-group">
+            <label>Business Description *</label>
+            <textarea
+              placeholder="What does your business do? What problems do you solve? (e.g., 'We help busy professionals lose weight through personalized coaching and accountability...')"
+              value={manualInput.description}
+              onChange={(e) => setManualInput({ ...manualInput, description: e.target.value })}
+              rows={4}
+              className="textarea-large"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Services/Products Offered *</label>
+            <textarea
+              placeholder="List your main services or products (e.g., '1-on-1 coaching, group programs, meal planning, fitness tracking...')"
+              value={manualInput.services}
+              onChange={(e) => setManualInput({ ...manualInput, services: e.target.value })}
+              rows={3}
+              className="textarea-large"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Target Audience *</label>
+            <input
+              type="text"
+              placeholder="Who are your ideal clients? (e.g., 'Busy professionals aged 30-50 who want to lose weight')"
+              value={manualInput.targetAudience}
+              onChange={(e) => setManualInput({ ...manualInput, targetAudience: e.target.value })}
+              className="input-large"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Key Benefits & Results</label>
+            <textarea
+              placeholder="What results do clients get? What makes you different? (e.g., 'Lose 10-20 lbs in 3 months, custom meal plans, 24/7 support...')"
+              value={manualInput.benefits}
+              onChange={(e) => setManualInput({ ...manualInput, benefits: e.target.value })}
+              rows={3}
+              className="textarea-large"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Pricing (Optional)</label>
+            <input
+              type="text"
+              placeholder="Price range or packages (e.g., '$497/month, $1497 for 3 months')"
+              value={manualInput.pricing}
+              onChange={(e) => setManualInput({ ...manualInput, pricing: e.target.value })}
+              className="input-large"
+            />
+          </div>
         </div>
 
         <div className="button-group">
-          <button onClick={() => setStep('business')} className="btn-secondary">
+          <button onClick={() => setStep('website')} className="btn-secondary">
             <Icons.ArrowRight size={18} style={{ transform: 'rotate(180deg)' }} />
             Back
           </button>
-          <button onClick={() => setStep('services')} className="btn-secondary">
-            Skip
-          </button>
           <button
-            onClick={() => scanWebsite(data.website)}
-            disabled={!data.website}
+            onClick={() => {
+              // Combine manual input into services field for backend compatibility
+              const combinedData = `${manualInput.description}\n\nSERVICES:\n${manualInput.services}\n\nTARGET AUDIENCE:\n${manualInput.targetAudience}\n\nBENEFITS:\n${manualInput.benefits}${manualInput.pricing ? `\n\nPRICING:\n${manualInput.pricing}` : ''}`;
+              setData({ ...data, services: combinedData });
+
+              // Create manual websiteData structure
+              setWebsiteData({
+                title: data.businessName,
+                description: manualInput.description,
+                services: manualInput.services.split('\n').filter(s => s.trim()),
+                targetAudience: manualInput.targetAudience,
+                benefits: manualInput.benefits.split('\n').filter(b => b.trim()),
+                pricing: manualInput.pricing ? [manualInput.pricing] : [],
+                features: [],
+                testimonials: [],
+                stats: [],
+                industryKeywords: [],
+                pagesScanned: 1,
+                manualEntry: true
+              });
+
+              setStep('goal');
+            }}
+            disabled={!manualInput.description || !manualInput.services || !manualInput.targetAudience}
             className="btn-primary"
           >
-            Scan & Continue
+            Continue
             <Icons.ArrowRight size={18} />
           </button>
         </div>

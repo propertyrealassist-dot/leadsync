@@ -219,12 +219,17 @@ Return ONLY this JSON (no markdown, no code blocks):
       "delay": 1
     },
     {
-      "text": "[Industry-specific qualifying question based on services]",
+      "text": "[Industry-specific qualifying question based on services - ask about their main objective or what they're trying to achieve]",
       "conditions": [],
       "delay": 1
     },
     {
-      "text": "Please share [relevant qualifier like age/company size/current situation]. Have you tried [similar solution] before?",
+      "text": "Please share [relevant qualifier like age/company size/current situation]. Have you tried [similar solution] before? What worked, what didn't?",
+      "conditions": [],
+      "delay": 1
+    },
+    {
+      "text": "What's the toughest part for you – [common obstacle 1], [common obstacle 2], or something else?",
       "conditions": [],
       "delay": 1
     },
@@ -275,12 +280,18 @@ Return ONLY this JSON (no markdown, no code blocks):
 
 1. **brief MUST be 800-1200 words** - Include ALL 8 sections formatted EXACTLY as shown
 2. **Use specific data** - Replace [placeholders] with actual data from website scan
-3. **Qualification questions** - Industry-specific, not generic
-4. **Follow-ups** - Include social proof, stats, and testimonials
-5. **NO placeholder text** - Every [bracket] must be replaced with real content
+3. **Qualification questions MUST be 5 questions** - Industry-specific, not generic, ZERO placeholders
+4. **Follow-ups MUST be EXACTLY 5 messages** - Include social proof, stats, and testimonials
+5. **NO placeholder text in questions or follow-ups** - Every [bracket] MUST be replaced with real content
 6. **Perfect formatting** - Preserve markdown, bullets, and section structure
 
-REPLACE ALL [PLACEHOLDERS] WITH ACTUAL DATA FROM THE SCAN ABOVE!
+⚠️ MANDATORY REPLACEMENTS - DO NOT LEAVE ANY [PLACEHOLDERS] IN:
+- qualificationQuestions: Replace [their main pain point], [Industry-specific qualifying question], [relevant qualifier], [common obstacle 1], [common obstacle 2]
+- followUps: Use real business data, stats, client names from the scan
+- initialMessage: Must use {{contact.first_name}} variable correctly
+- companyInformation: Use actual description, services, and benefits from scan
+
+EVERY SINGLE [PLACEHOLDER] MUST BE REPLACED WITH REAL, SPECIFIC CONTENT!
 
 Return ONLY valid JSON with no markdown code blocks.`;
 }
