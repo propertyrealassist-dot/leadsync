@@ -26,6 +26,16 @@ class ClaudeAIService {
       const systemPrompt = this.buildSystemPrompt();
 
       console.log('Sending request to Claude...');
+      console.log('📋 System Prompt Length:', systemPrompt.length);
+      console.log('📋 System Prompt Preview:', systemPrompt.substring(0, 500));
+
+      // Add script reminder to every user message if qualification questions exist
+      if (this.template.qualificationQuestions && this.template.qualificationQuestions.length > 0 && messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.role === 'user') {
+          lastMessage.content += `\n\n[REMINDER: You are following a SCRIPT. Your next response MUST be one of your scripted qualification questions, in order.]`;
+        }
+      }
 
       // Call Claude API
       const response = await this.client.messages.create({
