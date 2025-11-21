@@ -19,12 +19,8 @@ function Integrations() {
   const snapshotUrl = 'https://api.realassistagents.com/public/ghl-snapshot-template.json';
 
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!isAuthenticated()) {
-      navigate('/login');
-      return;
-    }
-
+    // Don't check auth on initial mount - let ProtectedRoute handle it
+    // This prevents false redirects during auth initialization
     checkGHLConnection();
     setLoading(false);
   }, []);
