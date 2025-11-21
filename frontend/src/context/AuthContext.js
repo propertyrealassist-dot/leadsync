@@ -21,6 +21,8 @@ export const AuthProvider = ({ children }) => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('currentOrganizationId');
+    sessionStorage.removeItem('activeSession');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     console.log('✅ Logged out successfully');
@@ -36,7 +38,23 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       const userStr = localStorage.getItem('user');
 
+      // Session-based auto-logout detection
+      // sessionStorage is cleared when tab closes, localStorage persists across tabs
+      const hasActiveSession = sessionStorage.getItem('activeSession');
+
       if (token && userStr) {
+        // If token exists but no active session flag, it's a NEW tab/window
+        if (!hasActiveSession) {
+          console.log('🚪 New tab detected - auto-logout');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('currentOrganizationId');
+          delete axios.defaults.headers.common['Authorization'];
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         try {
           const userData = JSON.parse(userStr);
 
@@ -48,6 +66,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
           console.error('Failed to restore auth:', error);
           localStorage.clear();
+          sessionStorage.clear();
         }
       }
 
@@ -96,6 +115,9 @@ export const AuthProvider = ({ children }) => {
       // Store everything
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
+
+      // Set session flag to prevent auto-logout on refresh
+      sessionStorage.setItem('activeSession', 'true');
 
       // Set axios header
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -158,6 +180,9 @@ export const AuthProvider = ({ children }) => {
       // Store everything
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
+
+      // Set session flag to prevent auto-logout on refresh
+      sessionStorage.setItem('activeSession', 'true');
 
       // Set axios header
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
