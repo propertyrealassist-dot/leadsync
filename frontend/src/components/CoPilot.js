@@ -175,7 +175,7 @@ function CoPilot() {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          timeout: 20000 // 20 second timeout
+          timeout: 35000 // 35 second timeout (homepage 8s + 3 pages * 8s + buffer)
         }
       );
 
@@ -223,14 +223,14 @@ function CoPilot() {
         // Server responded with error
         errorMessage = error.response.data.message || error.response.data.error || errorMessage;
       } else if (error.code === 'ECONNABORTED') {
-        errorMessage = 'Request timed out. The website took too long to respond.';
+        errorMessage = 'Request timed out. The website might be slow or blocking automated scans. Don\'t worry - you can still enter information manually in the next step.';
       } else if (error.message) {
         errorMessage = error.message;
       }
 
-      alert(`⚠️ ${errorMessage}`);
+      alert(`⚠️ ${errorMessage}\n\nClick OK to continue and enter information manually.`);
 
-      // Still allow user to continue
+      // Still allow user to continue with manual entry
       setStep('services');
     } finally {
       setIsScanning(false);

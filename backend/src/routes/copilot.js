@@ -178,10 +178,16 @@ async function scrapeSinglePage(url) {
     console.log('   📄 Crawling:', url);
 
     const response = await axios.get(url, {
-      timeout: 10000,
+      timeout: 8000, // Reduced from 10s to 8s
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1'
+      },
+      maxRedirects: 3 // Limit redirects
     });
 
     const $ = cheerio.load(response.data);
@@ -331,30 +337,36 @@ async function scrapeWebsite(url) {
       url = 'https://' + url;
     }
 
-    console.log('🔍 DEEP SCAN starting for:', url);
+    console.log('🔍 QUICK SCAN starting for:', url);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    // STEP 1: Scrape homepage
+    // STEP 1: Scrape homepage ONLY (fast scan)
     const homepageData = await scrapeSinglePage(url);
 
     if (!homepageData) {
       throw new Error('Failed to scrape homepage');
     }
 
-    // STEP 2: Find priority pages to crawl
+    console.log(`\n✅ Homepage scanned successfully`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    // STEP 2: Find priority pages to crawl (but limit to 3 for speed)
     const allLinks = homepageData.links;
     const priorityPages = findPriorityPages(allLinks, url);
 
-    console.log(`\n📊 Found ${priorityPages.length} priority pages to crawl`);
+    console.log(`📊 Found ${priorityPages.length} priority pages (scanning top 3 for speed)`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    // STEP 3: Scrape all priority pages in parallel
+    // STEP 3: Scrape only top 3 priority pages in parallel with Promise.allSettled
     const scrapePromises = priorityPages
       .filter(pageUrl => pageUrl !== url) // Exclude homepage (already scraped)
-      .slice(0, 9) // Max 9 additional pages
+      .slice(0, 3) // Max 3 additional pages for speed
       .map(pageUrl => scrapeSinglePage(pageUrl));
 
-    const pagesData = await Promise.all(scrapePromises);
+    const results = await Promise.allSettled(scrapePromises);
+    const pagesData = results
+      .filter(r => r.status === 'fulfilled' && r.value !== null)
+      .map(r => r.value);
 
     // Add homepage data
     const allPagesData = [homepageData, ...pagesData.filter(p => p !== null)];
