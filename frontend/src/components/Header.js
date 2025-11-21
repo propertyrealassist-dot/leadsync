@@ -55,13 +55,8 @@ function Header() {
 
     } catch (error) {
       console.error('Failed to load user data:', error);
-
-      // If 403, token is invalid - clear and redirect
-      if (error.response?.status === 403) {
-        console.log('Token invalid - clearing and redirecting to login');
-        localStorage.clear();
-        window.location.href = '/login';
-      }
+      // Don't auto-logout - let user stay logged in
+      // Pages will handle auth errors individually if needed
     }
   };
 
