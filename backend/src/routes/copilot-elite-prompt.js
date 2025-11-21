@@ -2,6 +2,12 @@
 // This generates AppointWise-level strategies with ultra-detailed briefs
 
 function generateElitePrompt(businessName, websiteData, goal) {
+  const cta = goal === 'aiBooks'
+    ? 'Let me get you scheduled. What time works best for you?'
+    : 'Here\'s our booking link to schedule a time:';
+
+  const turnOffFollowUps = goal === 'aiBooks' ? false : true;
+
   return `You are an ELITE AI strategy architect who creates world-class conversation strategies.
 
 Your task: Create a professional-grade AI agent strategy that rivals the best sales automation systems.
@@ -257,9 +263,9 @@ Return ONLY this JSON (no markdown, no code blocks):
     "bookingReadiness": 3,
     "messageDelayInitial": 30,
     "messageDelayStandard": 5,
-    "cta": "${goal === 'aiBooks' ? 'Let me get you scheduled. What time works best for you?' : 'Here's our booking link to schedule a time:'}",
+    "cta": "${cta}",
     "turnOffAiAfterCta": false,
-    "turnOffFollowUps": ${goal === 'aiBooks' ? 'false' : 'true'}
+    "turnOffFollowUps": ${turnOffFollowUps}
   }
 }
 
