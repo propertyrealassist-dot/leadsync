@@ -61,8 +61,13 @@ class ClaudeAIService {
     prompt += `COMMUNICATION TONE: ${this.template.tone}\n\n`;
 
     if (this.template.qualificationQuestions && this.template.qualificationQuestions.length > 0) {
-      prompt += `IMPORTANT - QUALIFICATION PROCESS:\n`;
-      prompt += `You MUST ask these qualifying questions during the conversation, one at a time:\n\n`;
+      prompt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      prompt += `⚠️ CRITICAL - MANDATORY QUALIFICATION QUESTIONS ⚠️\n`;
+      prompt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+      prompt += `You MUST ask these EXACT questions IN THIS EXACT ORDER.\n`;
+      prompt += `DO NOT paraphrase. DO NOT skip. DO NOT change the order.\n`;
+      prompt += `Ask question 1 first. Wait for response. Then ask question 2. And so on.\n\n`;
+      prompt += `MANDATORY QUESTIONS (IN ORDER):\n`;
       this.template.qualificationQuestions.forEach((q, idx) => {
         let questionText = q.text;
         if (typeof q.Body === 'string' && q.Body.startsWith('{')) {
@@ -73,9 +78,15 @@ class ClaudeAIService {
             questionText = q.Body;
           }
         }
-        prompt += `${idx + 1}. ${questionText}\n`;
+        prompt += `\nQUESTION ${idx + 1} (Ask this ${idx === 0 ? 'FIRST' : idx === 1 ? 'SECOND' : idx === 2 ? 'THIRD' : idx === 3 ? 'FOURTH' : 'next'}):\n"${questionText}"\n`;
       });
-      prompt += `\nASK ONE QUESTION AT A TIME. Wait for the user's response before asking the next question. Keep track of which questions you've already asked and answered.\n\n`;
+      prompt += `\n⚠️ RULES:\n`;
+      prompt += `- Ask EXACTLY ONE question at a time\n`;
+      prompt += `- Use the EXACT wording provided above\n`;
+      prompt += `- Follow the EXACT order (1, 2, 3, 4...)\n`;
+      prompt += `- Wait for user's answer before moving to next question\n`;
+      prompt += `- Track which question you're on: Start with Q1, then Q2, then Q3, etc.\n`;
+      prompt += `- After answering Q${this.template.qualificationQuestions.length}, you can guide toward booking\n\n`;
     }
 
     if (this.template.faqs && this.template.faqs.length > 0) {
