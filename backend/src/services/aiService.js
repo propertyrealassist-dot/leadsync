@@ -9,6 +9,42 @@ class AIService {
    * Build comprehensive system prompt from strategy template
    */
   buildComprehensiveSystemPrompt(strategy, userName = 'User') {
+    // If there are qualification questions, use ULTRA-STRICT script mode
+    if (strategy.qualificationQuestions && strategy.qualificationQuestions.length > 0) {
+      let systemPrompt = `You are a scripted sales assistant. You follow a STRICT SCRIPT.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ CRITICAL: YOU ARE IN SCRIPT MODE ⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+YOU ARE NOT ALLOWED TO IMPROVISE.
+YOU ARE NOT ALLOWED TO PARAPHRASE.
+YOU ARE NOT ALLOWED TO SKIP QUESTIONS.
+YOU ARE NOT ALLOWED TO MAKE SMALL TALK.
+
+YOUR ONLY JOB: Ask these ${strategy.qualificationQuestions.length} questions IN ORDER, WORD FOR WORD.
+
+AFTER NAME CONFIRMATION, YOUR RESPONSES MUST BE:
+
+Response #1: "${strategy.qualificationQuestions[0].text}"
+Response #2: "${strategy.qualificationQuestions[1]?.text || 'N/A'}"
+${strategy.qualificationQuestions[2] ? `Response #3: "${strategy.qualificationQuestions[2].text}"` : ''}
+${strategy.qualificationQuestions[3] ? `Response #4: "${strategy.qualificationQuestions[3].text}"` : ''}
+${strategy.qualificationQuestions[4] ? `Response #5: "${strategy.qualificationQuestions[4].text}"` : ''}
+
+DO NOT TYPE ANYTHING ELSE.
+DO NOT ADD "So", "Great", "Thanks", or any other words.
+ONLY TYPE THE EXACT QUESTION TEXT.
+
+After they answer the last question, THEN you can offer to book.
+
+REMEMBER: You are a ROBOT following a SCRIPT. No creativity allowed.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+      return systemPrompt;
+    }
+
+    // Fallback for strategies without questions
     let systemPrompt = `You are a professional AI sales assistant conducting a structured lead qualification conversation.
 
 # YOUR ROLE
@@ -51,42 +87,20 @@ ${strategy.step5_handling || 'Address concerns professionally and offer solution
       console.error('Error parsing conversation steps:', e);
     }
 
-    // Add qualification questions - PRIORITY INSTRUCTIONS
-    if (strategy.qualificationQuestions && strategy.qualificationQuestions.length > 0) {
-      systemPrompt += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-      systemPrompt += `🚨 PRIMARY DIRECTIVE - MANDATORY SCRIPT 🚨\n`;
-      systemPrompt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-      systemPrompt += `\nYou MUST ask these EXACT questions IN THIS EXACT ORDER.\n`;
-      systemPrompt += `DO NOT paraphrase. DO NOT skip. DO NOT improvise.\n`;
-      systemPrompt += `This is a SCRIPT - follow it word-for-word.\n\n`;
-      systemPrompt += `YOUR MANDATORY SCRIPT:\n`;
-      strategy.qualificationQuestions.forEach((q, i) => {
-        systemPrompt += `${i + 1}. ${q.text}\n`;
-      });
-      systemPrompt += `\n🚨 RULES:\n`;
-      systemPrompt += `- Ask question #1 FIRST (after name confirmation)\n`;
-      systemPrompt += `- Use EXACT wording - do not change ANY words\n`;
-      systemPrompt += `- ONE question per message\n`;
-      systemPrompt += `- Wait for their answer before asking next question\n`;
-      systemPrompt += `- Do NOT make small talk - just ask the next scripted question\n`;
-      systemPrompt += `- After ALL ${strategy.qualificationQuestions.length} questions are answered, offer to book\n\n`;
-      systemPrompt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    } else {
-      // Fallback to old format
-      systemPrompt += `\n\n## Qualification Questions (Ask ONE at a time, in order):`;
-      try {
-        if (strategy.conversationSteps) {
-          const steps = JSON.parse(strategy.conversationSteps);
-          if (steps.questions && steps.questions.length > 0) {
-            steps.questions.forEach((q, i) => {
-              systemPrompt += `\n${i + 1}. ${q.text || q.question}`;
-            });
-            systemPrompt += `\n\nAfter asking all questions, summarize what you learned and offer to book an appointment.`;
-          }
+    // Fallback qualification questions
+    systemPrompt += `\n\n## Qualification Questions (Ask ONE at a time, in order):`;
+    try {
+      if (strategy.conversationSteps) {
+        const steps = JSON.parse(strategy.conversationSteps);
+        if (steps.questions && steps.questions.length > 0) {
+          steps.questions.forEach((q, i) => {
+            systemPrompt += `\n${i + 1}. ${q.text || q.question}`;
+          });
+          systemPrompt += `\n\nAfter asking all questions, summarize what you learned and offer to book an appointment.`;
         }
-      } catch (e) {
-        console.error('Error parsing conversation steps:', e);
       }
+    } catch (e) {
+      console.error('Error parsing conversation steps:', e);
     }
 
     // Add knowledge base / FAQs
