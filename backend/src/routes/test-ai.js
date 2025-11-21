@@ -65,6 +65,12 @@ router.post('/conversation', authenticateToken, async (req, res) => {
     // Build system prompt
     const systemPrompt = aiService.buildComprehensiveSystemPrompt(strategy, userName);
 
+    console.log('\n📋 SYSTEM PROMPT LENGTH:', systemPrompt.length);
+    console.log('📋 SYSTEM PROMPT CONTENT:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(systemPrompt);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
     // Format conversation history
     const messages = conversationHistory.map(msg => ({
       role: msg.role === 'user' ? 'user' : 'assistant',
