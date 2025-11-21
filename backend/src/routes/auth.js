@@ -433,13 +433,17 @@ router.put('/update-profile', authenticateToken, async (req, res) => {
           last_name = ?,
           email = ?,
           company_name = ?,
+          phone = ?,
+          timezone = ?,
+          language = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `, [firstName, lastName, email.toLowerCase(), company || null, userId]);
+    `, [firstName, lastName, email.toLowerCase(), company || null, phone || null, timezone || 'America/New_York', language || 'en', userId]);
 
     // Get updated user
     const user = await db.get(`
-      SELECT id, email, first_name, last_name, company_name, client_id, plan_type
+      SELECT id, email, first_name, last_name, company_name, client_id, plan_type,
+             phone, timezone, language, profile_image, banner_image
       FROM users
       WHERE id = ?
     `, [userId]);

@@ -49,7 +49,8 @@ const authenticateToken = (req, res, next) => {
         // Get user from database
         const user = await db.get(`
           SELECT id, email, first_name, last_name, company_name,
-                 client_id, api_key, account_status, plan_type
+                 client_id, api_key, account_status, plan_type,
+                 phone, timezone, language, profile_image, banner_image
           FROM users
           WHERE id = ?
         `, [userId]);
