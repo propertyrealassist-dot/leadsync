@@ -10,9 +10,9 @@ router.get('/', authenticateToken, async (req, res) => {
     const orgId = req.user.currentOrganizationId;
     console.log('📋 Loading templates for organization:', orgId);
 
-    // Filter by organization_id if available, otherwise by user_id (backward compatibility)
+    // Filter by organization_id if available, OR show user's data without org_id (migration fallback)
     const templates = orgId
-      ? await db.all('SELECT * FROM templates WHERE organization_id = ? ORDER BY created_at DESC', [orgId])
+      ? await db.all('SELECT * FROM templates WHERE (organization_id = ? OR (organization_id IS NULL AND user_id = ?)) ORDER BY created_at DESC', [orgId, req.user.id])
       : await db.all('SELECT * FROM templates WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
 
     console.log('✅ Found', templates.length, 'templates');
@@ -27,9 +27,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const orgId = req.user.currentOrganizationId;
 
-    // Filter by organization_id if available, otherwise by user_id
+    // Filter by organization_id if available, OR show user's data without org_id (migration fallback)
     const template = orgId
-      ? await db.get('SELECT * FROM templates WHERE id = ? AND organization_id = ?', [req.params.id, orgId])
+      ? await db.get('SELECT * FROM templates WHERE id = ? AND (organization_id = ? OR (organization_id IS NULL AND user_id = ?))', [req.params.id, orgId, req.user.id])
       : await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
 
     if (!template) {
