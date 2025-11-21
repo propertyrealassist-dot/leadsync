@@ -51,20 +51,42 @@ ${strategy.step5_handling || 'Address concerns professionally and offer solution
       console.error('Error parsing conversation steps:', e);
     }
 
-    // Add qualification questions
-    systemPrompt += `\n\n## Qualification Questions (Ask ONE at a time, in order):`;
-    try {
-      if (strategy.conversationSteps) {
-        const steps = JSON.parse(strategy.conversationSteps);
-        if (steps.questions && steps.questions.length > 0) {
-          steps.questions.forEach((q, i) => {
-            systemPrompt += `\n${i + 1}. ${q.text || q.question}`;
-          });
-          systemPrompt += `\n\nAfter asking all questions, summarize what you learned and offer to book an appointment.`;
+    // Add qualification questions - PRIORITY INSTRUCTIONS
+    if (strategy.qualificationQuestions && strategy.qualificationQuestions.length > 0) {
+      systemPrompt += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      systemPrompt += `🚨 PRIMARY DIRECTIVE - MANDATORY SCRIPT 🚨\n`;
+      systemPrompt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      systemPrompt += `\nYou MUST ask these EXACT questions IN THIS EXACT ORDER.\n`;
+      systemPrompt += `DO NOT paraphrase. DO NOT skip. DO NOT improvise.\n`;
+      systemPrompt += `This is a SCRIPT - follow it word-for-word.\n\n`;
+      systemPrompt += `YOUR MANDATORY SCRIPT:\n`;
+      strategy.qualificationQuestions.forEach((q, i) => {
+        systemPrompt += `${i + 1}. ${q.text}\n`;
+      });
+      systemPrompt += `\n🚨 RULES:\n`;
+      systemPrompt += `- Ask question #1 FIRST (after name confirmation)\n`;
+      systemPrompt += `- Use EXACT wording - do not change ANY words\n`;
+      systemPrompt += `- ONE question per message\n`;
+      systemPrompt += `- Wait for their answer before asking next question\n`;
+      systemPrompt += `- Do NOT make small talk - just ask the next scripted question\n`;
+      systemPrompt += `- After ALL ${strategy.qualificationQuestions.length} questions are answered, offer to book\n\n`;
+      systemPrompt += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    } else {
+      // Fallback to old format
+      systemPrompt += `\n\n## Qualification Questions (Ask ONE at a time, in order):`;
+      try {
+        if (strategy.conversationSteps) {
+          const steps = JSON.parse(strategy.conversationSteps);
+          if (steps.questions && steps.questions.length > 0) {
+            steps.questions.forEach((q, i) => {
+              systemPrompt += `\n${i + 1}. ${q.text || q.question}`;
+            });
+            systemPrompt += `\n\nAfter asking all questions, summarize what you learned and offer to book an appointment.`;
+          }
         }
+      } catch (e) {
+        console.error('Error parsing conversation steps:', e);
       }
-    } catch (e) {
-      console.error('Error parsing conversation steps:', e);
     }
 
     // Add knowledge base / FAQs

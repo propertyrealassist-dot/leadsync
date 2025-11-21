@@ -44,6 +44,24 @@ router.post('/conversation', authenticateToken, async (req, res) => {
     console.log('✅ Strategy found:', strategy.name);
     console.log('📋 Initial message from DB:', strategy.initial_message);
 
+    // Load qualification questions from database
+    const qualificationQuestions = await db.all(
+      'SELECT * FROM qualification_questions WHERE template_id = ? ORDER BY id',
+      [strategyId]
+    );
+    console.log('📊 Loaded', qualificationQuestions.length, 'qualification questions from DB');
+
+    // Load FAQs from database
+    const faqs = await db.all(
+      'SELECT * FROM faqs WHERE template_id = ? ORDER BY id',
+      [strategyId]
+    );
+    console.log('📊 Loaded', faqs.length, 'FAQs from DB');
+
+    // Attach to strategy object for prompt building
+    strategy.qualificationQuestions = qualificationQuestions;
+    strategy.faqs = faqs;
+
     // Build system prompt
     const systemPrompt = aiService.buildComprehensiveSystemPrompt(strategy, userName);
 
