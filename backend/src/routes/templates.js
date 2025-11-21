@@ -134,6 +134,10 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // Insert template with async operations
     const orgId = req.user.currentOrganizationId;
+    console.log('🏢 Creating template with organization_id:', orgId);
+    console.log('👤 User ID:', req.user.id);
+    console.log('📋 Template name:', name);
+
     await db.run(`
       INSERT INTO templates (
         id, user_id, organization_id, name, tag, bot_temperature, brief, resiliancy, booking_readiness,
@@ -145,7 +149,7 @@ router.post('/', authenticateToken, async (req, res) => {
       tone || 'Friendly and Casual', mappedInitialMessage, mappedObjective, mappedCompanyInfo,
       messageDelayInitial || 30, mappedMessageDelayStandard, mappedCta
     ]);
-    console.log('✅ Template record inserted with organization:', orgId);
+    console.log('✅ Template record inserted - ID:', id, 'Org:', orgId);
 
     console.log('📋 Processing nested data...');
     console.log('  FAQs:', mappedFaqs?.length || 0);

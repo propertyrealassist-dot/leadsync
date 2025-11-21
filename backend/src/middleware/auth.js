@@ -82,14 +82,20 @@ const authenticateToken = (req, res, next) => {
 
         // Get organization ID from header or use first available
         const requestedOrgId = req.headers['x-organization-id'];
+        console.log('🏢 Requested organization from header:', requestedOrgId);
+        console.log('👥 User has', organizations.length, 'organizations');
         let currentOrganizationId = null;
 
         if (requestedOrgId && organizations.some(org => org.id === requestedOrgId)) {
           // Use the requested organization if user is a member
           currentOrganizationId = requestedOrgId;
+          console.log('✅ Using requested organization:', currentOrganizationId);
         } else if (organizations.length > 0) {
           // Default to first organization
           currentOrganizationId = organizations[0].id;
+          console.log('⚠️  Using default (first) organization:', currentOrganizationId);
+        } else {
+          console.log('❌ No organizations available for user');
         }
 
         // Attach user and organizations to request object
