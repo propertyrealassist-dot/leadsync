@@ -147,6 +147,33 @@ function Integrations() {
     window.open(snapshotUrl, '_blank');
   };
 
+  const handleTestWebhook = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/webhook/test`,
+        {
+          clientId: user?.clientId,
+          message: 'Test message from LeadSync UI',
+          contactName: 'Test Contact',
+          contactPhone: '+1234567890',
+          tag: 'test-tag'
+        },
+        {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        }
+      );
+
+      if (response.data.success) {
+        alert('✅ Webhook is working!\n\nThe AI processed your test message successfully. Check the Conversations page to see the result.');
+      } else {
+        alert('⚠️ Webhook responded but with an issue:\n\n' + (response.data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Webhook test error:', error);
+      alert('❌ Webhook test failed:\n\n' + (error.response?.data?.error || error.message || 'Network error'));
+    }
+  };
+
   // Show loading state while data is being fetched
   if (loading) {
     return (
@@ -278,89 +305,28 @@ function Integrations() {
           </div>
           <h3 className="card-title">GoHighLevel Integration</h3>
           <p className="card-description">
-            Connect your GHL account to enable AI automation
+            Use the snapshot method below - no connection needed here!
           </p>
 
           <div className="connection-status">
             <div className="status-indicator">
-              <span className={`status-dot ${ghlConnected ? 'connected' : 'disconnected'}`}></span>
+              <span className="status-dot" style={{ backgroundColor: '#f59e0b' }}></span>
               <span className="status-text">
-                {ghlConnected ? 'Connected' : 'Not Connected'}
+                Use Snapshot Method ⬇️
               </span>
             </div>
-            {ghlConnected && (
-              <div className="connection-info">
-                <p className="info-text">
-                  <Icons.Check size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
-                  Your GHL account is connected and ready
-                </p>
-              </div>
-            )}
+            <div className="connection-info">
+              <p className="info-text" style={{ fontSize: '13px', color: '#94a3b8', marginTop: '8px' }}>
+                <Icons.Info size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#f59e0b" />
+                The snapshot method (below) connects GHL via webhooks. No OAuth needed!
+              </p>
+            </div>
           </div>
 
-          {!ghlConnected && showGHLForm && (
-            <div className="ghl-form" style={{ marginTop: '16px' }}>
-              <div className="credential-field">
-                <label>GHL Location ID</label>
-                <input
-                  type="text"
-                  value={ghlLocationId}
-                  onChange={(e) => setGhlLocationId(e.target.value)}
-                  placeholder="Enter your GHL Location ID"
-                  className="credential-input"
-                />
-              </div>
-              <div className="credential-field" style={{ marginTop: '12px' }}>
-                <label>GHL Access Token</label>
-                <input
-                  type="password"
-                  value={ghlAccessToken}
-                  onChange={(e) => setGhlAccessToken(e.target.value)}
-                  placeholder="Enter your GHL Access Token"
-                  className="credential-input"
-                />
-              </div>
-            </div>
-          )}
-
           <div className="card-actions" style={{ marginTop: '16px' }}>
-            {ghlConnected ? (
-              <button
-                className="btn-danger full-width"
-                onClick={handleDisconnectGHL}
-              >
-                <Icons.X size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
-                Disconnect
-              </button>
-            ) : showGHLForm ? (
-              <>
-                <button
-                  className="btn-primary"
-                  onClick={handleConnectGHL}
-                  disabled={connecting}
-                  style={{ flex: 1 }}
-                >
-                  <Icons.Check size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
-                  {connecting ? 'Connecting...' : 'Connect'}
-                </button>
-                <button
-                  className="btn-secondary"
-                  onClick={() => setShowGHLForm(false)}
-                  disabled={connecting}
-                  style={{ flex: 1, marginLeft: '8px' }}
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <button
-                className="btn-primary full-width"
-                onClick={() => setShowGHLForm(true)}
-              >
-                <Icons.Integrations size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
-                Connect GHL Account
-              </button>
-            )}
+            <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center', margin: 0 }}>
+              👇 Import the snapshot below to connect GHL
+            </p>
           </div>
         </div>
 
@@ -428,22 +394,32 @@ function Integrations() {
             </div>
           </div>
 
-          <div className="card-actions">
+          <div className="card-actions" style={{ flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                className="btn-primary"
+                onClick={handleMigrateSnapshot}
+                style={{ flex: 1 }}
+              >
+                <Icons.Download size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
+                Get Snapshot
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={() => window.open('https://github.com/propertyrealassist-dot/leadsync/blob/main/GHL_SNAPSHOT_SETUP.md', '_blank')}
+                style={{ flex: 1 }}
+              >
+                <Icons.Info size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+                Setup Guide
+              </button>
+            </div>
             <button
-              className="btn-primary"
-              onClick={handleMigrateSnapshot}
-              style={{ flex: 1 }}
+              className="btn-secondary full-width"
+              onClick={handleTestWebhook}
+              style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' }}
             >
-              <Icons.Download size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
-              Get Snapshot
-            </button>
-            <button
-              className="btn-secondary"
-              onClick={() => window.open('https://github.com/propertyrealassist-dot/leadsync/blob/main/GHL_SNAPSHOT_SETUP.md', '_blank')}
-              style={{ flex: 1, marginLeft: '8px' }}
-            >
-              <Icons.Info size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
-              Setup Guide
+              <Icons.Check size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+              Test Webhook Connection
             </button>
           </div>
         </div>
