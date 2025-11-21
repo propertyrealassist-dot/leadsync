@@ -371,31 +371,40 @@ function Integrations() {
               <Icons.Download size={32} color="#8B5CF6" />
             </span>
           </div>
-          <h3 className="card-title">GHL Snapshot</h3>
+          <h3 className="card-title">🚀 GHL Snapshot - 5 Minute Setup!</h3>
           <p className="card-description">
-            Import LeadSync workflows and settings into GHL
+            <strong>NO Developer Account Needed!</strong> Just import the snapshot and paste your Client ID.
           </p>
 
           <div className="snapshot-info">
+            <div className="info-box" style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '600', color: '#8B5CF6' }}>
+                ⚡ Super Simple Setup:
+              </p>
+              <ol style={{ margin: 0, paddingLeft: '20px', fontSize: '14px' }}>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>Copy your Client ID</strong> from the card above ⬆️
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>Import snapshot</strong> into GHL (click button below)
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>Paste Client ID</strong> in GHL Custom Values
+                </li>
+                <li>
+                  <strong>Done!</strong> 🎉 AI will handle all messages
+                </li>
+              </ol>
+            </div>
             <div className="info-box">
-              <p><strong>What's included:</strong></p>
-              <ul>
-                <li>
-                  <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
-                  Custom fields and values
-                </li>
-                <li>
-                  <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
-                  AI automation workflows
-                </li>
-                <li>
-                  <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
-                  Tags and status tracking
-                </li>
-                <li>
-                  <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
-                  Error handling setup
-                </li>
+              <p><strong>Includes everything:</strong></p>
+              <ul style={{ margin: '8px 0', paddingLeft: '20px', fontSize: '14px' }}>
+                <li>✅ 2 AI workflows (auto-activated)</li>
+                <li>✅ 5 custom fields for tracking</li>
+                <li>✅ 6 smart tags</li>
+                <li>✅ Error handling with fallbacks</li>
+                <li>✅ Booking detection</li>
+                <li>✅ Multi-channel support (SMS, FB, IG, GMB)</li>
               </ul>
             </div>
           </div>
@@ -421,11 +430,20 @@ function Integrations() {
 
           <div className="card-actions">
             <button
-              className="btn-primary full-width"
+              className="btn-primary"
               onClick={handleMigrateSnapshot}
+              style={{ flex: 1 }}
             >
               <Icons.Download size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
-              View Snapshot
+              Get Snapshot
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => window.open('https://github.com/propertyrealassist-dot/leadsync/blob/main/GHL_SNAPSHOT_SETUP.md', '_blank')}
+              style={{ flex: 1, marginLeft: '8px' }}
+            >
+              <Icons.Info size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
+              Setup Guide
             </button>
           </div>
         </div>
