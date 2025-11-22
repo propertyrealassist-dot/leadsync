@@ -11,121 +11,96 @@ class GroqService {
    * Build comprehensive system prompt from strategy template
    */
   buildComprehensiveSystemPrompt(strategy, userName = 'User') {
-    let systemPrompt = `You are a professional AI sales assistant conducting a structured lead qualification conversation.
+    // Extract brief sections if they exist
+    const brief = strategy.brief || '';
 
-# YOUR ROLE
-${strategy.step1_role || strategy.brief || 'You are a helpful sales assistant.'}
+    // ULTRA-STRICT STRUCTURED CONVERSATION FLOW
+    let systemPrompt = `You are an AI sales assistant following a STRUCTURED conversation flow.
 
-# YOUR OBJECTIVES
-${strategy.step2_objectives || strategy.goal || 'Qualify leads and book appointments.'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 YOUR MISSION: FOLLOW THE BRIEF AND CONVERSATION STRUCTURE EXACTLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# CONVERSATION FLOW - FOLLOW THIS STRUCTURE
-${strategy.step3_conversation_flow || 'Have a natural conversation while gathering information.'}
+# STEP 1: WHO YOU ARE & YOUR BRIEF
 
-# GUIDELINES & BEST PRACTICES
-${strategy.step4_guidelines || 'Be professional, friendly, and helpful.'}
+${brief}
 
-# HANDLING OBJECTIONS & SPECIAL CASES
-${strategy.step5_handling || 'Address concerns professionally and offer solutions.'}
+${strategy.company_information ? `\n# STEP 4: KNOWLEDGE BASE (Use for answering questions)\n\n${strategy.company_information}\n` : ''}
 
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STEP 2: CONVERSATION STRUCTURE - FOLLOW EXACTLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# IMPORTANT INSTRUCTIONS
+## PHASE 1: QUALIFICATION QUESTIONS
+You MUST ask these questions ONE AT A TIME, in order:
+`;
 
-## Conversation Structure:
-1. **FIRST MESSAGE ONLY**: Start with the initial greeting
-2. **ASK QUESTIONS IN ORDER**: Go through qualification questions one at a time
-3. **LISTEN**: Wait for the user's answer before asking the next question
-4. **DON'T RUSH**: Don't ask multiple questions at once
-5. **BE NATURAL**: Acknowledge their answers before moving to the next question
+    // Add qualification questions from database
+    if (strategy.qualificationQuestions && strategy.qualificationQuestions.length > 0) {
+      strategy.qualificationQuestions.forEach((q, idx) => {
+        systemPrompt += `\nQuestion ${idx + 1}: "${q.text}"`;
+      });
 
-## Initial Greeting:`;
+      systemPrompt += `\n\n⚠️ CRITICAL RULES FOR QUALIFICATION:
+- Ask ONE question at a time
+- Wait for their answer before asking the next question
+- Acknowledge their answer briefly (1 sentence max) before next question
+- Follow conversation rules from your brief
+- Track which questions you've asked
+- Once ALL ${strategy.qualificationQuestions.length} questions are answered, move to PHASE 2
 
-    // Add initial message
-    try {
-      if (strategy.conversationSteps) {
-        const steps = JSON.parse(strategy.conversationSteps);
-        if (steps.initialMessage) {
-          systemPrompt += `\n"${steps.initialMessage}"`;
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing conversation steps:', e);
+`;
     }
 
-    // Add qualification questions
-    systemPrompt += `\n\n## Qualification Questions (Ask ONE at a time, in order):`;
-    try {
-      if (strategy.conversationSteps) {
-        const steps = JSON.parse(strategy.conversationSteps);
-        if (steps.questions && steps.questions.length > 0) {
-          steps.questions.forEach((q, i) => {
-            systemPrompt += `\n${i + 1}. ${q.text || q.question}`;
-          });
-          systemPrompt += `\n\nAfter asking all questions, summarize what you learned and offer to book an appointment.`;
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing conversation steps:', e);
+    systemPrompt += `## PHASE 2: BOOKING (Only after ALL qualification questions complete)
+
+${strategy.settings ? (() => {
+  try {
+    const settings = typeof strategy.settings === 'string' ? JSON.parse(strategy.settings) : strategy.settings;
+    return settings.cta || 'Let me get you scheduled. What time works best for you?';
+  } catch (e) {
+    return 'Let me get you scheduled. What time works best for you?';
+  }
+})() : 'Let me get you scheduled. What time works best for you?'}
+
+⚠️ YOU MUST COMPLETE ALL QUALIFICATION QUESTIONS BEFORE OFFERING TO BOOK!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STEP 4: KNOWLEDGE BASE & FAQs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If they ask questions during qualification, use this knowledge:
+`;
+
+    // Add FAQs from database
+    if (strategy.faqs && strategy.faqs.length > 0) {
+      strategy.faqs.forEach((faq, idx) => {
+        systemPrompt += `\n\nQ${idx + 1}: ${faq.question}\nA${idx + 1}: ${faq.answer}`;
+      });
     }
 
-    // Add knowledge base / FAQs
-    try {
-      if (strategy.knowledgeBase) {
-        const kb = JSON.parse(strategy.knowledgeBase);
-        if (kb.faqs && kb.faqs.length > 0) {
-          systemPrompt += `\n\n## Knowledge Base - Use this to answer questions:`;
-          kb.faqs.forEach((faq) => {
-            systemPrompt += `\n\nQ: ${faq.question}\nA: ${faq.answer}`;
-          });
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing knowledge base:', e);
-    }
+    systemPrompt += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CONVERSATION FLOW TRACKER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    // Add response style
-    systemPrompt += `\n\n## Your Communication Style:`;
-    try {
-      if (strategy.responseStyle) {
-        const style = JSON.parse(strategy.responseStyle);
-        systemPrompt += `\n- Personality: ${style.personality || 'Professional and friendly'}`;
-        systemPrompt += `\n- Message length: ${style.length || 'Concise (2-3 sentences)'}`;
-        if (style.emojis) {
-          systemPrompt += `\n- Use appropriate emojis to be friendly`;
-        }
-      } else {
-        systemPrompt += `\n- Tone: ${strategy.tone || 'Professional and friendly'}`;
-        systemPrompt += `\n- Keep responses concise (2-3 sentences)`;
-      }
-    } catch (e) {
-      console.error('Error parsing response style:', e);
-    }
+Lead's Name: ${userName}
+Current Phase: Check message history to see where you are
+Questions Asked: Track which qualification questions you've asked
+Questions Remaining: Don't move to booking until ALL questions answered
 
-    // Add booking info
-    try {
-      if (strategy.bookingWorkflow) {
-        const booking = JSON.parse(strategy.bookingWorkflow);
-        if (booking.enabled) {
-          systemPrompt += `\n\n## Appointment Booking:`;
-          systemPrompt += `\nAfter qualification, offer to schedule a ${booking.durationType || 'meeting'}.`;
-          if (booking.callToAction) {
-            systemPrompt += `\nCall to action: "${booking.callToAction}"`;
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing booking workflow:', e);
-    }
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ CRITICAL REMINDERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    systemPrompt += `\n\n---
+1. FOLLOW YOUR BRIEF - Use the conversation rules, objection handling, and psychological triggers from your brief
+2. ASK QUESTIONS IN ORDER - Don't skip, don't rush, don't ask multiple at once
+3. USE KNOWLEDGE BASE - When they ask questions, reference Step 4 knowledge
+4. COMPLETE QUALIFICATION BEFORE BOOKING - All questions must be answered first
+5. FOLLOW CONVERSATION RULES - Short messages, acknowledge their answers, match their energy
 
-# CONVERSATION TRACKER
-- User's name: ${userName}
-- Current conversation: Maintain context from previous messages
-- Next step: Follow the conversation flow and ask questions in order
-
-Remember: Be helpful, professional, and guide the conversation naturally toward qualification and booking.`;
+You are a professional who follows structure while being warm and human.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
 
     console.log('📋 Built Groq system prompt:', systemPrompt.substring(0, 200) + '...');
 

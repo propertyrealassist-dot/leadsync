@@ -72,6 +72,25 @@ router.post('/chat', async (req, res) => {
 
     console.log('🎯 Using strategy:', strategy.name);
 
+    // Load qualification questions and FAQs from database
+    if (strategy.id) {
+      const qualificationQuestions = await db.all(
+        'SELECT * FROM qualification_questions WHERE template_id = ? ORDER BY id',
+        [strategy.id]
+      );
+      const faqs = await db.all(
+        'SELECT * FROM faqs WHERE template_id = ? ORDER BY id',
+        [strategy.id]
+      );
+
+      // Attach to strategy object for prompt building
+      strategy.qualificationQuestions = qualificationQuestions;
+      strategy.faqs = faqs;
+
+      console.log('📊 Loaded', qualificationQuestions.length, 'qualification questions');
+      console.log('📊 Loaded', faqs.length, 'FAQs');
+    }
+
     // Build system prompt from strategy
     const systemPrompt = groqService.buildComprehensiveSystemPrompt(strategy, contactName || 'User');
 

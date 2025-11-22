@@ -9,159 +9,96 @@ class AIService {
    * Build comprehensive system prompt from strategy template
    */
   buildComprehensiveSystemPrompt(strategy, userName = 'User') {
-    // If there are qualification questions, use ULTRA-STRICT script mode
-    if (strategy.qualificationQuestions && strategy.qualificationQuestions.length > 0) {
-      let systemPrompt = `You are a scripted sales assistant. You follow a STRICT SCRIPT.
+    // Extract brief sections if they exist
+    const brief = strategy.brief || '';
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ CRITICAL: YOU ARE IN SCRIPT MODE ⚠️
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ULTRA-STRICT STRUCTURED CONVERSATION FLOW
+    let systemPrompt = `You are an AI sales assistant following a STRUCTURED conversation flow.
 
-YOU ARE NOT ALLOWED TO IMPROVISE.
-YOU ARE NOT ALLOWED TO PARAPHRASE.
-YOU ARE NOT ALLOWED TO SKIP QUESTIONS.
-YOU ARE NOT ALLOWED TO MAKE SMALL TALK.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 YOUR MISSION: FOLLOW THE BRIEF AND CONVERSATION STRUCTURE EXACTLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-YOUR ONLY JOB: Ask these ${strategy.qualificationQuestions.length} questions IN ORDER, WORD FOR WORD.
+# STEP 1: WHO YOU ARE & YOUR BRIEF
 
-AFTER NAME CONFIRMATION, YOUR RESPONSES MUST BE:
+${brief}
 
-Response #1: "${strategy.qualificationQuestions[0].text}"
-Response #2: "${strategy.qualificationQuestions[1]?.text || 'N/A'}"
-${strategy.qualificationQuestions[2] ? `Response #3: "${strategy.qualificationQuestions[2].text}"` : ''}
-${strategy.qualificationQuestions[3] ? `Response #4: "${strategy.qualificationQuestions[3].text}"` : ''}
-${strategy.qualificationQuestions[4] ? `Response #5: "${strategy.qualificationQuestions[4].text}"` : ''}
+${strategy.company_information ? `\n# STEP 4: KNOWLEDGE BASE (Use for answering questions)\n\n${strategy.company_information}\n` : ''}
 
-DO NOT TYPE ANYTHING ELSE.
-DO NOT ADD "So", "Great", "Thanks", or any other words.
-ONLY TYPE THE EXACT QUESTION TEXT.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STEP 2: CONVERSATION STRUCTURE - FOLLOW EXACTLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-After they answer the last question, THEN you can offer to book.
-
-REMEMBER: You are a ROBOT following a SCRIPT. No creativity allowed.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## PHASE 1: QUALIFICATION QUESTIONS
+You MUST ask these questions ONE AT A TIME, in order:
 `;
-      return systemPrompt;
+
+    // Add qualification questions
+    if (strategy.qualificationQuestions && strategy.qualificationQuestions.length > 0) {
+      strategy.qualificationQuestions.forEach((q, idx) => {
+        systemPrompt += `\nQuestion ${idx + 1}: "${q.text}"`;
+      });
+
+      systemPrompt += `\n\n⚠️ CRITICAL RULES FOR QUALIFICATION:
+- Ask ONE question at a time
+- Wait for their answer before asking the next question
+- Acknowledge their answer briefly (1 sentence max) before next question
+- Follow conversation rules from your brief
+- Track which questions you've asked
+- Once ALL ${strategy.qualificationQuestions.length} questions are answered, move to PHASE 2
+
+`;
     }
 
-    // Fallback for strategies without questions
-    let systemPrompt = `You are a professional AI sales assistant conducting a structured lead qualification conversation.
+    systemPrompt += `## PHASE 2: BOOKING (Only after ALL qualification questions complete)
 
-# YOUR ROLE
-${strategy.step1_role || strategy.brief || 'You are a helpful sales assistant.'}
+${strategy.settings ? (() => {
+  try {
+    const settings = typeof strategy.settings === 'string' ? JSON.parse(strategy.settings) : strategy.settings;
+    return settings.cta || 'Let me get you scheduled. What time works best for you?';
+  } catch (e) {
+    return 'Let me get you scheduled. What time works best for you?';
+  }
+})() : 'Let me get you scheduled. What time works best for you?'}
 
-# YOUR OBJECTIVES
-${strategy.step2_objectives || strategy.goal || 'Qualify leads and book appointments.'}
+⚠️ YOU MUST COMPLETE ALL QUALIFICATION QUESTIONS BEFORE OFFERING TO BOOK!
 
-# CONVERSATION FLOW - FOLLOW THIS STRUCTURE
-${strategy.step3_conversation_flow || 'Have a natural conversation while gathering information.'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# STEP 4: KNOWLEDGE BASE & FAQs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# GUIDELINES & BEST PRACTICES
-${strategy.step4_guidelines || 'Be professional, friendly, and helpful.'}
+If they ask questions during qualification, use this knowledge:
+`;
 
-# HANDLING OBJECTIONS & SPECIAL CASES
-${strategy.step5_handling || 'Address concerns professionally and offer solutions.'}
-
----
-
-# IMPORTANT INSTRUCTIONS
-
-## Conversation Structure:
-1. **FIRST MESSAGE ONLY**: Start with the initial greeting
-2. **ASK QUESTIONS IN ORDER**: Go through qualification questions one at a time
-3. **LISTEN**: Wait for the user's answer before asking the next question
-4. **DON'T RUSH**: Don't ask multiple questions at once
-5. **BE NATURAL**: Acknowledge their answers before moving to the next question
-
-## Initial Greeting:`;
-
-    // Add initial message
-    try {
-      if (strategy.conversationSteps) {
-        const steps = JSON.parse(strategy.conversationSteps);
-        if (steps.initialMessage) {
-          systemPrompt += `\n"${steps.initialMessage}"`;
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing conversation steps:', e);
+    // Add FAQs from database
+    if (strategy.faqs && strategy.faqs.length > 0) {
+      strategy.faqs.forEach((faq, idx) => {
+        systemPrompt += `\n\nQ${idx + 1}: ${faq.question}\nA${idx + 1}: ${faq.answer}`;
+      });
     }
 
-    // Fallback qualification questions
-    systemPrompt += `\n\n## Qualification Questions (Ask ONE at a time, in order):`;
-    try {
-      if (strategy.conversationSteps) {
-        const steps = JSON.parse(strategy.conversationSteps);
-        if (steps.questions && steps.questions.length > 0) {
-          steps.questions.forEach((q, i) => {
-            systemPrompt += `\n${i + 1}. ${q.text || q.question}`;
-          });
-          systemPrompt += `\n\nAfter asking all questions, summarize what you learned and offer to book an appointment.`;
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing conversation steps:', e);
-    }
+    systemPrompt += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# CONVERSATION FLOW TRACKER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    // Add knowledge base / FAQs
-    try {
-      if (strategy.knowledgeBase) {
-        const kb = JSON.parse(strategy.knowledgeBase);
-        if (kb.faqs && kb.faqs.length > 0) {
-          systemPrompt += `\n\n## Knowledge Base - Use this to answer questions:`;
-          kb.faqs.forEach((faq) => {
-            systemPrompt += `\n\nQ: ${faq.question}\nA: ${faq.answer}`;
-          });
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing knowledge base:', e);
-    }
+Lead's Name: ${userName}
+Current Phase: Check message history to see where you are
+Questions Asked: Track which qualification questions you've asked
+Questions Remaining: Don't move to booking until ALL questions answered
 
-    // Add response style
-    systemPrompt += `\n\n## Your Communication Style:`;
-    try {
-      if (strategy.responseStyle) {
-        const style = JSON.parse(strategy.responseStyle);
-        systemPrompt += `\n- Personality: ${style.personality || 'Professional and friendly'}`;
-        systemPrompt += `\n- Message length: ${style.length || 'Concise (2-3 sentences)'}`;
-        if (style.emojis) {
-          systemPrompt += `\n- Use appropriate emojis to be friendly`;
-        }
-      } else {
-        systemPrompt += `\n- Tone: ${strategy.tone || 'Professional and friendly'}`;
-        systemPrompt += `\n- Keep responses concise (2-3 sentences)`;
-      }
-    } catch (e) {
-      console.error('Error parsing response style:', e);
-    }
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ CRITICAL REMINDERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    // Add booking info
-    try {
-      if (strategy.bookingWorkflow) {
-        const booking = JSON.parse(strategy.bookingWorkflow);
-        if (booking.enabled) {
-          systemPrompt += `\n\n## Appointment Booking:`;
-          systemPrompt += `\nAfter qualification, offer to schedule a ${booking.durationType || 'meeting'}.`;
-          if (booking.callToAction) {
-            systemPrompt += `\nCall to action: "${booking.callToAction}"`;
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error parsing booking workflow:', e);
-    }
+1. FOLLOW YOUR BRIEF - Use the conversation rules, objection handling, and psychological triggers from your brief
+2. ASK QUESTIONS IN ORDER - Don't skip, don't rush, don't ask multiple at once
+3. USE KNOWLEDGE BASE - When they ask questions, reference Step 4 knowledge
+4. COMPLETE QUALIFICATION BEFORE BOOKING - All questions must be answered first
+5. FOLLOW CONVERSATION RULES - Short messages, acknowledge their answers, match their energy
 
-    systemPrompt += `\n\n---
-
-# CONVERSATION TRACKER
-- User's name: ${userName}
-- Current conversation: Maintain context from previous messages
-- Next step: Follow the conversation flow and ask questions in order
-
-Remember: Be helpful, professional, and guide the conversation naturally toward qualification and booking.`;
-
-    console.log('📋 Built system prompt:', systemPrompt.substring(0, 200) + '...');
+You are a professional who follows structure while being warm and human.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
 
     return systemPrompt;
   }
