@@ -75,28 +75,41 @@ function CoPilot() {
 
       const aiStrategy = aiStrategyResponse.data.strategy || {};
 
-      // Step 2: Create the template with AI-generated content
+      console.log('📋 AI Strategy received from backend:', {
+        name: aiStrategy.name,
+        brief: aiStrategy.brief?.substring(0, 200) + '...',
+        qualificationQuestions: aiStrategy.qualificationQuestions?.length,
+        faqs: aiStrategy.faqs?.length,
+        followUps: aiStrategy.followUps?.length,
+        companyInformation: aiStrategy.companyInformation?.substring(0, 200) + '...'
+      });
+
+      // Step 2: Create the template with AI-generated content (USE AI DATA, NOT HARDCODED!)
       const strategyData = {
-        name: `${data.businessName} AI Agent`,
-        tag: data.businessName.toLowerCase().replace(/\s+/g, '-') + '-ai',
-        tone: 'Friendly and Professional',
-        brief: generateBrief(),
-        objective: data.goal === 'aiBooks' ? 'Book appointments automatically' :
-                   data.goal === 'sendLink' ? 'Share booking links' : 'Custom conversion goal',
-        companyInformation: data.services || `${data.businessName} - ${data.website}`,
-        initialMessage: `Hey! Thanks for reaching out to ${data.businessName}. Can you confirm this is {{contact.first_name}}?`,
+        name: aiStrategy.name || `${data.businessName} AI Agent`,
+        tag: aiStrategy.tag || data.businessName.toLowerCase().replace(/\s+/g, '-') + '-ai',
+        tone: aiStrategy.tone || 'Friendly and Professional',
+        brief: aiStrategy.brief || generateBrief(), // USE AI BRIEF!
+        objective: aiStrategy.objective || (data.goal === 'aiBooks' ? 'Book appointments automatically' : data.goal === 'sendLink' ? 'Share booking links' : 'Custom conversion goal'),
+        companyInformation: aiStrategy.companyInformation || data.services || `${data.businessName} - ${data.website}`, // USE AI COMPANY INFO!
+        initialMessage: aiStrategy.initialMessage || `Hey! Thanks for reaching out to ${data.businessName}. Can you confirm this is {{contact.first_name}}?`, // USE AI INITIAL MESSAGE!
         cta: data.goal === 'sendLink' ? 'Here\'s our booking link to schedule your appointment!' : '',
-        turnOffAiAfterCta: data.postBooking === 'turnOffAI',
-        turnOffFollowUps: data.postBooking === 'turnOffFollowUps',
-        faqs: generateFAQs(),
-        qualificationQuestions: generateQuestions(),
-        followUps: generateFollowUps(),
-        // Add AI-generated 5-step strategy
-        step1_role: aiStrategy.step1_role || generateBrief(),
-        step2_objectives: aiStrategy.step2_objectives || '- Qualify leads\n- Book appointments\n- Answer questions',
-        step3_conversation_flow: aiStrategy.step3_conversation_flow || '1. Greet\n2. Qualify\n3. Book',
-        step4_guidelines: aiStrategy.step4_guidelines || '- Be professional\n- Keep responses concise',
-        step5_handling: aiStrategy.step5_handling || '- Handle objections professionally\n- Stay positive'
+        turnOffAiAfterCta: aiStrategy.settings?.turnOffAiAfterCta ?? (data.postBooking === 'turnOffAI'),
+        turnOffFollowUps: aiStrategy.settings?.turnOffFollowUps ?? (data.postBooking === 'turnOffFollowUps'),
+        faqs: aiStrategy.faqs || generateFAQs(), // USE AI FAQs!
+        qualificationQuestions: aiStrategy.qualificationQuestions || generateQuestions(), // USE AI QUESTIONS!
+        followUps: aiStrategy.followUps || generateFollowUps(), // USE AI FOLLOW-UPS!
+        // Settings from AI
+        settings: aiStrategy.settings || {
+          botTemperature: 0.4,
+          resiliancy: 3,
+          bookingReadiness: 3,
+          messageDelayInitial: 30,
+          messageDelayStandard: 5,
+          cta: aiStrategy.settings?.cta || 'Let me get you scheduled. What time works best for you?',
+          turnOffAiAfterCta: false,
+          turnOffFollowUps: data.goal === 'sendLink'
+        }
       };
 
       console.log('📤 Creating template with AI strategy...');
