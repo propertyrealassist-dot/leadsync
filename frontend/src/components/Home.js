@@ -27,20 +27,45 @@ function Home() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      const totalAgents = strategiesResponse.data?.length || 0;
+
+      // Load conversations
+      let totalConversations = 0;
+      let activeLeads = 0;
+      try {
+        const conversationsResponse = await axios.get(`${API_URL}/api/conversations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        totalConversations = conversationsResponse.data?.data?.length || 0;
+      } catch (err) {
+        console.log('No conversations endpoint or error:', err);
+      }
+
+      // Load leads
+      try {
+        const leadsResponse = await axios.get(`${API_URL}/api/leads`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        activeLeads = leadsResponse.data?.data?.length || 0;
+      } catch (err) {
+        console.log('No leads endpoint or error:', err);
+      }
+
       setStats({
-        totalAgents: strategiesResponse.data.length || 21,
-        totalConversations: 16,
-        activeLeads: 15,
+        totalAgents,
+        totalConversations,
+        activeLeads,
         appointmentsBooked: 0
       });
 
       setRecentAgents(strategiesResponse.data.slice(0, 3));
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+      // Set everything to 0 on error
       setStats({
-        totalAgents: 21,
-        totalConversations: 16,
-        activeLeads: 15,
+        totalAgents: 0,
+        totalConversations: 0,
+        activeLeads: 0,
         appointmentsBooked: 0
       });
     }
