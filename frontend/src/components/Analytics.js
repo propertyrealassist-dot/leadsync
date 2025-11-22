@@ -109,21 +109,30 @@ function Analytics() {
     );
   }
 
-  const { leadMetrics, conversionRates, leadSources, overTime, appointments, conversations, strategyPerformance } = analytics;
+  // Safely destructure with defaults
+  const {
+    leadMetrics = { total: 0, new: 0, contacted: 0, qualified: 0, won: 0 },
+    conversionRates = { leadToAppointment: 0, contactedToQualified: 0, qualifiedToWon: 0 },
+    leadSources = [],
+    overTime = [],
+    appointments = { total: 0, completed: 0, pending: 0 },
+    conversations = { totalMessages: 0, avgPerConversation: 0 },
+    strategyPerformance = []
+  } = analytics || {};
 
-  // Prepare pie chart data for lead sources
-  const sourceChartData = leadSources.map(source => ({
+  // Prepare pie chart data for lead sources - ensure array
+  const sourceChartData = Array.isArray(leadSources) ? leadSources.map(source => ({
     name: source.source,
     value: source.count
-  }));
+  })) : [];
 
-  // Prepare line chart data for leads over time
-  const timeSeriesData = overTime.map(item => ({
+  // Prepare line chart data for leads over time - ensure array
+  const timeSeriesData = Array.isArray(overTime) ? overTime.map(item => ({
     date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     leads: item.leads,
     appointments: item.appointments,
     conversations: item.conversations
-  }));
+  })) : [];
 
   return (
     <div className="analytics-container">
@@ -350,7 +359,7 @@ function Analytics() {
         )}
 
         {/* Strategy Performance */}
-        {strategyPerformance.length > 0 && (
+        {Array.isArray(strategyPerformance) && strategyPerformance.length > 0 && (
           <div className="chart-card">
             <div className="chart-header">
               <h3>
@@ -391,7 +400,7 @@ function Analytics() {
       </div>
 
       {/* Strategy Performance Table */}
-      {strategyPerformance.length > 0 && (
+      {Array.isArray(strategyPerformance) && strategyPerformance.length > 0 && (
         <div className="table-card">
           <div className="table-header">
             <h3>
