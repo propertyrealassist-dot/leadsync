@@ -15,8 +15,9 @@ import Analytics from './components/Analytics';
 import CoPilot from './components/CoPilot';
 import Integrations from './components/Integrations';
 import Settings from './components/Settings';
-import TeamManagement from './components/TeamManagement';
-import AdvancedAnalytics from './components/AdvancedAnalytics';
+// Removed for later implementation
+// import TeamManagement from './components/TeamManagement';
+// import AdvancedAnalytics from './components/AdvancedAnalytics';
 import Login from './components/Login';
 import Register from './components/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -134,22 +135,9 @@ function AppContent() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/leads" element={<Leads />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route
-            path="/team"
-            element={
-              <ProtectedRoute>
-                <TeamManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/analytics/advanced"
-            element={
-              <ProtectedRoute>
-                <AdvancedAnalytics />
-              </ProtectedRoute>
-            }
-          />
+          {/* Removed for later implementation */}
+          {/* <Route path="/team" element={<ProtectedRoute><TeamManagement /></ProtectedRoute>} /> */}
+          {/* <Route path="/analytics/advanced" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} /> */}
           <Route
             path="/integrations"
             element={

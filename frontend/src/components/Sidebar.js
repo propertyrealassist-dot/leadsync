@@ -21,8 +21,9 @@ function Sidebar() {
   ];
 
   const enterpriseItems = [
-    { path: '/team', icon: Icons.Team, label: 'Team Management', badge: 'NEW' },
-    { path: '/analytics/advanced', icon: Icons.AdvancedAnalytics, label: 'Advanced Analytics', badge: 'NEW' }
+    // Removed for now - will be implemented later
+    // { path: '/team', icon: Icons.Team, label: 'Team Management', badge: 'NEW' },
+    // { path: '/analytics/advanced', icon: Icons.AdvancedAnalytics, label: 'Advanced Analytics', badge: 'NEW' }
   ];
 
   return (
