@@ -49,12 +49,15 @@ function StrategyEditor() {
     cta: '',
     turnOffAiAfterCta: false,
     turnOffFollowUps: false,
-    ghlContactId: ''
+    ghlContactId: '',
+    ghlCalendarId: ''
   });
 
   const [qualificationQuestions, setQualificationQuestionsRaw] = useState([]);
   const [followUps, setFollowUpsRaw] = useState([]);
   const [faqs, setFaqsRaw] = useState([]);
+  const [ghlCalendars, setGhlCalendars] = useState([]);
+  const [loadingCalendars, setLoadingCalendars] = useState(false);
 
   // Wrapped setters with logging to track state changes
   const setQualificationQuestions = (value) => {
@@ -346,6 +349,32 @@ function StrategyEditor() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
+  const fetchGHLCalendars = async () => {
+    setLoadingCalendars(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${API_URL}/api/ghl/calendars`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success && res.data.calendars) {
+        setGhlCalendars(res.data.calendars);
+        console.log('✅ GHL Calendars loaded:', res.data.calendars.length);
+      } else {
+        console.log('⚠️ No GHL calendars found or GHL not connected');
+        setGhlCalendars([]);
+      }
+    } catch (error) {
+      console.error('❌ Error loading GHL calendars:', error);
+      if (error.response?.status === 404 || error.response?.status === 401) {
+        console.log('ℹ️ GHL not connected - user needs to import snapshot and configure Client ID');
+      }
+      setGhlCalendars([]);
+    } finally {
+      setLoadingCalendars(false);
+    }
+  };
+
   const loadAgent = async () => {
     try {
       console.log('📥 Loading agent:', id);
@@ -398,6 +427,9 @@ function StrategyEditor() {
       console.log('✅ Load complete - state should now have data');
       // Reset unsaved changes flag
       setHasUnsavedChanges(false);
+
+      // Fetch GHL calendars
+      fetchGHLCalendars();
     } catch (error) {
       console.error('❌ Error loading agent:', error);
       console.error('Error details:', error.response?.data);
@@ -850,6 +882,49 @@ function StrategyEditor() {
                   <h3>Automated AI Booking</h3>
                   <p>Connect your GHL calendar, and the AI will book directly into it through conversational AI.</p>
                 </div>
+              </div>
+
+              {/* GHL Calendar Selection */}
+              <div className="section">
+                <label>📅 Select GHL Calendar</label>
+                {loadingCalendars ? (
+                  <p style={{ color: '#94a3b8', fontSize: '14px' }}>Loading calendars...</p>
+                ) : ghlCalendars.length > 0 ? (
+                  <select
+                    name="ghlCalendarId"
+                    value={formData.ghlCalendarId}
+                    onChange={handleChange}
+                    className="dark-input"
+                  >
+                    <option value="">-- Select a calendar --</option>
+                    {ghlCalendars.map(calendar => (
+                      <option key={calendar.id} value={calendar.id}>
+                        {calendar.name || calendar.id}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div style={{
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    marginTop: '8px'
+                  }}>
+                    <p style={{ color: '#f59e0b', margin: '0 0 8px 0', fontWeight: '600' }}>
+                      📅 Calendar Booking Setup Required
+                    </p>
+                    <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 12px 0', lineHeight: '1.5' }}>
+                      The <strong>snapshot method</strong> (webhooks only) lets AI respond to messages but can't access GHL calendars.
+                    </p>
+                    <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 12px 0', lineHeight: '1.5' }}>
+                      <strong>To enable calendar booking:</strong> You need GHL API access tokens (requires GHL location access token or OAuth setup).
+                    </p>
+                    <p style={{ color: '#8B5CF6', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+                      💡 For now: AI can still ask for availability and manually coordinate bookings through conversation. Full automated booking coming soon with advanced integration!
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Call-to-Action Highlight */}
