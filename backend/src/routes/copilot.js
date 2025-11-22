@@ -178,16 +178,19 @@ async function scrapeSinglePage(url) {
     console.log('   📄 Crawling:', url);
 
     const response = await axios.get(url, {
-      timeout: 8000, // Reduced from 10s to 8s
+      timeout: 15000, // Increased to 15s for more reliability
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
+        'Upgrade-Insecure-Requests': '1',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       },
-      maxRedirects: 3 // Limit redirects
+      maxRedirects: 5, // Increased redirects
+      validateStatus: (status) => status < 500 // Accept 4xx errors too
     });
 
     const $ = cheerio.load(response.data);
@@ -344,7 +347,8 @@ async function scrapeWebsite(url) {
     const homepageData = await scrapeSinglePage(url);
 
     if (!homepageData) {
-      throw new Error('Failed to scrape homepage');
+      console.log('⚠️ Homepage scraping failed, returning minimal data');
+      return createMinimalWebsiteData(url);
     }
 
     console.log(`\n✅ Homepage scanned successfully`);
@@ -526,8 +530,39 @@ async function scrapeWebsite(url) {
 
   } catch (error) {
     console.error('❌ Deep scan error:', error.message);
-    throw new Error('Failed to perform deep scan');
+    // Return minimal data instead of throwing - NEVER fail the scan
+    return createMinimalWebsiteData(url);
   }
+}
+
+// ============================================
+// CREATE MINIMAL WEBSITE DATA (Fallback)
+// ============================================
+function createMinimalWebsiteData(url) {
+  const urlObj = new URL(url.startsWith('http') ? url : 'https://' + url);
+  const domain = urlObj.hostname.replace('www.', '');
+  const businessName = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
+
+  return {
+    businessName,
+    title: businessName,
+    description: `${businessName} - Professional business services`,
+    tagline: `Welcome to ${businessName}`,
+    valuePropositions: [],
+    services: [],
+    features: [],
+    benefits: [],
+    stats: [],
+    testimonials: [],
+    pricing: [],
+    targetAudience: 'businesses',
+    industryKeywords: [],
+    ctas: [],
+    pagesScanned: 1,
+    allHeadings: [],
+    allParagraphs: [],
+    scannedSuccessfully: false // Flag to indicate scan failed but still returned data
+  };
 }
 
 // ============================================
