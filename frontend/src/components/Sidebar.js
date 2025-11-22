@@ -22,8 +22,7 @@ function Sidebar() {
 
   const enterpriseItems = [
     { path: '/team', icon: Icons.Team, label: 'Team Management', badge: 'NEW' },
-    { path: '/analytics/advanced', icon: Icons.AdvancedAnalytics, label: 'Advanced Analytics', badge: 'NEW' },
-    { path: '/white-label', icon: Icons.WhiteLabel, label: 'White Label', badge: 'PRO' }
+    { path: '/analytics/advanced', icon: Icons.AdvancedAnalytics, label: 'Advanced Analytics', badge: 'NEW' }
   ];
 
   return (

@@ -49,10 +49,35 @@ function Analytics() {
       const response = await axios.get(`${API_URL}/api/analytics/dashboard?dateRange=${dateRange}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAnalytics(response.data);
+
+      // Backend now returns data directly (not wrapped in .data)
+      const analyticsData = response.data;
+
+      // Ensure all arrays exist
+      const safeData = {
+        leadMetrics: analyticsData.leadMetrics || { total: 0, new: 0, contacted: 0, qualified: 0, won: 0 },
+        conversionRates: analyticsData.conversionRates || { leadToAppointment: 0, contactedToQualified: 0, qualifiedToWon: 0 },
+        leadSources: Array.isArray(analyticsData.leadSources) ? analyticsData.leadSources : [],
+        overTime: Array.isArray(analyticsData.overTime) ? analyticsData.overTime : [],
+        appointments: analyticsData.appointments || { total: 0, completed: 0, pending: 0 },
+        conversations: analyticsData.conversations || { totalMessages: 0, avgPerConversation: 0 },
+        strategyPerformance: Array.isArray(analyticsData.strategyPerformance) ? analyticsData.strategyPerformance : []
+      };
+
+      setAnalytics(safeData);
     } catch (error) {
       console.error('Error loading analytics:', error);
       showToast('Failed to load analytics data', 'error');
+      // Set empty analytics on error
+      setAnalytics({
+        leadMetrics: { total: 0, new: 0, contacted: 0, qualified: 0, won: 0 },
+        conversionRates: { leadToAppointment: 0, contactedToQualified: 0, qualifiedToWon: 0 },
+        leadSources: [],
+        overTime: [],
+        appointments: { total: 0, completed: 0, pending: 0 },
+        conversations: { totalMessages: 0, avgPerConversation: 0 },
+        strategyPerformance: []
+      });
     } finally {
       setLoading(false);
     }

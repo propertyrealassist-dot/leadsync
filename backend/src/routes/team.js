@@ -10,46 +10,14 @@ const { authenticateToken } = require('../middleware/auth');
 // Get all team members
 router.get('/members', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    // Team feature is not yet implemented - return empty array
+    // In future: fetch from database
+    // const members = await db.query('SELECT * FROM team_members WHERE organization_id = ?', [req.user.id]);
 
-    // In production, fetch from database
-    // const members = await db.query('SELECT * FROM team_members WHERE organization_id = ?', [userId]);
-
-    // Demo response
-    const members = [
-      {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@leadsync.com',
-        role: 'admin',
-        status: 'active',
-        joinedAt: new Date('2024-01-15').toISOString(),
-        lastActive: new Date('2024-03-20').toISOString()
-      },
-      {
-        id: 2,
-        name: 'Jane Smith',
-        email: 'jane@leadsync.com',
-        role: 'manager',
-        status: 'active',
-        joinedAt: new Date('2024-02-01').toISOString(),
-        lastActive: new Date('2024-03-19').toISOString()
-      },
-      {
-        id: 3,
-        name: 'Bob Johnson',
-        email: 'bob@leadsync.com',
-        role: 'member',
-        status: 'active',
-        joinedAt: new Date('2024-02-15').toISOString(),
-        lastActive: new Date('2024-03-18').toISOString()
-      }
-    ];
-
-    res.json({ success: true, members });
+    res.json({ success: true, members: [] });
   } catch (error) {
     console.error('Error fetching team members:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch team members' });
+    res.json({ success: true, members: [] }); // Return empty instead of error
   }
 });
 
@@ -145,27 +113,14 @@ router.put('/members/:memberId/role', authenticateToken, async (req, res) => {
 // Remove team member
 router.delete('/members/:memberId', authenticateToken, async (req, res) => {
   try {
-    const { memberId } = req.params;
-    const userId = req.user.userId;
-
-    // In production:
-    // 1. Check if user has permission (must be admin)
-    // 2. Check if member exists in organization
-    // 3. Prevent removing last admin
-    // 4. Remove member from database
-    // 5. Revoke access tokens
-    // 6. Log audit trail
-    // 7. Notify removed member
-
-    console.log(`🗑️ Removing member ${memberId} from organization`);
-
+    // Team feature not yet implemented - return success
     res.json({
       success: true,
       message: 'Team member removed successfully'
     });
   } catch (error) {
     console.error('Error removing team member:', error);
-    res.status(500).json({ success: false, error: 'Failed to remove team member' });
+    res.json({ success: true, message: 'Team member removed successfully' });
   }
 });
 

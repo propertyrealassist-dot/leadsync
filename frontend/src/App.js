@@ -17,7 +17,6 @@ import Integrations from './components/Integrations';
 import Settings from './components/Settings';
 import TeamManagement from './components/TeamManagement';
 import AdvancedAnalytics from './components/AdvancedAnalytics';
-import WhiteLabel from './components/WhiteLabel';
 import Login from './components/Login';
 import Register from './components/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -148,14 +147,6 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <AdvancedAnalytics />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/white-label"
-            element={
-              <ProtectedRoute>
-                <WhiteLabel />
               </ProtectedRoute>
             }
           />

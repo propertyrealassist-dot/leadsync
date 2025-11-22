@@ -62,18 +62,20 @@ function AdvancedAnalytics() {
   const loadAnalytics = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('leadsync_token');
+      const token = localStorage.getItem('token'); // FIXED: was 'leadsync_token'
 
       // In production, fetch real analytics data
       const response = await axios.get(`${API_URL}/api/conversations`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const conversations = response.data || [];
+      // FIXED: Handle response.data.data structure properly
+      const conversationsData = response.data?.data || response.data || [];
+      const conversations = Array.isArray(conversationsData) ? conversationsData : [];
 
       // Calculate KPIs from real data
       const totalLeads = conversations.length;
-      const booked = conversations.filter(c => c.status === 'booked').length;
+      const booked = Array.isArray(conversations) ? conversations.filter(c => c.status === 'booked').length : 0;
       const conversionRate = totalLeads > 0 ? (booked / totalLeads * 100).toFixed(1) : 0;
 
       setKpis({
