@@ -81,29 +81,34 @@ function AdvancedAnalytics() {
       setKpis({
         totalLeads,
         conversionRate,
-        avgResponseTime: 2.4,
+        avgResponseTime: 0,
         appointmentsBooked: booked,
         revenue: booked * 150,
-        customerLifetimeValue: 1250
+        customerLifetimeValue: 0
       });
 
-      // Generate chart data
+      // Generate chart data from real data (empty for now)
       setChartData({
-        conversions: generateConversionData(timeRange),
-        engagement: generateEngagementData(timeRange),
-        performance: generatePerformanceData(timeRange)
+        conversions: [],
+        engagement: [],
+        performance: []
       });
 
     } catch (error) {
       console.error('Error loading analytics:', error);
-      // Set demo data
+      // Set REAL zeros instead of fake data
       setKpis({
-        totalLeads: 1250,
-        conversionRate: 28.5,
-        avgResponseTime: 2.4,
-        appointmentsBooked: 356,
-        revenue: 53400,
-        customerLifetimeValue: 1250
+        totalLeads: 0,
+        conversionRate: 0,
+        avgResponseTime: 0,
+        appointmentsBooked: 0,
+        revenue: 0,
+        customerLifetimeValue: 0
+      });
+      setChartData({
+        conversions: [],
+        engagement: [],
+        performance: []
       });
     } finally {
       setLoading(false);
@@ -190,7 +195,6 @@ function AdvancedAnalytics() {
           <div className="kpi-content">
             <div className="kpi-label">Total Leads</div>
             <div className="kpi-value">{kpis.totalLeads.toLocaleString()}</div>
-            <div className="kpi-change positive">+12.5% from last period</div>
           </div>
         </div>
 
@@ -201,7 +205,6 @@ function AdvancedAnalytics() {
           <div className="kpi-content">
             <div className="kpi-label">Conversion Rate</div>
             <div className="kpi-value">{kpis.conversionRate}%</div>
-            <div className="kpi-change positive">+3.2% from last period</div>
           </div>
         </div>
 
@@ -212,7 +215,6 @@ function AdvancedAnalytics() {
           <div className="kpi-content">
             <div className="kpi-label">Avg Response Time</div>
             <div className="kpi-value">{kpis.avgResponseTime}min</div>
-            <div className="kpi-change positive">-0.3min from last period</div>
           </div>
         </div>
 
@@ -223,7 +225,6 @@ function AdvancedAnalytics() {
           <div className="kpi-content">
             <div className="kpi-label">Appointments Booked</div>
             <div className="kpi-value">{kpis.appointmentsBooked}</div>
-            <div className="kpi-change positive">+18.7% from last period</div>
           </div>
         </div>
 
@@ -234,7 +235,6 @@ function AdvancedAnalytics() {
           <div className="kpi-content">
             <div className="kpi-label">Revenue</div>
             <div className="kpi-value">{formatCurrency(kpis.revenue)}</div>
-            <div className="kpi-change positive">+24.3% from last period</div>
           </div>
         </div>
 
@@ -245,12 +245,12 @@ function AdvancedAnalytics() {
           <div className="kpi-content">
             <div className="kpi-label">Customer LTV</div>
             <div className="kpi-value">{formatCurrency(kpis.customerLifetimeValue)}</div>
-            <div className="kpi-change positive">+8.1% from last period</div>
           </div>
         </div>
       </div>
 
-      {/* AI Insights */}
+      {/* AI Insights - DISABLED: Shows fake data */}
+      {false && (
       <div className="insights-section">
         <h2>
           <Icons.CoPilot size={24} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
@@ -275,8 +275,10 @@ function AdvancedAnalytics() {
           })}
         </div>
       </div>
+      )}
 
-      {/* Conversion Funnel */}
+      {/* Conversion Funnel - DISABLED: Shows fake data */}
+      {false && (
       <div className="funnel-section">
         <h2>
           <Icons.AdvancedAnalytics size={24} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
@@ -302,8 +304,10 @@ function AdvancedAnalytics() {
           ))}
         </div>
       </div>
+      )}
 
-      {/* Charts */}
+      {/* Charts - DISABLED: Shows fake data */}
+      {false && (
       <div className="charts-grid">
         <div className="chart-card">
           <h3>Conversion Trend</h3>
@@ -370,6 +374,7 @@ function AdvancedAnalytics() {
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }
