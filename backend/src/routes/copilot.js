@@ -607,8 +607,19 @@ router.post('/generate-strategy', async (req, res) => {
     // Use ELITE-LEVEL prompt for AppointWise-quality strategies
     const prompt = generateElitePrompt(businessName, websiteData, goal);
 
-
-    console.log('🤖 Generating professional AI strategy using Claude for:', businessName);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🤖 Generating ELITE AI strategy using Claude for:', businessName);
+    console.log('📊 Website Data Summary:');
+    console.log('   - Pages Scanned:', websiteData.pagesScanned || 0);
+    console.log('   - Headings:', websiteData.allHeadings?.length || 0);
+    console.log('   - Paragraphs:', websiteData.allParagraphs?.length || 0);
+    console.log('   - Services:', websiteData.services?.length || 0);
+    console.log('   - Stats:', websiteData.stats?.length || 0);
+    console.log('   - Testimonials:', websiteData.testimonials?.length || 0);
+    console.log('📋 Elite Prompt Length:', prompt.length, 'characters');
+    console.log('📋 Elite Prompt Preview (first 500 chars):');
+    console.log(prompt.substring(0, 500));
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     // Use Claude API for better quality strategy generation
     const Anthropic = require('@anthropic-ai/sdk');
@@ -632,13 +643,29 @@ router.post('/generate-strategy', async (req, res) => {
     let strategy;
     const aiResponse = response.content[0].text;
 
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🤖 Claude AI Response received');
+    console.log('📏 Response length:', aiResponse.length, 'characters');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
     try {
       strategy = JSON.parse(aiResponse);
 
       // Post-process to remove any remaining noise
       strategy = cleanStrategy(strategy);
 
-      console.log('✅ Professional AI strategy generated');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ Professional ELITE AI strategy generated successfully!');
+      console.log('📊 Strategy Summary:');
+      console.log('   - Name:', strategy.name);
+      console.log('   - Brief Length:', strategy.brief?.length || 0, 'characters');
+      console.log('   - Company Info Length:', strategy.companyInformation?.length || 0, 'characters');
+      console.log('   - Qualification Questions:', strategy.qualificationQuestions?.length || 0);
+      console.log('   - FAQs:', strategy.faqs?.length || 0);
+      console.log('   - Follow-ups:', strategy.followUps?.length || 0);
+      console.log('📝 Brief Preview (first 300 chars):');
+      console.log(strategy.brief?.substring(0, 300) + '...');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     } catch (parseError) {
       console.error('❌ JSON parse error, using fallback');
       strategy = createProfessionalFallback(businessName, websiteData, goal);
