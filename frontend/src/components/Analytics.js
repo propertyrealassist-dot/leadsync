@@ -45,7 +45,7 @@ function Analytics() {
 
   const loadAnalytics = async () => {
     try {
-      const token = localStorage.getItem('leadsync_token');
+      const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/api/analytics/dashboard?dateRange=${dateRange}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -60,7 +60,7 @@ function Analytics() {
 
   const loadRealTimeStats = async () => {
     try {
-      const token = localStorage.getItem('leadsync_token');
+      const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/api/analytics/realtime`, {
         headers: { Authorization: `Bearer ${token}` }
       });
