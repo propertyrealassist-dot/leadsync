@@ -196,104 +196,132 @@ function Integrations() {
         </div>
       </div>
 
+      {/* Connect to GHL - Prominent CTA */}
+      <div className="ghl-connect-banner">
+        <div className="ghl-banner-content">
+          <div className="ghl-banner-icon">
+            <Icons.Integrations size={48} color="#10b981" />
+          </div>
+          <div className="ghl-banner-text">
+            <h2>Connect GoHighLevel</h2>
+            <p>Link your GoHighLevel account to sync contacts, calendars, and conversations</p>
+            {ghlConnected && (
+              <div className="ghl-connected-badge">
+                <Icons.Check size={16} color="#10b981" />
+                <span>Connected</span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="ghl-banner-actions">
+          {!ghlConnected ? (
+            <button
+              className="btn-ghl-connect"
+              onClick={() => {
+                const marketplaceUrl = 'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&client_id=69218dacd101d3222ff1708c-mic4vq7j&scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+opportunities.write+locations.readonly&version_id=69218dacd101d3ab25f1708d';
+                window.location.href = marketplaceUrl;
+              }}
+            >
+              <Icons.Integrations size={20} style={{ marginRight: '8px' }} color="#ffffff" />
+              Connect to GoHighLevel
+            </button>
+          ) : (
+            <button
+              className="btn-ghl-disconnect"
+              onClick={handleDisconnectGHL}
+            >
+              Disconnect
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Integration Cards Grid */}
       <div className="integrations-grid">
         {/* Card 1: API Credentials */}
-        <div className="integration-card">
-          <div className="card-icon-wrapper api">
-            <span className="card-icon">
-              <Icons.Settings size={32} color="#8B5CF6" />
-            </span>
+        <div className="integration-card compact">
+          <div className="card-header">
+            <div className="card-icon-wrapper-compact api">
+              <Icons.Settings size={20} color="#8B5CF6" />
+            </div>
+            <h3 className="card-title-compact">API Key</h3>
           </div>
-          <h3 className="card-title">API Credentials</h3>
-          <p className="card-description">
-            Your API key for authenticating requests to LeadSync
-          </p>
 
-          <div className="credential-field">
-            <label>API Key</label>
+          <div className="credential-field-compact">
             <div className="credential-input-group">
               <input
                 type="text"
                 value={showApiKey ? (user?.apiKey || 'No API key available') : maskCredential(user?.apiKey)}
                 readOnly
-                className="credential-input"
+                className="credential-input-compact"
               />
               <button
-                className="btn-toggle-visibility"
+                className="btn-icon"
                 onClick={() => setShowApiKey(!showApiKey)}
                 title={showApiKey ? 'Hide' : 'Show'}
               >
-                <Icons.Eye size={16} color="#8B5CF6" />
+                <Icons.Eye size={14} color="#8B5CF6" />
+              </button>
+              <button
+                className="btn-icon"
+                onClick={() => handleCopy(user?.apiKey, 'API Key')}
+                title="Copy"
+              >
+                <Icons.Copy size={14} color="#8B5CF6" />
               </button>
             </div>
           </div>
 
-          <div className="card-actions">
-            <button
-              className="btn-secondary"
-              onClick={() => handleCopy(user?.apiKey, 'API Key')}
-              disabled={!user?.apiKey}
-            >
-              <Icons.Copy size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
-              Copy
-            </button>
-            <button
-              className="btn-danger"
-              onClick={handleRegenerateApiKey}
-              disabled={regenerating}
-            >
-              {regenerating ? 'Regenerating...' : (
-                <>
-                  <Icons.Settings size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#ffffff" />
-                  Regenerate
-                </>
-              )}
-            </button>
-          </div>
+          <button
+            className="btn-compact btn-danger-compact"
+            onClick={handleRegenerateApiKey}
+            disabled={regenerating}
+          >
+            {regenerating ? 'Regenerating...' : 'Regenerate Key'}
+          </button>
         </div>
 
         {/* Card 2: Client ID */}
-        <div className="integration-card">
-          <div className="card-icon-wrapper client">
-            <span className="card-icon">
-              <Icons.Info size={32} color="#8B5CF6" />
-            </span>
+        <div className="integration-card compact">
+          <div className="card-header">
+            <div className="card-icon-wrapper-compact client">
+              <Icons.Info size={20} color="#8B5CF6" />
+            </div>
+            <h3 className="card-title-compact">Client ID</h3>
           </div>
-          <h3 className="card-title">Client ID</h3>
-          <p className="card-description">
-            Your unique identifier for LeadSync integration
-          </p>
 
-          <div className="credential-field">
-            <label>Client ID</label>
+          <div className="credential-field-compact">
             <div className="credential-input-group">
               <input
                 type="text"
                 value={showClientId ? (user?.clientId || 'No client ID available') : maskCredential(user?.clientId)}
                 readOnly
-                className="credential-input"
+                className="credential-input-compact"
               />
               <button
-                className="btn-toggle-visibility"
+                className="btn-icon"
                 onClick={() => setShowClientId(!showClientId)}
                 title={showClientId ? 'Hide' : 'Show'}
               >
-                <Icons.Eye size={16} color="#8B5CF6" />
+                <Icons.Eye size={14} color="#8B5CF6" />
+              </button>
+              <button
+                className="btn-icon"
+                onClick={() => handleCopy(user?.clientId, 'Client ID')}
+                title="Copy"
+              >
+                <Icons.Copy size={14} color="#8B5CF6" />
               </button>
             </div>
           </div>
 
-          <div className="card-actions">
-            <button
-              className="btn-secondary full-width"
-              onClick={() => handleCopy(user?.clientId, 'Client ID')}
-              disabled={!user?.clientId}
-            >
-              <Icons.Copy size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
-              Copy Client ID
-            </button>
-          </div>
+          <button
+            className="btn-compact btn-secondary-compact"
+            onClick={() => handleCopy(user?.clientId, 'Client ID')}
+            disabled={!user?.clientId}
+          >
+            Copy to Clipboard
+          </button>
         </div>
 
         {/* Card 3: GHL Snapshot */}

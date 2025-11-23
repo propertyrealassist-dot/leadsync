@@ -41,7 +41,10 @@ function Settings() {
 
   const checkGHLStatus = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/ghl/status?userId=default_user`);
+      const token = localStorage.getItem('leadsync_token');
+      const response = await axios.get(`${API_URL}/api/ghl/status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setGhlStatus(response.data);
 
       if (response.data.connected) {
@@ -54,7 +57,10 @@ function Settings() {
 
   const loadCalendars = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/ghl/calendars?userId=default_user`);
+      const token = localStorage.getItem('leadsync_token');
+      const response = await axios.get(`${API_URL}/api/ghl/calendars`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setCalendars(response.data.calendars || []);
     } catch (error) {
       console.error('Error loading calendars:', error);
@@ -73,16 +79,18 @@ function Settings() {
     }
   };
 
-  const handleConnectGHL = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/ghl/auth/start?userId=default_user`);
-      if (response.data.authUrl) {
-        window.location.href = response.data.authUrl;
-      }
-    } catch (error) {
-      console.error('Error connecting to GHL:', error);
-      alert('Failed to initiate GHL connection');
+  const handleConnectGHL = () => {
+    // Use the marketplace install link directly
+    // This redirects to GHL marketplace for OAuth authorization
+    const marketplaceUrl = 'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&client_id=69218dacd101d3222ff1708c-mic4vq7j&scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+opportunities.write+locations.readonly&version_id=69218dacd101d3ab25f1708d';
+
+    // Store current user in session for callback (optional)
+    if (user?.id) {
+      sessionStorage.setItem('ghl_connecting_user', user.id);
     }
+
+    // Redirect to GHL marketplace
+    window.location.href = marketplaceUrl;
   };
 
   const handleDisconnectGHL = async () => {
@@ -91,7 +99,10 @@ function Settings() {
     }
 
     try {
-      await axios.post(`${API_URL}/api/ghl/disconnect`, { userId: 'default_user' });
+      const token = localStorage.getItem('leadsync_token');
+      await axios.post(`${API_URL}/api/ghl/disconnect`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setGhlStatus({ connected: false, locationId: null });
       setCalendars([]);
       alert('GoHighLevel disconnected successfully');

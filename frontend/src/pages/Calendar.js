@@ -13,6 +13,18 @@ function Calendar() {
   useEffect(() => {
     checkConnection();
     loadAppointments();
+
+    // Check for OAuth callback success/error
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('calendar_connected') === 'true') {
+      alert('✅ Google Calendar connected successfully!');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('error')) {
+      const error = urlParams.get('error');
+      const message = urlParams.get('message');
+      alert(`❌ Failed to connect calendar: ${error}${message ? ` - ${message}` : ''}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   const checkConnection = async () => {

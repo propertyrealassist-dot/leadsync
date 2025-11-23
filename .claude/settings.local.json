@@ -5,7 +5,21 @@
       "Bash(powershell -Command \"(Get-Content ''src/routes/auth.js'').Length\")",
       "Bash(DATABASE_URL=\"postgresql://leadsync:RYUN2rpGsOPvDArZidoMVg@spicy-egret-18515.j77.aws-us-east-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full\" node:*)",
       "Bash(powershell -Command \"(Get-Content ''src/components/Auth.css'').Length\")",
-      "Bash(powershell -Command \"(Get-Content ''src/components/AIAgents.js'').Length\")"
+      "Bash(powershell -Command \"(Get-Content ''src/components/AIAgents.js'').Length\")",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFIX: Profile loading stuck on loading screen\n\nFixed issue where Account Settings page was stuck on \"Loading account settings...\" \nby ensuring all user profile fields are properly loaded and saved.\n\nChanges:\n1. Auth Middleware: Added phone, timezone, language, profile_image, banner_image to user SELECT query\n2. Update Profile Endpoint: Now properly saves phone, timezone, and language fields\n3. Get Updated User Query: Returns all profile fields after update\n\nBackend Changes:\n- backend/src/middleware/auth.js: Extended user query to include all profile fields\n- backend/src/routes/auth.js: Fixed update-profile endpoint to save and return all fields\n\nThis fix ensures the /api/auth/me endpoint returns complete user data needed by AccountSettings.js\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(powershell -Command \"(Get-Content ''backend\\src\\config\\database-postgres.js'').Length\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFIX: Add missing user profile columns and handle organizations gracefully\n\nFixed production database errors by:\n1. Adding phone, timezone, language, profile_image, banner_image columns to users table\n2. Including migration to add columns to existing production tables\n3. Gracefully handling missing organizations table in auth middleware\n\nBackend Changes:\n- database-postgres.js: Added profile fields to users table schema + migration\n- middleware/auth.js: Wrapped organizations query in try-catch to handle missing table\n\nThis ensures the profile loading works on production CockroachDB without errors.\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nADD: Standalone migration script to add profile columns to production DB\n\nCreated a robust migration script that:\n1. Checks existing columns in the users table\n2. Only adds missing columns (phone, timezone, language, profile_image, banner_image)\n3. Verifies all columns were added successfully\n4. Provides detailed logging for debugging\n\nUpdated render.yaml to run this migration during build phase.\n\nThis will fix the \"column phone does not exist\" errors in production.\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(powershell -Command \"(Get-Content ''frontend\\src\\components\\Sidebar.js'').Length\")",
+      "Bash(test:*)",
+      "Bash(git reset:*)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []
