@@ -605,6 +605,47 @@ router.post('/scan-website', async (req, res) => {
 });
 
 // ============================================
+// DEBUG: TEST ELITE PROMPT (Remove after testing)
+// ============================================
+router.post('/test-elite-prompt', async (req, res) => {
+  try {
+    const { generateElitePrompt } = require('./copilot-elite-prompt');
+
+    // Test data
+    const testWebsiteData = {
+      businessName: 'ProCouriers',
+      title: 'Professional Courier Services',
+      description: 'Fast, reliable delivery services',
+      allHeadings: [
+        { level: 'h1', text: 'Professional Courier Services' },
+        { level: 'h2', text: '24/7 Same-Day Delivery' },
+        { level: 'h2', text: 'Trusted by 5000+ Businesses' }
+      ],
+      allParagraphs: [
+        'We provide fast, reliable courier services across the city.',
+        'Our team has 15+ years of logistics experience.',
+        '99% on-time delivery rate guaranteed.'
+      ],
+      services: ['Same-day delivery', 'Next-day delivery', 'International shipping'],
+      stats: ['5000+ clients served', '99% on-time', '15+ years experience'],
+      testimonials: ['Best courier service ever! - John D.'],
+      pagesScanned: 10
+    };
+
+    const prompt = generateElitePrompt('ProCouriers', testWebsiteData, 'aiBooks');
+
+    res.json({
+      success: true,
+      promptLength: prompt.length,
+      promptPreview: prompt.substring(0, 2000),
+      fullPrompt: prompt
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
 // AI STRATEGY GENERATION (ULTRA-SMART)
 // ============================================
 router.post('/generate-strategy', async (req, res) => {
