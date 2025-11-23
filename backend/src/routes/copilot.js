@@ -232,20 +232,31 @@ async function scrapeSinglePage(url) {
       }
     });
 
-    // Extract ALL meaningful paragraphs
+    // Extract ALL meaningful paragraphs (INCREASED LIMIT for more content)
     $('p').each((i, elem) => {
       const text = cleanText($(elem).text());
-      if (text.length > 20 && text.length < 1500 && !isNoise(text)) {
+      // Relaxed minimum from 20 to 15, increased max from 1500 to 3000 for longer content
+      if (text.length > 15 && text.length < 3000 && !isNoise(text)) {
         pageData.paragraphs.push(text);
       }
     });
 
-    // Also extract div text for modern websites
-    $('div[class*="content"], div[class*="text"], div[class*="description"], section').each((i, elem) => {
+    // Extract div text for modern websites (MORE AGGRESSIVE)
+    $('div[class*="content"], div[class*="text"], div[class*="description"], div[class*="about"], div[class*="info"], section, article').each((i, elem) => {
       const text = cleanText($(elem).text());
-      // Only get direct text, not nested
-      if (text.length > 30 && text.length < 500 && !isNoise(text)) {
+      // Relaxed minimum, increased max for richer content capture
+      if (text.length > 25 && text.length < 2000 && !isNoise(text)) {
         // Make sure it's not already captured
+        if (!pageData.paragraphs.includes(text)) {
+          pageData.paragraphs.push(text);
+        }
+      }
+    });
+
+    // Extract span and strong text that might contain important info
+    $('span, strong, em, b').each((i, elem) => {
+      const text = cleanText($(elem).text());
+      if (text.length > 20 && text.length < 500 && !isNoise(text) && hasValue(text)) {
         if (!pageData.paragraphs.includes(text)) {
           pageData.paragraphs.push(text);
         }
@@ -340,10 +351,10 @@ async function scrapeWebsite(url) {
       url = 'https://' + url;
     }
 
-    console.log('🔍 QUICK SCAN starting for:', url);
+    console.log('🔍 DEEP SCAN starting for:', url);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    // STEP 1: Scrape homepage ONLY (fast scan)
+    // STEP 1: Scrape homepage FIRST
     const homepageData = await scrapeSinglePage(url);
 
     if (!homepageData) {
@@ -354,17 +365,17 @@ async function scrapeWebsite(url) {
     console.log(`\n✅ Homepage scanned successfully`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    // STEP 2: Find priority pages to crawl (but limit to 3 for speed)
+    // STEP 2: Find priority pages to crawl (SCAN UP TO 9 PAGES for comprehensive data)
     const allLinks = homepageData.links;
     const priorityPages = findPriorityPages(allLinks, url);
 
-    console.log(`📊 Found ${priorityPages.length} priority pages (scanning top 3 for speed)`);
+    console.log(`📊 Found ${priorityPages.length} priority pages (scanning top 9 for comprehensive analysis)`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    // STEP 3: Scrape only top 3 priority pages in parallel with Promise.allSettled
+    // STEP 3: Scrape up to 9 priority pages in parallel for MAXIMUM data extraction
     const scrapePromises = priorityPages
       .filter(pageUrl => pageUrl !== url) // Exclude homepage (already scraped)
-      .slice(0, 3) // Max 3 additional pages for speed
+      .slice(0, 9) // Max 9 additional pages (10 total) for comprehensive scan
       .map(pageUrl => scrapeSinglePage(pageUrl));
 
     const results = await Promise.allSettled(scrapePromises);
