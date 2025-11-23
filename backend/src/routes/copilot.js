@@ -660,7 +660,7 @@ router.post('/generate-strategy', async (req, res) => {
     const prompt = generateElitePrompt(businessName, websiteData, goal);
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🤖 Generating ELITE AI strategy using Claude for:', businessName);
+    console.log('🤖 Generating ELITE AI strategy using GROQ for:', businessName);
     console.log('📊 Website Data Summary:');
     console.log('   - Pages Scanned:', websiteData.pagesScanned || 0);
     console.log('   - Headings:', websiteData.allHeadings?.length || 0);
@@ -673,30 +673,35 @@ router.post('/generate-strategy', async (req, res) => {
     console.log(prompt.substring(0, 500));
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    // Use Claude API for better quality strategy generation
-    const Anthropic = require('@anthropic-ai/sdk');
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+    // Use Groq API for elite strategy generation
+    const Groq = require('groq-sdk');
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY
     });
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 16000,
-      temperature: 0.7,
-      system: 'You are an ELITE AI strategy architect who creates world-class conversation strategies. You write ultra-detailed briefs with conversation rules, psychological triggers, objection handling, and strategic qualification flows. You use ALL available data to create hyper-specific, industry-tailored strategies. NEVER use generic content or placeholders - every strategy must be completely customized.',
+    const systemPrompt = 'You are an ELITE AI strategy architect who creates world-class conversation strategies. You write ultra-detailed briefs with conversation rules, psychological triggers, objection handling, and strategic qualification flows. You use ALL available data to create hyper-specific, industry-tailored strategies. NEVER use generic content or placeholders - every strategy must be completely customized. Return ONLY valid JSON with no markdown code blocks.';
+
+    const response = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
         {
           role: 'user',
           content: prompt
         }
-      ]
+      ],
+      temperature: 0.7,
+      max_tokens: 16000
     });
 
     let strategy;
-    const aiResponse = response.content[0].text;
+    const aiResponse = response.choices[0].message.content;
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🤖 Claude AI Response received');
+    console.log('🤖 Groq AI Response received');
     console.log('📏 Response length:', aiResponse.length, 'characters');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
