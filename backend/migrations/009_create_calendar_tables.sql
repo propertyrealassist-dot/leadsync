@@ -4,14 +4,17 @@
 -- Table: calendar_connections
 -- Stores OAuth tokens and calendar provider connections for each user
 CREATE TABLE IF NOT EXISTS calendar_connections (
-  id TEXT PRIMARY KEY,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   user_id TEXT NOT NULL,
   provider TEXT NOT NULL,
   access_token TEXT NOT NULL,
   refresh_token TEXT,
-  expires_at DATETIME,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  token_expiry TIMESTAMP,
+  calendar_id TEXT DEFAULT 'primary',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE (user_id, provider)
 );
 
 CREATE INDEX IF NOT EXISTS idx_calendar_connections_user_id ON calendar_connections(user_id);

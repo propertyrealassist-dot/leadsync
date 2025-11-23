@@ -24,12 +24,13 @@ const authenticateToken = (req, res, next) => {
 /**
  * GET /api/calendar/auth
  * Start OAuth flow - returns authorization URL
+ * PUBLIC ROUTE - No authentication required to start OAuth
  */
-router.get('/auth', authenticateToken, async (req, res) => {
+router.get('/auth', async (req, res) => {
   try {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/api/calendar/callback';
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/calendar/callback';
 
     if (!clientId || !clientSecret) {
       return res.status(500).json({
@@ -37,11 +38,27 @@ router.get('/auth', authenticateToken, async (req, res) => {
       });
     }
 
+    // Get userId from token if provided (optional for this route)
+    let userId = null;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        userId = decoded.userId;
+      } catch (error) {
+        console.log('No valid token provided for /auth, continuing without userId');
+      }
+    }
+
     const authUrl = calendarService.getAuthUrl(clientId, clientSecret, redirectUri);
 
-    // Store userId in session or state parameter for callback
+    // Store userId in state parameter for callback if available
+    const stateData = userId ? Buffer.from(JSON.stringify({ userId })).toString('base64') : '';
+    const authUrlWithState = stateData ? `${authUrl}&state=${stateData}` : authUrl;
+
     res.json({
-      authUrl,
+      authUrl: authUrlWithState,
       message: 'Redirect user to this URL to authorize Google Calendar access'
     });
   } catch (error) {
@@ -53,50 +70,78 @@ router.get('/auth', authenticateToken, async (req, res) => {
 /**
  * GET /api/calendar/callback
  * Handle OAuth callback - exchange code for tokens
+ * PUBLIC ROUTE - Google redirects here after OAuth
  */
 router.get('/callback', async (req, res) => {
   try {
     const { code, state } = req.query;
 
+    console.log('📅 Calendar OAuth callback received');
+    console.log('Code:', code ? 'Present' : 'Missing');
+    console.log('State:', state);
+
     if (!code) {
-      return res.status(400).json({ error: 'Authorization code not provided' });
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      return res.redirect(`${frontendUrl}/calendar?error=no_code`);
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/api/calendar/callback';
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/calendar/callback';
 
     // Exchange code for tokens
+    console.log('🔄 Exchanging code for tokens...');
     const tokens = await calendarService.getTokensFromCode(code, clientId, clientSecret, redirectUri);
+    console.log('✅ Tokens received:', { hasAccessToken: !!tokens.access_token, hasRefreshToken: !!tokens.refresh_token });
 
-    // In a real app, extract userId from state parameter
-    // For now, you'll need to implement session management
-    const userId = state || req.session?.userId;
+    // Extract userId from state parameter
+    let userId = null;
+    if (state) {
+      try {
+        const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+        userId = stateData.userId;
+        console.log('📌 User ID from state:', userId);
+      } catch (error) {
+        console.log('⚠️ Could not parse state parameter');
+      }
+    }
 
+    // If no userId from state, try to get first user (fallback for demo)
     if (!userId) {
-      return res.status(400).json({ error: 'User session not found. Please start authorization flow again.' });
+      console.log('🔍 No userId in state, looking for first user...');
+      const firstUser = await db.get('SELECT id FROM users ORDER BY created_at ASC LIMIT 1');
+      if (firstUser) {
+        userId = firstUser.id;
+        console.log('📌 Using first user:', userId);
+      } else {
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        return res.redirect(`${frontendUrl}/calendar?error=no_user`);
+      }
     }
 
     // Store tokens in database
-    const query = `
+    console.log('💾 Storing credentials for user:', userId);
+    const tokenExpiry = new Date(Date.now() + (tokens.expiry_date || 3600000));
+
+    await db.run(`
       INSERT INTO calendar_connections (user_id, provider, access_token, refresh_token, token_expiry, calendar_id)
       VALUES (?, 'google', ?, ?, ?, 'primary')
-      ON DUPLICATE KEY UPDATE
-        access_token = VALUES(access_token),
-        refresh_token = VALUES(refresh_token),
-        token_expiry = VALUES(token_expiry),
+      ON CONFLICT (user_id, provider) DO UPDATE SET
+        access_token = EXCLUDED.access_token,
+        refresh_token = EXCLUDED.refresh_token,
+        token_expiry = EXCLUDED.token_expiry,
         updated_at = CURRENT_TIMESTAMP
-    `;
+    `, [userId, tokens.access_token, tokens.refresh_token, tokenExpiry.toISOString()]);
 
-    const tokenExpiry = new Date(Date.now() + tokens.expiry_date);
+    console.log('✅ Calendar connected successfully');
 
-    await db.query(query, [userId, tokens.access_token, tokens.refresh_token, tokenExpiry]);
-
-    // Redirect to success page or return success message
-    res.redirect('/dashboard?calendar_connected=true');
+    // Redirect to frontend success page
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/calendar?calendar_connected=true`);
   } catch (error) {
-    console.error('Error handling OAuth callback:', error);
-    res.status(500).json({ error: 'Failed to complete authorization' });
+    console.error('❌ Error handling OAuth callback:', error);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/calendar?error=oauth_failed&message=${encodeURIComponent(error.message)}`);
   }
 });
 

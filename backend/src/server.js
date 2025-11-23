@@ -23,6 +23,7 @@ const bookingRoutes = require('./routes/booking');
 const analyticsRoutes = require('./routes/analytics');
 const aiRoutes = require('./routes/ai');
 const organizationRoutes = require('./routes/organizations');
+const oauthRoutes = require('./routes/oauth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -123,6 +124,7 @@ app.use('/api/booking', bookingRoutes); // Public booking widget
 app.use('/api/analytics', analyticsRoutes); // Analytics dashboard
 app.use('/api/ai', aiRoutes); // AI chat endpoint for Make.com
 app.use('/api/organizations', organizationRoutes); // Multi-tenant organizations
+app.use('/api/oauth', oauthRoutes); // OAuth callbacks (GHL marketplace)
 
 // Health check
 app.get('/api/health', (req, res) => {
