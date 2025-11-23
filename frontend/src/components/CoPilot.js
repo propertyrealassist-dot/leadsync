@@ -55,9 +55,19 @@ function CoPilot() {
     try {
       const token = localStorage.getItem('token');
 
-      console.log('🤖 Calling AI to generate strategy...');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🤖 CALLING ELITE AI STRATEGY GENERATOR');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📊 Business Name:', data.businessName);
+      console.log('🌐 Website Data:', {
+        pagesScanned: websiteData?.pagesScanned || 0,
+        headings: websiteData?.allHeadings?.length || 0,
+        paragraphs: websiteData?.allParagraphs?.length || 0,
+        services: websiteData?.services?.length || 0
+      });
+      console.log('🎯 Goal:', data.goal);
 
-      // Step 1: Generate AI strategy
+      // Step 1: Generate AI strategy using ELITE PROMPT
       const aiStrategyResponse = await axios.post(
         `${API_URL}/api/copilot/generate-strategy`,
         {
@@ -71,7 +81,10 @@ function CoPilot() {
         }
       );
 
-      console.log('✅ AI strategy generated:', aiStrategyResponse.data);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ ELITE AI STRATEGY RECEIVED FROM BACKEND');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('Full Response:', aiStrategyResponse.data);
 
       const aiStrategy = aiStrategyResponse.data.strategy || {};
 
