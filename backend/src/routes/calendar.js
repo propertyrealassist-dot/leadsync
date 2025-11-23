@@ -148,16 +148,16 @@ router.get('/availability', authenticateToken, async (req, res) => {
     }
 
     // Get user's calendar connection
-    const connection = await db.query(
-      'SELECT * FROM calendar_connections WHERE user_id = ? AND provider = "google" ORDER BY created_at DESC LIMIT 1',
-      [userId]
+    const connection = await db.get(
+      'SELECT * FROM calendar_connections WHERE user_id = ? AND provider = ? ORDER BY created_at DESC LIMIT 1',
+      [userId, 'google']
     );
 
-    if (!connection || connection.length === 0) {
+    if (!connection) {
       return res.status(404).json({ error: 'No calendar connected. Please connect your Google Calendar first.' });
     }
 
-    const { access_token, refresh_token, token_expiry, calendar_id } = connection[0];
+    const { access_token, refresh_token, token_expiry, calendar_id } = connection;
 
     // Check if token is expired and refresh if needed
     const now = new Date();
@@ -169,9 +169,9 @@ router.get('/availability', authenticateToken, async (req, res) => {
       const newTokens = await calendarService.refreshAccessToken(refresh_token, clientId, clientSecret, redirectUri);
 
       // Update tokens in database
-      await db.query(
+      await db.run(
         'UPDATE calendar_connections SET access_token = ?, token_expiry = ? WHERE id = ?',
-        [newTokens.access_token, new Date(Date.now() + newTokens.expiry_date), connection[0].id]
+        [newTokens.access_token, new Date(Date.now() + newTokens.expiry_date), connection.id]
       );
 
       calendarService.setCredentials(newTokens, clientId, clientSecret, redirectUri);
@@ -233,16 +233,16 @@ router.post('/book', authenticateToken, async (req, res) => {
     }
 
     // Get user's calendar connection
-    const connection = await db.query(
-      'SELECT * FROM calendar_connections WHERE user_id = ? AND provider = "google" ORDER BY created_at DESC LIMIT 1',
-      [userId]
+    const connection = await db.get(
+      'SELECT * FROM calendar_connections WHERE user_id = ? AND provider = ? ORDER BY created_at DESC LIMIT 1',
+      [userId, 'google']
     );
 
-    if (!connection || connection.length === 0) {
+    if (!connection) {
       return res.status(404).json({ error: 'No calendar connected. Please connect your Google Calendar first.' });
     }
 
-    const { access_token, refresh_token, calendar_id } = connection[0];
+    const { access_token, refresh_token, calendar_id } = connection;
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -283,14 +283,14 @@ router.post('/book', authenticateToken, async (req, res) => {
 
     const meetingLink = event.hangoutLink || event.conferenceData?.entryPoints?.[0]?.uri;
 
-    await db.query(appointmentQuery, [
+    await db.run(appointmentQuery, [
       userId,
-      connection[0].id,
+      connection.id,
       event.id,
       summary,
       description,
-      new Date(startTime),
-      new Date(endTime),
+      new Date(startTime).toISOString(),
+      new Date(endTime).toISOString(),
       attendeeEmail,
       attendeeName || null,
       meetingLink
@@ -325,16 +325,16 @@ router.get('/events', authenticateToken, async (req, res) => {
     const { maxResults = 10, startDate } = req.query;
 
     // Get user's calendar connection
-    const connection = await db.query(
-      'SELECT * FROM calendar_connections WHERE user_id = ? AND provider = "google" ORDER BY created_at DESC LIMIT 1',
-      [userId]
+    const connection = await db.get(
+      'SELECT * FROM calendar_connections WHERE user_id = ? AND provider = ? ORDER BY created_at DESC LIMIT 1',
+      [userId, 'google']
     );
 
-    if (!connection || connection.length === 0) {
+    if (!connection) {
       return res.status(404).json({ error: 'No calendar connected. Please connect your Google Calendar first.' });
     }
 
-    const { access_token, refresh_token, calendar_id } = connection[0];
+    const { access_token, refresh_token, calendar_id } = connection;
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -351,9 +351,9 @@ router.get('/events', authenticateToken, async (req, res) => {
     );
 
     // Also get from database for additional metadata
-    const dbAppointments = await db.query(
+    const dbAppointments = await db.all(
       'SELECT * FROM appointments WHERE user_id = ? AND start_time >= ? ORDER BY start_time ASC',
-      [userId, new Date(timeMin)]
+      [userId, timeMin]
     );
 
     res.json({
@@ -377,16 +377,16 @@ router.delete('/events/:id', authenticateToken, async (req, res) => {
     const eventId = req.params.id;
 
     // Get user's calendar connection
-    const connection = await db.query(
-      'SELECT * FROM calendar_connections WHERE user_id = ? AND provider = "google" ORDER BY created_at DESC LIMIT 1',
-      [userId]
+    const connection = await db.get(
+      'SELECT * FROM calendar_connections WHERE user_id = ? AND provider = ? ORDER BY created_at DESC LIMIT 1',
+      [userId, 'google']
     );
 
-    if (!connection || connection.length === 0) {
+    if (!connection) {
       return res.status(404).json({ error: 'No calendar connected. Please connect your Google Calendar first.' });
     }
 
-    const { access_token, refresh_token, calendar_id } = connection[0];
+    const { access_token, refresh_token, calendar_id } = connection;
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -398,8 +398,8 @@ router.delete('/events/:id', authenticateToken, async (req, res) => {
     await calendarService.cancelEvent(eventId, calendar_id || 'primary', true);
 
     // Update status in database
-    await db.query(
-      'UPDATE appointments SET status = "cancelled", updated_at = CURRENT_TIMESTAMP WHERE event_id = ? AND user_id = ?',
+    await db.run(
+      "UPDATE appointments SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE event_id = ? AND user_id = ?",
       [eventId, userId]
     );
 
@@ -421,12 +421,12 @@ router.get('/connection/status', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const connection = await db.query(
-      'SELECT id, provider, calendar_id, created_at, updated_at FROM calendar_connections WHERE user_id = ? AND provider = "google" ORDER BY created_at DESC LIMIT 1',
-      [userId]
+    const connection = await db.get(
+      'SELECT id, provider, calendar_id, created_at, updated_at FROM calendar_connections WHERE user_id = ? AND provider = ? ORDER BY created_at DESC LIMIT 1',
+      [userId, 'google']
     );
 
-    if (!connection || connection.length === 0) {
+    if (!connection) {
       return res.json({
         connected: false,
         message: 'No calendar connected'
@@ -436,10 +436,10 @@ router.get('/connection/status', authenticateToken, async (req, res) => {
     res.json({
       connected: true,
       connection: {
-        id: connection[0].id,
-        provider: connection[0].provider,
-        calendarId: connection[0].calendar_id,
-        connectedAt: connection[0].created_at
+        id: connection.id,
+        provider: connection.provider,
+        calendarId: connection.calendar_id,
+        connectedAt: connection.created_at
       }
     });
   } catch (error) {
@@ -456,9 +456,9 @@ router.delete('/connection', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    await db.query(
-      'DELETE FROM calendar_connections WHERE user_id = ? AND provider = "google"',
-      [userId]
+    await db.run(
+      'DELETE FROM calendar_connections WHERE user_id = ? AND provider = ?',
+      [userId, 'google']
     );
 
     res.json({
