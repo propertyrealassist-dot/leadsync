@@ -4,9 +4,9 @@
   "description": "LeadSync AI Conversation Engine Backend",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node src/scripts/run-migrations-on-startup.js && node src/server.js",
     "dev": "nodemon src/server.js",
-    "migrate": "node migrate.js",
+    "migrate": "node run-migrations.js",
     "test": "node test-api.js"
   },
   "dependencies": {
