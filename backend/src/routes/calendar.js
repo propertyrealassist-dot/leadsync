@@ -2,24 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../config/database');
 const calendarService = require('../services/googleCalendarService');
-
-// Middleware to verify authentication
-const authenticateToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'No token provided' });
-
-  // Verify JWT token (assuming you have JWT verification set up)
-  try {
-    // Add your JWT verification logic here
-    // For now, we'll extract userId from the token payload
-    const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    req.userId = decoded.userId;
-    next();
-  } catch (error) {
-    return res.status(403).json({ error: 'Invalid token' });
-  }
-};
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * GET /api/calendar/auth
@@ -151,7 +134,7 @@ router.get('/callback', async (req, res) => {
  */
 router.get('/availability', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user.id;
     const {
       startDate,
       endDate,
@@ -231,7 +214,7 @@ router.get('/availability', authenticateToken, async (req, res) => {
  */
 router.post('/book', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user.id;
     const {
       startTime,
       endTime,
@@ -338,7 +321,7 @@ router.post('/book', authenticateToken, async (req, res) => {
  */
 router.get('/events', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user.id;
     const { maxResults = 10, startDate } = req.query;
 
     // Get user's calendar connection
@@ -390,7 +373,7 @@ router.get('/events', authenticateToken, async (req, res) => {
  */
 router.delete('/events/:id', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user.id;
     const eventId = req.params.id;
 
     // Get user's calendar connection
@@ -436,7 +419,7 @@ router.delete('/events/:id', authenticateToken, async (req, res) => {
  */
 router.get('/connection/status', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user.id;
 
     const connection = await db.query(
       'SELECT id, provider, calendar_id, created_at, updated_at FROM calendar_connections WHERE user_id = ? AND provider = "google" ORDER BY created_at DESC LIMIT 1',
@@ -471,7 +454,7 @@ router.get('/connection/status', authenticateToken, async (req, res) => {
  */
 router.delete('/connection', authenticateToken, async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user.id;
 
     await db.query(
       'DELETE FROM calendar_connections WHERE user_id = ? AND provider = "google"',
