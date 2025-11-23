@@ -254,22 +254,64 @@ Return ONLY this JSON (no markdown, no code blocks):
 }
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ CRITICAL REQUIREMENTS - DO NOT IGNORE
+⚠️ CRITICAL REQUIREMENTS - DO NOT IGNORE ⚠️
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. **MINIMUM 4 QUALIFICATION QUESTIONS** - Actually 5 required, all ultra-specific
-2. **EXACTLY 5 FOLLOW-UPS** - 3h, 1 day, 2 days, 3 days, 4 days timing
-3. **SCAN EVERY WORD** - Use ALL paragraphs, headings, stats, testimonials
-4. **NO PLACEHOLDERS** - Replace EVERY [bracket] with real content from website
-5. **COMPREHENSIVE companyInformation** - 500+ words using EVERYTHING from website
-6. **SPECIFIC brief** - All 8 sections filled with real data, not generic advice
-7. **REAL objection handlers** - Use actual pricing, testimonials, stats
-8. **REAL qualification questions** - Based on actual services and customer pain points
-9. **REAL follow-ups** - Include actual client names, stats, results from website
+🚨 ABSOLUTE MANDATORY REQUIREMENTS:
 
-EVERY [BRACKET] MUST BE FILLED WITH ACTUAL CONTENT FROM THE WEBSITE DATA!
+1. **MINIMUM 5 QUALIFICATION QUESTIONS** - All ultra-specific based on actual services
+   Example: "What's your average shipment volume per week?" NOT "What services interest you?"
 
-If website data is limited, be creative but realistic - infer from business name and industry.
+2. **EXACTLY 5 FOLLOW-UPS** with these EXACT delays:
+   - delay: 180 (3 hours)
+   - delay: 1440 (1 day)
+   - delay: 2880 (2 days)
+   - delay: 4320 (3 days)
+   - delay: 5760 (4 days)
+
+3. **SCAN EVERY WORD** - Use ALL paragraphs, headings, stats, testimonials from website data
+
+4. **ZERO PLACEHOLDERS ALLOWED** - Replace EVERY [bracket] with actual content:
+   ❌ WRONG: "Role: [Specific role based on company]"
+   ✅ CORRECT: "Role: Senior Logistics Coordinator with 15+ years expertise"
+
+   ❌ WRONG: "Price: [Create specific response using pricing]"
+   ✅ CORRECT: "Price: Our rates start at $X per shipment, with volume discounts available"
+
+5. **COMPREHENSIVE companyInformation** - MINIMUM 500 words including:
+   - Full company description
+   - ALL services listed
+   - ALL benefits mentioned
+   - ALL stats (clients served, years in business, success rates)
+   - ALL testimonials word-for-word
+   - Pricing information (even if "custom pricing")
+
+6. **ULTRA-SPECIFIC brief** - All 8 sections MUST have real data:
+   - WHO YOU ARE: Real role, real stats, real pain points from website
+   - OBJECTION HANDLING: Actual prices, actual testimonials, actual value props
+   - QUALIFICATION STRATEGY: Specific green/red flags for THIS industry
+   - PSYCHOLOGICAL TRIGGERS: Actual client names, actual numbers, actual proof
+   - LANGUAGE CALIBRATION: Actual power words FROM THEIR WEBSITE
+
+7. **REAL qualification questions** based on actual services:
+   Example for logistics: "What's your typical delivery window requirement - same day, next day, or standard?"
+   NOT generic: "When do you need this?"
+
+8. **REAL follow-ups** with actual data:
+   Example: "Just helped a client reduce their shipping costs by 30% - would you like to hear how?"
+   NOT generic: "Still interested?"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔥 ENFORCEMENT RULES 🔥
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- IF YOU LEAVE ANY [BRACKETS] IN THE BRIEF, THIS IS A FAILURE
+- IF YOU USE GENERIC PHRASES, THIS IS A FAILURE
+- IF YOU HAVE LESS THAN 5 QUESTIONS, THIS IS A FAILURE
+- IF YOU HAVE LESS THAN 5 FOLLOW-UPS, THIS IS A FAILURE
+- IF companyInformation IS LESS THAN 500 WORDS, THIS IS A FAILURE
+
+USE EVERY PIECE OF DATA FROM THE WEBSITE. SCAN EVERYTHING.
 
 Return ONLY valid JSON with no markdown code blocks.`;
 }
