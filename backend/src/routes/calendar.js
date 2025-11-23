@@ -4,6 +4,11 @@ const { db } = require('../config/database');
 const calendarService = require('../services/googleCalendarService');
 const { authenticateToken } = require('../middleware/auth');
 
+// Async error wrapper for routes
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
 /**
  * GET /api/calendar/auth
  * Start OAuth flow - returns authorization URL
@@ -132,7 +137,7 @@ router.get('/callback', async (req, res) => {
  * GET /api/calendar/availability
  * Get available time slots
  */
-router.get('/availability', authenticateToken, async (req, res) => {
+router.get('/availability', asyncHandler(authenticateToken), async (req, res) => {
   try {
     const userId = req.user.id;
     const {
@@ -212,7 +217,7 @@ router.get('/availability', authenticateToken, async (req, res) => {
  * POST /api/calendar/book
  * Book an appointment
  */
-router.post('/book', authenticateToken, async (req, res) => {
+router.post('/book', asyncHandler(authenticateToken), async (req, res) => {
   try {
     const userId = req.user.id;
     const {
@@ -319,7 +324,7 @@ router.post('/book', authenticateToken, async (req, res) => {
  * GET /api/calendar/events
  * List appointments
  */
-router.get('/events', authenticateToken, async (req, res) => {
+router.get('/events', asyncHandler(authenticateToken), async (req, res) => {
   try {
     const userId = req.user.id;
     const { maxResults = 10, startDate } = req.query;
@@ -371,7 +376,7 @@ router.get('/events', authenticateToken, async (req, res) => {
  * DELETE /api/calendar/events/:id
  * Cancel an appointment
  */
-router.delete('/events/:id', authenticateToken, async (req, res) => {
+router.delete('/events/:id', asyncHandler(authenticateToken), async (req, res) => {
   try {
     const userId = req.user.id;
     const eventId = req.params.id;
@@ -417,8 +422,10 @@ router.delete('/events/:id', authenticateToken, async (req, res) => {
  * GET /api/calendar/connection/status
  * Check calendar connection status
  */
-router.get('/connection/status', authenticateToken, async (req, res) => {
+router.get('/connection/status', asyncHandler(authenticateToken), async (req, res) => {
   try {
+    console.log('📅 /connection/status called');
+    console.log('📝 User from auth:', req.user?.id, req.user?.email);
     const userId = req.user.id;
 
     const connection = await db.get(
@@ -452,7 +459,7 @@ router.get('/connection/status', authenticateToken, async (req, res) => {
  * DELETE /api/calendar/connection
  * Disconnect calendar
  */
-router.delete('/connection', authenticateToken, async (req, res) => {
+router.delete('/connection', asyncHandler(authenticateToken), async (req, res) => {
   try {
     const userId = req.user.id;
 
