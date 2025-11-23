@@ -77,16 +77,26 @@ ${allContent}
 📋 REQUIRED OUTPUT FORMAT (FOLLOW EXACTLY)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-You MUST create a brief following this EXACT structure:
+⚠️ CRITICAL: DO NOT USE [BRACKETS] IN YOUR OUTPUT! ⚠️
+
+Here is an EXAMPLE of GOOD output (for a logistics company):
+**EXAMPLE LOGISTICS COMPANY SMS AI AGENT BRIEF**
+**WHO YOU ARE**
+- Name: Alex
+- Role: Senior Logistics Coordinator with 15+ years in courier services
+- Credibility: Trusted by 5000+ businesses, 99% on-time delivery rate, serving the metro area since 2008
+- Customer Understanding: I know businesses need fast, reliable delivery they can count on, especially for time-sensitive shipments and last-minute orders
+
+Now create YOUR brief for ${businessName.toUpperCase()} following this EXACT structure:
 
 **${businessName.toUpperCase()} SMS AI AGENT BRIEF**
 
 **WHO YOU ARE**
 
 - Name: ${agentName}
-- Role: [Specific role based on company - e.g., "Senior Logistics Coordinator" not just "agent"]
-- Credibility: [Use actual stats, years in business, number of clients served from website data]
-- Customer Understanding: [Use actual customer pain points mentioned on website - be SPECIFIC]
+- Role: (Use their actual services/industry - be specific like "Senior Logistics Coordinator" not generic)
+- Credibility: (Use ACTUAL stats from website data above - clients served, years, success rates)
+- Customer Understanding: (Use ACTUAL pain points from their website content)
 
 ---
 
@@ -105,10 +115,12 @@ You MUST create a brief following this EXACT structure:
 
 **OBJECTION HANDLING**
 
-- **Price**: [Create specific response using actual pricing/value props from website]
-- **Timing**: [Create specific response based on business type and urgency]
-- **Trust**: [Use actual testimonials, stats, years in business from website]
-- **Need**: [Use actual benefits and results from website data]
+(EXAMPLE: "Price: Our rates are competitive and we offer volume discounts. Most clients save 20-30% compared to traditional carriers")
+
+- **Price**: (Use ACTUAL pricing or value from their website - be specific with numbers if available)
+- **Timing**: (Based on their actual service - same-day? next-day? Be specific)
+- **Trust**: (Use ACTUAL testimonials, stats, years from website - quote them!)
+- **Need**: (Use ACTUAL benefits from their website - specific results they deliver)
 
 ---
 
