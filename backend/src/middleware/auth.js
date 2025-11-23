@@ -26,12 +26,16 @@ const authenticateToken = async (req, res, next) => {
     let decoded;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
-      console.log('JWT decoded:', decoded);
+      console.log('✅ JWT decoded successfully:', { userId: decoded.userId || decoded.id, email: decoded.email });
     } catch (err) {
-      console.error('JWT verification failed:', err.message);
+      console.error('❌ JWT verification failed:', err.message);
+      console.error('Token preview:', token.substring(0, 20) + '...');
+      console.error('JWT_SECRET exists:', !!JWT_SECRET);
+      console.error('JWT_SECRET length:', JWT_SECRET?.length);
       return res.status(403).json({
         success: false,
-        error: 'Invalid or expired token.'
+        error: 'Invalid or expired token.',
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
       });
     }
 
