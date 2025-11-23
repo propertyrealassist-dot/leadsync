@@ -9,7 +9,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d'; // Extended to 30 da
  * Middleware to verify JWT token
  * Usage: Add this middleware to protected routes
  */
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   try {
     // Get token from Authorization header
     const authHeader = req.headers['authorization'];
@@ -22,96 +22,96 @@ const authenticateToken = (req, res, next) => {
       });
     }
 
-    // Verify token
-    jwt.verify(token, JWT_SECRET, async (err, decoded) => {
-      if (err) {
-        console.error('JWT verification failed:', err.message);
-        return res.status(403).json({
-          success: false,
-          error: 'Invalid or expired token.'
-        });
-      }
-
+    // Verify token (synchronous)
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
       console.log('JWT decoded:', decoded);
+    } catch (err) {
+      console.error('JWT verification failed:', err.message);
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid or expired token.'
+      });
+    }
 
-      // Handle both userId and id for backward compatibility
-      const userId = decoded.userId || decoded.id;
+    // Handle both userId and id for backward compatibility
+    const userId = decoded.userId || decoded.id;
 
-      if (!userId) {
-        console.error('No userId found in token:', decoded);
-        return res.status(403).json({
+    if (!userId) {
+      console.error('No userId found in token:', decoded);
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid token format.'
+      });
+    }
+
+    try {
+      // Get user from database
+      const user = await db.get(`
+        SELECT id, email, first_name, last_name, company_name,
+               client_id, api_key, account_status, plan_type,
+               phone, timezone, language, profile_image, banner_image
+        FROM users
+        WHERE id = ?
+      `, [userId]);
+
+      if (!user) {
+        console.error('User not found for id:', userId);
+        return res.status(401).json({
           success: false,
-          error: 'Invalid token format.'
+          error: 'User not found or account is inactive. Please login again.'
         });
       }
 
+      // Get user's organizations (if table exists)
+      let organizations = [];
       try {
-        // Get user from database
-        const user = await db.get(`
-          SELECT id, email, first_name, last_name, company_name,
-                 client_id, api_key, account_status, plan_type,
-                 phone, timezone, language, profile_image, banner_image
-          FROM users
-          WHERE id = ?
+        organizations = await db.all(`
+          SELECT o.id, o.name, om.role
+          FROM organizations o
+          INNER JOIN organization_members om ON o.id = om.organization_id
+          WHERE om.user_id = ? AND om.status = 'active'
+          ORDER BY om.joined_at DESC
         `, [userId]);
-
-        if (!user) {
-          console.error('User not found for id:', userId);
-          return res.status(401).json({
-            success: false,
-            error: 'User not found or account is inactive. Please login again.'
-          });
-        }
-
-        // Get user's organizations (if table exists)
-        let organizations = [];
-        try {
-          organizations = await db.all(`
-            SELECT o.id, o.name, om.role
-            FROM organizations o
-            INNER JOIN organization_members om ON o.id = om.organization_id
-            WHERE om.user_id = ? AND om.status = 'active'
-            ORDER BY om.joined_at DESC
-          `, [userId]);
-        } catch (orgError) {
-          // Organizations table might not exist yet, that's okay
-          console.log('ℹ️ Organizations not available:', orgError.message);
-        }
-
-        console.log('Auth successful for user:', user.email);
-
-        // Get organization ID from header or use first available
-        const requestedOrgId = req.headers['x-organization-id'];
-        console.log('🏢 Requested organization from header:', requestedOrgId);
-        console.log('👥 User has', organizations.length, 'organizations');
-        let currentOrganizationId = null;
-
-        if (requestedOrgId && organizations.some(org => org.id === requestedOrgId)) {
-          // Use the requested organization if user is a member
-          currentOrganizationId = requestedOrgId;
-          console.log('✅ Using requested organization:', currentOrganizationId);
-        } else if (organizations.length > 0) {
-          // Default to first organization
-          currentOrganizationId = organizations[0].id;
-          console.log('⚠️  Using default (first) organization:', currentOrganizationId);
-        } else {
-          console.log('❌ No organizations available for user');
-        }
-
-        // Attach user and organizations to request object
-        req.user = user;
-        req.user.id = user.id; // Ensure id is always available
-        req.user.organizations = organizations;
-        req.user.currentOrganizationId = currentOrganizationId;
-        next();
-      } catch (dbError) {
-        console.error('Database error in auth middleware:', dbError);
-        return res.status(500).json({
-          success: false,
-          error: 'Authentication failed.'
-        });
+      } catch (orgError) {
+        // Organizations table might not exist yet, that's okay
+        console.log('ℹ️ Organizations not available:', orgError.message);
       }
-    });
+
+      console.log('Auth successful for user:', user.email);
+
+      // Get organization ID from header or use first available
+      const requestedOrgId = req.headers['x-organization-id'];
+      console.log('🏢 Requested organization from header:', requestedOrgId);
+      console.log('👥 User has', organizations.length, 'organizations');
+      let currentOrganizationId = null;
+
+      if (requestedOrgId && organizations.some(org => org.id === requestedOrgId)) {
+        // Use the requested organization if user is a member
+        currentOrganizationId = requestedOrgId;
+        console.log('✅ Using requested organization:', currentOrganizationId);
+      } else if (organizations.length > 0) {
+        // Default to first organization
+        currentOrganizationId = organizations[0].id;
+        console.log('⚠️  Using default (first) organization:', currentOrganizationId);
+      } else {
+        console.log('❌ No organizations available for user');
+      }
+
+      // Attach user and organizations to request object
+      req.user = user;
+      req.user.id = user.id; // Ensure id is always available
+      req.user.organizations = organizations;
+      req.user.currentOrganizationId = currentOrganizationId;
+      next();
+    } catch (dbError) {
+      console.error('Database error in auth middleware:', dbError);
+      return res.status(500).json({
+        success: false,
+        error: 'Authentication failed.'
+      });
+    }
   } catch (error) {
     console.error('Auth middleware error:', error);
     res.status(500).json({
