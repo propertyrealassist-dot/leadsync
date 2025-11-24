@@ -420,7 +420,7 @@ function CoPilot() {
 
         <div className="goal-cards" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
           <div
-            className="goal-card"
+            className="goal-card recommended"
             onClick={() => {
               setManualMode(false);
             }}
@@ -428,10 +428,14 @@ function CoPilot() {
             <Icons.Settings size={48} color="#8B5CF6" />
             <h3>Scan Website</h3>
             <p>Automatically extract information from your website</p>
+            <span className="badge-recommended" style={{ position: 'absolute', top: '10px', right: '10px' }}>
+              <Icons.CheckCircle size={16} color="#ffffff" />
+              RECOMMENDED
+            </span>
           </div>
 
           <div
-            className="goal-card recommended"
+            className="goal-card"
             onClick={() => {
               setManualMode(true);
               setStep('manual');
@@ -440,10 +444,6 @@ function CoPilot() {
             <Icons.Target size={48} color="#10b981" />
             <h3>Manual Entry</h3>
             <p>Paste your business details for best results</p>
-            <span className="badge-recommended" style={{ position: 'absolute', top: '10px', right: '10px' }}>
-              <Icons.CheckCircle size={16} color="#ffffff" />
-              RECOMMENDED
-            </span>
           </div>
         </div>
 
