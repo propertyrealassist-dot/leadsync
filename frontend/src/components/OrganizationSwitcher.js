@@ -101,6 +101,31 @@ function OrganizationSwitcher() {
     );
   }
 
+  // If there are organizations but no current one selected, select the first one
+  if (!currentOrganization && organizations.length > 0) {
+    const firstOrg = organizations[0];
+    return (
+      <div className="org-switcher" ref={dropdownRef}>
+        <button
+          className="org-switcher-button"
+          onClick={() => {
+            switchOrganization(firstOrg.id);
+          }}
+        >
+          <div className="org-icon">
+            {firstOrg.logo_url ? (
+              <img src={firstOrg.logo_url} alt={firstOrg.name} />
+            ) : (
+              <span>{firstOrg.name.charAt(0).toUpperCase()}</span>
+            )}
+          </div>
+          <span className="org-name">{firstOrg.name}</span>
+          <span className="org-arrow">▼</span>
+        </button>
+      </div>
+    );
+  }
+
   if (!currentOrganization) return null;
 
   return (
