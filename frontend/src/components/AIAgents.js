@@ -1078,16 +1078,15 @@ function AIAgents() {
       )}
 
       {/* Modal */}
-      {modal.isOpen && (
-        <Modal
-          title={modal.title}
-          message={modal.message}
-          onConfirm={modal.onConfirm}
-          onCancel={modal.onCancel}
-          confirmText={modal.confirmText}
-          cancelText={modal.cancelText}
-        />
-      )}
+      <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        onConfirm={modal.onConfirm}
+        onCancel={modal.onCancel}
+        confirmText={modal.confirmText}
+        cancelText={modal.cancelText}
+      />
 
       {/* Strategy Option Modal */}
       <StrategyOptionModal
