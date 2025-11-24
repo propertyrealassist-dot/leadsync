@@ -3,6 +3,7 @@
 CREATE TABLE IF NOT EXISTS leads (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  organization_id TEXT,
   template_id TEXT,
 
   -- Contact Info
@@ -32,10 +33,12 @@ CREATE TABLE IF NOT EXISTS leads (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
   FOREIGN KEY (template_id) REFERENCES templates(id) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_leads_user_id ON leads(user_id);
+CREATE INDEX IF NOT EXISTS idx_leads_organization_id ON leads(organization_id);
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
 CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
 CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at DESC);
