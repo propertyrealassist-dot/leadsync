@@ -9,8 +9,7 @@ function Home() {
   const [stats, setStats] = useState({
     totalAgents: 0,
     totalConversations: 0,
-    activeLeads: 0,
-    appointmentsBooked: 0
+    activeLeads: 0
   });
   const [recentAgents, setRecentAgents] = useState([]);
 
@@ -54,8 +53,7 @@ function Home() {
       setStats({
         totalAgents,
         totalConversations,
-        activeLeads,
-        appointmentsBooked: 0
+        activeLeads
       });
 
       setRecentAgents(strategiesResponse.data.slice(0, 3));
@@ -65,8 +63,7 @@ function Home() {
       setStats({
         totalAgents: 0,
         totalConversations: 0,
-        activeLeads: 0,
-        appointmentsBooked: 0
+        activeLeads: 0
       });
     }
   };
@@ -349,67 +346,6 @@ function Home() {
               lineHeight: '1'
             }}>
               {stats.activeLeads}
-            </div>
-          </div>
-        </div>
-
-        {/* Appointments Card */}
-        <div style={{
-          background: 'rgba(26, 10, 46, 0.6)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(139, 92, 246, 0.3)',
-          borderRadius: '24px',
-          padding: '40px 36px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '28px',
-          minHeight: '180px',
-          transition: 'all 0.3s ease',
-          cursor: 'pointer'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 12px 32px rgba(16, 185, 129, 0.4)';
-          e.currentTarget.style.borderColor = '#10b981';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
-          e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
-        }}
-        >
-          <div style={{
-            width: '88px',
-            height: '88px',
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            borderRadius: '22px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '44px',
-            boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
-            flexShrink: 0
-          }}>
-            📅
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{
-              fontSize: '14px',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              color: 'rgba(255, 255, 255, 0.6)',
-              marginBottom: '12px',
-              fontWeight: '600'
-            }}>
-              APPOINTMENTS
-            </div>
-            <div style={{
-              fontSize: '52px',
-              fontWeight: '700',
-              color: 'white',
-              lineHeight: '1'
-            }}>
-              {stats.appointmentsBooked}
             </div>
           </div>
         </div>
