@@ -9,8 +9,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Global axios interceptor to add organization header to ALL requests
 axios.interceptors.request.use(
   (config) => {
-    // Add auth token
-    const token = localStorage.getItem('token');
+    // Add auth token (use leadsync_token key)
+    const token = localStorage.getItem('leadsync_token');
     if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }

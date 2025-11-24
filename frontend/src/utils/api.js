@@ -10,8 +10,8 @@ const api = axios.create({
 // Request interceptor to add auth token and organization ID
 api.interceptors.request.use(
   (config) => {
-    // Add auth token
-    const token = localStorage.getItem('token');
+    // Add auth token (use leadsync_token key)
+    const token = localStorage.getItem('leadsync_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
