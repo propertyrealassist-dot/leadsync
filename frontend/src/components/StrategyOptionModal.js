@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import './StrategyOptionModal.css';
 
 function StrategyOptionModal({ isOpen, onClose }) {
@@ -16,7 +17,7 @@ function StrategyOptionModal({ isOpen, onClose }) {
         navigate('/copilot');
         break;
       case 'scratch':
-        navigate('/ai-agents/new');
+        navigate('/strategy/new');
         break;
       case 'import':
         // Trigger import file dialog
@@ -32,9 +33,9 @@ function StrategyOptionModal({ isOpen, onClose }) {
               try {
                 const strategyData = JSON.parse(event.target.result);
                 // Navigate to strategy editor with imported data
-                navigate('/ai-agents/new', { state: { importedStrategy: strategyData } });
+                navigate('/strategy/new', { state: { importedStrategy: strategyData } });
               } catch (error) {
-                alert('Invalid strategy file. Please upload a valid JSON file.');
+                toast.error('Invalid strategy file. Please upload a valid JSON file.');
               }
             };
             reader.readAsText(file);
