@@ -14,7 +14,6 @@ function Sidebar() {
     { path: '/copilot', icon: Icons.CoPilot, label: 'Co-Pilot' },
     { path: '/test-ai', icon: Icons.TestAI, label: 'Test AI' },
     { path: '/leads', icon: Icons.Users, label: 'Leads' },
-    { path: '/calendar', icon: Icons.Calendar, label: 'Calendar' },
     { path: '/analytics', icon: Icons.Analytics, label: 'Analytics' },
     { path: '/integrations', icon: Icons.Integrations, label: 'Integrations' }
   ];
