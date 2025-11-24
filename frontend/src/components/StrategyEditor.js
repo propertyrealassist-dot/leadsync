@@ -393,10 +393,30 @@ function StrategyEditor() {
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+
+    // If the name field is changed, update references in the brief
+    if (name === 'name' && formData.name && formData.brief) {
+      const oldName = formData.name;
+      const newName = value;
+
+      // Replace references to the old name in the brief with the new name
+      const updatedBrief = formData.brief
+        .replace(new RegExp(`\\b${oldName}\\b`, 'g'), newName)
+        .replace(new RegExp(`\\b${oldName.toUpperCase()}\\b`, 'g'), newName.toUpperCase());
+
+      setFormData({
+        ...formData,
+        [name]: value,
+        brief: updatedBrief
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
+
     setHasUnsavedChanges(true);
   };
 
