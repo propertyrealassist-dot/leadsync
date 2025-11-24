@@ -58,10 +58,10 @@ function AIAgents() {
 
       const [agentsRes, conversationsRes] = await Promise.all([
         axios.get(`${API_URL}/api/templates`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API_URL}/api/conversations`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${token}` }
         })
       ]);
 
@@ -137,7 +137,7 @@ function AIAgents() {
       const response = await axios.post(
         `${API_URL}/api/templates/${agent.id}/duplicate`,
         { newName },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
+        { headers: { Authorization: `Bearer ${token}` }}
       );
 
       console.log('✅ Agent duplicated:', response.data);
@@ -168,6 +168,7 @@ function AIAgents() {
 
         setDuplicating(true);
         try {
+          const token = localStorage.getItem('token');
           console.log('📋 Duplicating strategy:', agent.id);
           console.log('📋 New name:', newName);
 
@@ -175,7 +176,7 @@ function AIAgents() {
           const response = await axios.post(
             `${API_URL}/api/templates/${agent.id}/duplicate`,
             { customName: newName.trim() },
-            { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+            { headers: { Authorization: `Bearer ${token}` } }
           );
 
           console.log('✅ Duplicate successful:', response.data);
@@ -292,7 +293,7 @@ function AIAgents() {
       console.log('🗑️ Deleting agent:', agent.id);
 
       await axios.delete(`${API_URL}/api/templates/${agent.id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       console.log('✅ Agent deleted successfully');
@@ -339,7 +340,7 @@ function AIAgents() {
 
           const response = await axios.delete(url, {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           });
@@ -396,6 +397,7 @@ function AIAgents() {
     }
 
     setImporting(true);
+    const token = localStorage.getItem('token');
     try {
       const fileContent = await file.text();
       let importedData;
@@ -445,13 +447,14 @@ function AIAgents() {
             setModal({ ...modal, isOpen: false });
             // Continue with import
             try {
+              const token = localStorage.getItem('token');
               // Check for warnings
               const warnings = transformedData._warnings;
               delete transformedData._warnings; // Remove warnings before sending to API
               delete transformedData.id;
 
               const response = await axios.post(`${API_URL}/api/templates`, transformedData, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                headers: { Authorization: `Bearer ${token}` }
               });
 
               const warningText = warnings && warnings.length > 0
@@ -497,7 +500,7 @@ function AIAgents() {
 
       // Import the strategy
       const response = await axios.post(`${API_URL}/api/templates`, transformedData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
       console.log('✅ Import API response:', response.data);
 
