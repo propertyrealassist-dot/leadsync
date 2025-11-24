@@ -1092,6 +1092,10 @@ function AIAgents() {
       <StrategyOptionModal
         isOpen={showStrategyModal}
         onClose={() => setShowStrategyModal(false)}
+        onImportStart={() => {
+          setShowStrategyModal(false);
+          handleImportClick();
+        }}
       />
     </div>
   );

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './StrategyOptionModal.css';
 
-function StrategyOptionModal({ isOpen, onClose }) {
+function StrategyOptionModal({ isOpen, onClose, onImportStart }) {
   const navigate = useNavigate();
   const [selectedOption, setSelectedOption] = useState('copilot');
 
@@ -20,28 +20,10 @@ function StrategyOptionModal({ isOpen, onClose }) {
         navigate('/strategy/new');
         break;
       case 'import':
-        // Trigger import file dialog
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.json';
-        fileInput.onchange = (e) => {
-          const file = e.target.files[0];
-          if (file) {
-            // Read and import the strategy
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              try {
-                const strategyData = JSON.parse(event.target.result);
-                // Navigate to strategy editor with imported data
-                navigate('/strategy/new', { state: { importedStrategy: strategyData } });
-              } catch (error) {
-                toast.error('Invalid strategy file. Please upload a valid JSON file.');
-              }
-            };
-            reader.readAsText(file);
-          }
-        };
-        fileInput.click();
+        // Trigger the import from AIAgents component
+        if (onImportStart) {
+          onImportStart();
+        }
         break;
       default:
         break;
