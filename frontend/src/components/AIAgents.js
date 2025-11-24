@@ -283,7 +283,7 @@ function AIAgents() {
       title: '🗑️ Delete Strategy',
       message: `Are you sure you want to delete "${agent.name}"? This action cannot be undone.`,
       onConfirm: async () => {
-        setModal({ ...modal, isOpen: false });
+        setModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null });
         try {
           const token = localStorage.getItem('token');
 
@@ -309,7 +309,7 @@ function AIAgents() {
           toast.error('Failed to delete strategy: ' + (error.response?.data?.error || error.message));
         }
       },
-      onCancel: () => setModal({ ...modal, isOpen: false }),
+      onCancel: () => setModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null }),
       confirmText: 'Delete',
       cancelText: 'Cancel'
     });
