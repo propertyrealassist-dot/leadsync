@@ -128,7 +128,7 @@ function AIAgents() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        alert('Not authenticated. Please log in again.');
+        toast.error('Not authenticated. Please log in again.');
         return;
       }
 
@@ -141,14 +141,14 @@ function AIAgents() {
       );
 
       console.log('✅ Agent duplicated:', response.data);
-      alert('Strategy duplicated successfully!');
+      toast.success('Strategy duplicated successfully!');
 
       // Reload agents
       loadData();
 
     } catch (error) {
       console.error('❌ Duplication failed:', error);
-      alert('Failed to duplicate strategy: ' + (error.response?.data?.error || error.message));
+      toast.error('Failed to duplicate strategy: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -278,34 +278,41 @@ function AIAgents() {
     console.log('📝 Agent:', agent);
     console.log('📝 Agent ID:', agent.id);
 
-    if (!window.confirm(`Are you sure you want to delete "${agent.name}"?`)) {
-      return;
-    }
+    setModal({
+      isOpen: true,
+      title: '🗑️ Delete Strategy',
+      message: `Are you sure you want to delete "${agent.name}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        setModal({ ...modal, isOpen: false });
+        try {
+          const token = localStorage.getItem('token');
 
-    try {
-      const token = localStorage.getItem('token');
+          if (!token) {
+            toast.error('Not authenticated. Please log in again.');
+            return;
+          }
 
-      if (!token) {
-        alert('Not authenticated. Please log in again.');
-        return;
-      }
+          console.log('🗑️ Deleting agent:', agent.id);
 
-      console.log('🗑️ Deleting agent:', agent.id);
+          await axios.delete(`${API_URL}/api/templates/${agent.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
 
-      await axios.delete(`${API_URL}/api/templates/${agent.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+          console.log('✅ Agent deleted successfully');
+          toast.success('Strategy deleted successfully!');
 
-      console.log('✅ Agent deleted successfully');
-      alert('Strategy deleted successfully!');
+          // Reload agents
+          loadData();
 
-      // Reload agents
-      loadData();
-
-    } catch (error) {
-      console.error('❌ Delete failed:', error);
-      alert('Failed to delete strategy: ' + (error.response?.data?.error || error.message));
-    }
+        } catch (error) {
+          console.error('❌ Delete failed:', error);
+          toast.error('Failed to delete strategy: ' + (error.response?.data?.error || error.message));
+        }
+      },
+      onCancel: () => setModal({ ...modal, isOpen: false }),
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
   };
 
   const handleDeleteAgentOld = async (agent) => {
