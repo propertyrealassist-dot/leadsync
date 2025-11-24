@@ -2,7 +2,7 @@ services:
   - type: web
     name: leadsync-backend
     env: node
-    buildCommand: cd backend && npm install && node src/scripts/add-profile-columns.js && node src/scripts/assign-data-to-primary-org.js
+    buildCommand: cd backend && npm install && node src/scripts/add-profile-columns.js && node src/scripts/assign-data-to-primary-org.js && node add-organization-to-leads.js
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
