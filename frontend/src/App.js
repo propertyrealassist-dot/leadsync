@@ -24,7 +24,6 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import TestAI from './pages/TestAI';
-import Snapshots from './pages/Snapshots';
 import Calendar from './pages/Calendar';
 import Leads from './pages/Leads';
 import Header from './components/Header';
@@ -131,7 +130,6 @@ function AppContent() {
           <Route path="/copilot" element={<CoPilot />} />
           <Route path="/test" element={<ConversationTest />} />
           <Route path="/test-ai" element={<TestAI />} />
-          <Route path="/snapshots" element={<Snapshots />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/leads" element={<Leads />} />
           <Route path="/analytics" element={<Analytics />} />

@@ -13,7 +13,6 @@ function Sidebar() {
     { path: '/strategies', icon: Icons.Target, label: 'Strategies' },
     { path: '/copilot', icon: Icons.CoPilot, label: 'Co-Pilot' },
     { path: '/test-ai', icon: Icons.TestAI, label: 'Test AI' },
-    { path: '/snapshots', icon: Icons.Camera, label: 'Snapshots' },
     { path: '/leads', icon: Icons.Users, label: 'Leads' },
     { path: '/calendar', icon: Icons.Calendar, label: 'Calendar' },
     { path: '/analytics', icon: Icons.Analytics, label: 'Analytics' },

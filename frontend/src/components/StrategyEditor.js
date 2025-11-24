@@ -256,51 +256,6 @@ function StrategyEditor() {
     setOnSaveCallback(() => handleSave);
   }, [setOnSaveCallback, handleSave]);
 
-  // Save as Snapshot function
-  const saveAsSnapshot = async () => {
-    const snapshotName = prompt('Enter a name for this snapshot:', formData.name + ' Snapshot');
-    if (!snapshotName) return;
-
-    const description = prompt('Enter a description (optional):');
-
-    try {
-      const token = localStorage.getItem('token');
-
-      // Prepare the complete template data
-      const templateData = {
-        name: formData.name,
-        description: formData.brief,
-        tag: formData.tag,
-        conversationSteps: [],
-        intentRecognition: {},
-        bookingWorkflow: {},
-        responseStyle: {
-          tone: formData.tone,
-          objective: formData.objective,
-          companyInformation: formData.companyInformation,
-          botTemperature: formData.botTemperature
-        },
-        availabilitySettings: {}
-      };
-
-      await axios.post(
-        `${API_URL}/api/snapshots`,
-        {
-          name: snapshotName,
-          description: description || formData.brief || null,
-          template_data: templateData,
-          tags: formData.tag || null
-        },
-        { headers: { Authorization: `Bearer ${token}` }}
-      );
-
-      toast.success('Snapshot saved successfully! You can deploy it from the Snapshots page.');
-    } catch (error) {
-      console.error('Failed to save snapshot:', error);
-      toast.error('Failed to save snapshot. Please try again.');
-    }
-  };
-
   // Show modal when navigation is blocked by context
   useEffect(() => {
     if (showUnsavedModal) {
@@ -553,14 +508,6 @@ function StrategyEditor() {
         </div>
         <div className="editor-actions">
           <button className="btn btn-secondary" onClick={() => handleNavigation('/strategies')}>Cancel</button>
-          <button
-            className="btn btn-secondary"
-            onClick={saveAsSnapshot}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-          >
-            <span>📸</span>
-            Save as Snapshot
-          </button>
           <button
             type="button"
             className="btn btn-primary"
