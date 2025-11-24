@@ -395,20 +395,34 @@ function StrategyEditor() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // If the name field is changed, update references in the brief
-    if (name === 'name' && formData.name && formData.brief) {
+    // If the name field is changed, update references in the brief and initial message
+    if (name === 'name' && formData.name) {
       const oldName = formData.name;
       const newName = value;
 
+      // Create regex patterns for replacement
+      const oldNameRegex = new RegExp(`\\b${oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+      const oldNameUpperRegex = new RegExp(`\\b${oldName.toUpperCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+
       // Replace references to the old name in the brief with the new name
       const updatedBrief = formData.brief
-        .replace(new RegExp(`\\b${oldName}\\b`, 'g'), newName)
-        .replace(new RegExp(`\\b${oldName.toUpperCase()}\\b`, 'g'), newName.toUpperCase());
+        ? formData.brief
+            .replace(oldNameRegex, newName)
+            .replace(oldNameUpperRegex, newName.toUpperCase())
+        : formData.brief;
+
+      // Replace references to the old name in the initial message
+      const updatedInitialMessage = formData.initialMessage
+        ? formData.initialMessage
+            .replace(oldNameRegex, newName)
+            .replace(oldNameUpperRegex, newName.toUpperCase())
+        : formData.initialMessage;
 
       setFormData({
         ...formData,
         [name]: value,
-        brief: updatedBrief
+        brief: updatedBrief,
+        initialMessage: updatedInitialMessage
       });
     } else {
       setFormData({
