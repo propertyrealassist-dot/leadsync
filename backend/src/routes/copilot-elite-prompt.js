@@ -53,9 +53,9 @@ PAGES SCANNED: ${websiteData.pagesScanned || 1}
 
   return `You are an ELITE AI strategy architect creating a world-class SMS conversation strategy.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 YOUR MISSION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+========================================
+YOUR MISSION
+========================================
 
 Create a HYPER-DETAILED, ULTRA-SPECIFIC SMS AI agent brief for ${businessName}.
 
@@ -67,17 +67,17 @@ You MUST analyze EVERY SINGLE WORD from the website data below and use it to cre
 
 NO GENERIC CONTENT. NO PLACEHOLDERS. EVERYTHING MUST BE SPECIFIC TO THIS BUSINESS.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 COMPLETE WEBSITE DATA TO ANALYZE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+========================================
+COMPLETE WEBSITE DATA TO ANALYZE
+========================================
 
 ${allContent}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 REQUIRED OUTPUT FORMAT (FOLLOW EXACTLY)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+========================================
+REQUIRED OUTPUT FORMAT (FOLLOW EXACTLY)
+========================================
 
-⚠️ CRITICAL: DO NOT USE [BRACKETS] IN YOUR OUTPUT! ⚠️
+CRITICAL: DO NOT USE [BRACKETS] IN YOUR OUTPUT!
 
 Here is an EXAMPLE of GOOD output (for a logistics company):
 
@@ -131,9 +131,9 @@ KEY REMINDERS
 
 If you take over a conversation, continue as ${agentName} without breaking the flow. Always keep the client's experience seamless and positive.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 JSON OUTPUT STRUCTURE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+========================================
+JSON OUTPUT STRUCTURE
+========================================
 
 Return ONLY this JSON (no markdown, no code blocks):
 
@@ -234,11 +234,11 @@ Return ONLY this JSON (no markdown, no code blocks):
   }
 }
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ CRITICAL REQUIREMENTS - DO NOT IGNORE ⚠️
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+========================================
+CRITICAL REQUIREMENTS - DO NOT IGNORE
+========================================
 
-🚨 ABSOLUTE MANDATORY REQUIREMENTS:
+ABSOLUTE MANDATORY REQUIREMENTS:
 
 1. **MINIMUM 5 QUALIFICATION QUESTIONS** - All ultra-specific based on actual services
    Example: "What's your average shipment volume per week?" NOT "What services interest you?"
@@ -282,9 +282,9 @@ Return ONLY this JSON (no markdown, no code blocks):
    Example: "Just helped a client reduce their shipping costs by 30% - would you like to hear how?"
    NOT generic: "Still interested?"
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔥 ENFORCEMENT RULES 🔥
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+========================================
+ENFORCEMENT RULES
+========================================
 
 - IF YOU LEAVE ANY [BRACKETS] IN THE BRIEF, THIS IS A FAILURE
 - IF YOU USE GENERIC PHRASES, THIS IS A FAILURE
@@ -294,20 +294,20 @@ Return ONLY this JSON (no markdown, no code blocks):
 
 USE EVERY PIECE OF DATA FROM THE WEBSITE. SCAN EVERYTHING.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 FINAL OUTPUT FORMAT REQUIREMENTS 🚨
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+========================================
+FINAL OUTPUT FORMAT REQUIREMENTS
+========================================
 
 CRITICAL: Your response MUST be ONLY the JSON object.
 
-❌ DO NOT include:
+DO NOT include:
 - Markdown code blocks (three backticks)
 - The word "json" before the JSON
 - Any explanatory text before or after the JSON
 - Any backticks or formatting
 - Any comments or notes
 
-✅ DO include:
+DO include:
 - ONLY the raw JSON object
 - Starting with {
 - Ending with }
