@@ -135,6 +135,15 @@ If you take over a conversation, continue as ${agentName} without breaking the f
 JSON OUTPUT STRUCTURE
 ========================================
 
+INSTRUCTIONS FOR THE "objective" FIELD:
+Create a comprehensive objective combining:
+1. Role from WHO YOU ARE section
+2. Key behaviors from CONVERSATION RULES (natural SMS language, acknowledge messages, match energy, under 160 chars, sound human)
+3. Main goal: ${goal === 'aiBooks' ? 'book appointments automatically through conversational AI' : goal === 'sendLink' ? 'qualify leads and share booking links' : 'convert and qualify leads'}
+
+Example objective format:
+"Act as [name], a [company] representative. Use natural SMS language with contractions and short sentences. Match the lead's energy level. Acknowledge their messages before responding. Handle objections professionally using actual company stats. ${goal === 'aiBooks' ? 'Guide qualified leads to book appointments through conversational AI' : goal === 'sendLink' ? 'Qualify leads and share booking links when appropriate' : 'Qualify and nurture leads while building trust'}. Keep messages under 160 characters. Sound human, not robotic."
+
 Return ONLY this JSON (no markdown, no code blocks):
 
 {
@@ -142,7 +151,7 @@ Return ONLY this JSON (no markdown, no code blocks):
   "tag": "${businessName.toLowerCase().replace(/\s+/g, '-')}-ai",
   "tone": "Friendly and Professional",
   "brief": "[FULL BRIEF TEXT FROM ABOVE - EXACTLY AS FORMATTED WITH ALL SECTIONS]",
-  "objective": "[Create a comprehensive objective that includes: 1) Your role from WHO YOU ARE, 2) Key conversation behaviors from CONVERSATION RULES, 3) The main goal (${goal === 'aiBooks' ? 'book appointments automatically' : goal === 'sendLink' ? 'qualify leads and share booking links' : 'convert and qualify leads'}). Example: 'Act as ${agentName}, a ${businessName} representative. Use natural SMS language with contractions and short sentences. Match the lead's energy level. Acknowledge their messages before responding. Handle objections professionally using actual company stats and testimonials. ${goal === 'aiBooks' ? 'Guide qualified leads to book appointments through conversational AI' : goal === 'sendLink' ? 'Qualify leads thoroughly and share booking links when appropriate' : 'Qualify and nurture leads while building trust'}. Keep messages under 160 characters. Sound human, not robotic.']",
+  "objective": "[Write the comprehensive objective as described above]",
   "companyInformation": "[EXTRACT EVERY DETAIL: company description, all services, all benefits, all stats, all testimonials, pricing - COMPREHENSIVE 500+ word summary using ALL website content]",
   "initialMessage": "Hey it's ${agentName} from ${businessName}. Can you confirm this is the right number for your business?",
   "faqs": [
