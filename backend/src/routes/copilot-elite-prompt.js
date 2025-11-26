@@ -301,7 +301,7 @@ USE EVERY PIECE OF DATA FROM THE WEBSITE. SCAN EVERYTHING.
 CRITICAL: Your response MUST be ONLY the JSON object.
 
 ❌ DO NOT include:
-- Markdown code blocks (```)
+- Markdown code blocks (three backticks)
 - The word "json" before the JSON
 - Any explanatory text before or after the JSON
 - Any backticks or formatting
