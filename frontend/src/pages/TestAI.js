@@ -16,6 +16,7 @@ function TestAI() {
   const [isTyping, setIsTyping] = useState(false);
   const [loading, setLoading] = useState(false);
   const [conversationStarted, setConversationStarted] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
 
   useEffect(() => {
     loadStrategies();
@@ -41,6 +42,10 @@ function TestAI() {
 
     setConversationStarted(true);
     setLoading(true);
+
+    // Generate a simple conversation ID
+    const newConversationId = `conv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setConversationId(newConversationId);
 
     try {
       const token = localStorage.getItem('token');
@@ -197,7 +202,15 @@ function TestAI() {
   const resetConversation = () => {
     setConversationStarted(false);
     setMessages([]);
+    setConversationHistory([]);
+    setConversationId(null);
     setUserName('');
+  };
+
+  const endConversation = () => {
+    if (window.confirm('Are you sure you want to end this conversation?')) {
+      resetConversation();
+    }
   };
 
   const testScenarios = [
@@ -310,9 +323,16 @@ function TestAI() {
                       <span className="status-dot"></span>
                       Active
                     </div>
+                    {conversationId && (
+                      <div className="conversation-id">
+                        ID: {conversationId.substring(5, 13)}...
+                      </div>
+                    )}
                   </div>
                 </div>
-                <button className="btn-info">ℹ️</button>
+                <button className="btn-end-conversation" onClick={endConversation}>
+                  End conversation
+                </button>
               </div>
 
               <div className="messages-container">

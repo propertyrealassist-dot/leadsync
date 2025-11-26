@@ -351,6 +351,13 @@
   gap: 6px;
 }
 
+.conversation-id {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Courier New', monospace;
+  margin-top: 2px;
+}
+
 .status-dot {
   width: 8px;
   height: 8px;
@@ -378,6 +385,24 @@
 .btn-info:hover {
   background: rgba(139, 92, 246, 0.1);
   border-color: #8B5CF6;
+}
+
+.btn-end-conversation {
+  padding: 10px 20px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #EF4444;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-end-conversation:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #EF4444;
+  transform: translateY(-1px);
 }
 
 .messages-container {
