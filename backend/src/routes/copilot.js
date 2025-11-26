@@ -729,25 +729,44 @@ router.post('/generate-strategy', async (req, res) => {
 
       strategy = JSON.parse(aiResponse);
 
-      // Validate critical fields
+      // Validate critical fields with detailed logging
+      console.log('📋 Validating strategy fields...');
+      console.log('   - brief length:', strategy.brief?.length || 0);
+      console.log('   - qualificationQuestions:', strategy.qualificationQuestions?.length || 0);
+      console.log('   - faqs:', strategy.faqs?.length || 0);
+      console.log('   - followUps:', strategy.followUps?.length || 0);
+      console.log('   - companyInformation length:', strategy.companyInformation?.length || 0);
+
+      const validationErrors = [];
+
       if (!strategy.brief || strategy.brief.length < 200) {
-        throw new Error('Brief is missing or too short');
+        validationErrors.push(`Brief is too short (${strategy.brief?.length || 0} chars, need 200+)`);
       }
       if (!strategy.qualificationQuestions || strategy.qualificationQuestions.length < 5) {
-        throw new Error('Missing required 5 qualification questions');
+        validationErrors.push(`Need 5 qualification questions (got ${strategy.qualificationQuestions?.length || 0})`);
       }
       if (!strategy.faqs || strategy.faqs.length < 5) {
-        throw new Error('Missing required 5 FAQs');
+        validationErrors.push(`Need 5 FAQs (got ${strategy.faqs?.length || 0})`);
       }
       if (!strategy.followUps || strategy.followUps.length < 5) {
-        throw new Error('Missing required 5 follow-ups');
+        validationErrors.push(`Need 5 follow-ups (got ${strategy.followUps?.length || 0})`);
       }
       if (!strategy.companyInformation || strategy.companyInformation.length < 300) {
-        throw new Error('Company information is missing or too short (needs 500+ words)');
+        validationErrors.push(`Company info too short (${strategy.companyInformation?.length || 0} chars, need 300+)`);
       }
+
+      if (validationErrors.length > 0) {
+        console.error('❌ Validation failed:', validationErrors);
+        throw new Error('Validation failed: ' + validationErrors.join(', '));
+      }
+
+      console.log('✅ All validation checks passed!');
 
       // Post-process to remove any remaining noise
       strategy = cleanStrategy(strategy);
+
+      // Normalize all field types (convert strings to numbers where needed)
+      strategy = normalizeStrategySettings(strategy);
 
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('✅ Professional ELITE AI strategy generated successfully!');
@@ -767,6 +786,7 @@ router.post('/generate-strategy', async (req, res) => {
       console.error(aiResponse.substring(0, 1000));
       console.error('❌ Using professional fallback strategy');
       strategy = createProfessionalFallback(businessName, websiteData, goal);
+      strategy = normalizeStrategySettings(strategy);
     }
 
     res.json({
@@ -785,7 +805,7 @@ router.post('/generate-strategy', async (req, res) => {
 
     res.json({
       success: true,
-      strategy: fallbackStrategy,
+      strategy: normalizeStrategySettings(fallbackStrategy),
       fallback: true
     });
   }
@@ -832,21 +852,68 @@ function cleanStrategy(strategy) {
 // PROFESSIONAL FALLBACK
 // ============================================
 function createProfessionalFallback(businessName, websiteData, goal) {
+  console.log('🚨 Creating fallback strategy for:', businessName);
+
   const description = websiteData.description ||
                      websiteData.tagline ||
                      `${businessName} - Professional services and solutions`;
 
   const stats = websiteData.stats?.slice(0, 3).join('. ') || '';
   const benefits = websiteData.benefits?.slice(0, 2).join(' ') || '';
-  const services = websiteData.services?.slice(0, 5).join(', ') || '';
+  const services = websiteData.services?.slice(0, 5).join(', ') || 'professional services';
+
+  // Build comprehensive company information (minimum 300 chars)
+  let companyInfo = `${businessName} - About Us\n\n${description}\n\n`;
+
+  if (services) {
+    companyInfo += `Our Services:\n${services}\n\n`;
+  }
+
+  if (stats) {
+    companyInfo += `Our Track Record:\n${stats}\n\n`;
+  }
+
+  if (benefits) {
+    companyInfo += `Why Choose Us:\n${benefits}\n\n`;
+  }
+
+  companyInfo += `We are committed to delivering exceptional results for our clients. Our team brings years of experience and expertise to every project. Contact us today to learn how we can help you achieve your goals.`;
+
+  // Build detailed brief (minimum 200 chars)
+  const brief = `${businessName.toUpperCase()} SMS AI AGENT
+
+WHO YOU ARE
+- Name: Alex
+- Role: Senior Account Manager with expertise in understanding client needs and delivering tailored solutions
+- Credibility: Backed by ${businessName}'s proven track record of client success
+- Customer Understanding: I know that choosing the right partner is crucial for your success
+
+CONVERSATION RULES
+- Never use em dashes or excessive punctuation
+- Always acknowledge what the lead just said before moving forward
+- Use natural SMS language: contractions, short sentences, friendly tone
+- Match their energy (formal, casual, excited)
+- Keep every message under 160 characters
+- Sound like a real human texting, not a bot
+
+OBJECTION HANDLING
+- Price: Our pricing is competitive and reflects the exceptional value we deliver. Many clients see ROI within the first few months.
+- Timing: We can work with your timeline. Many clients start seeing results quickly.
+- Trust: ${stats || 'We have a proven track record of delivering results for our clients.'}
+- Need: ${benefits || 'We help businesses achieve their goals through our proven solutions.'}
+
+KEY REMINDERS
+- You're ${businessName}'s top performer who genuinely cares about client success
+- Build trust through expertise, not pushy sales tactics
+- Every message should feel like a helpful friend who wants to help`;
 
   return {
     name: `${businessName} AI Agent`,
     tag: businessName.toLowerCase().replace(/\s+/g, '-') + '-ai',
     tone: 'Professional and Helpful',
-    brief: `**${businessName.toUpperCase()} AI AGENT**\n\nYou are the AI assistant for ${businessName}. Your role is to engage potential clients professionally, understand their needs, and guide them toward the right solution.\n\nBe helpful, knowledgeable, and consultative. Ask thoughtful questions and provide value in every interaction.`,
-    objective: goal === 'book_appointments' ? 'Schedule qualified appointments' : 'Qualify and nurture leads',
-    companyInformation: `${description}\n\n${services ? 'We offer: ' + services + '.\n\n' : ''}${stats ? stats + '\n\n' : ''}${benefits || ''}`.trim(),
+    brief: brief,
+    objective: goal === 'aiBooks' ? 'Book appointments automatically through conversational AI' : goal === 'sendLink' ? 'Qualify leads and share booking links' : 'Qualify and nurture leads',
+    companyInformation: companyInfo,
     initialMessage: `Hey! Thanks for reaching out to ${businessName}. Can you confirm this is {{contact.first_name}}?`,
     faqs: [
       {
@@ -857,6 +924,16 @@ function createProfessionalFallback(businessName, websiteData, goal) {
       {
         question: `Who do you work with?`,
         answer: `We work with ${websiteData.targetAudience || 'businesses'} looking to improve their results through our professional services.`,
+        delay: 1
+      },
+      {
+        question: 'How much does it cost?',
+        answer: 'Our pricing is customized based on your specific needs. Let\'s schedule a quick call to discuss your situation and provide accurate pricing.',
+        delay: 1
+      },
+      {
+        question: 'How long does it take to get started?',
+        answer: 'Most clients can get started within a few days. We make the onboarding process quick and easy.',
         delay: 1
       },
       {
@@ -877,7 +954,17 @@ function createProfessionalFallback(businessName, websiteData, goal) {
         delay: 1
       },
       {
-        text: 'When are you looking to get started?',
+        text: 'Have you worked with a similar service before?',
+        conditions: [],
+        delay: 1
+      },
+      {
+        text: 'What\'s your timeline for getting started?',
+        conditions: [],
+        delay: 1
+      },
+      {
+        text: 'Would you like to schedule a quick call to discuss how we can help?',
         conditions: [],
         delay: 1
       }
@@ -890,6 +977,18 @@ function createProfessionalFallback(businessName, websiteData, goal) {
       {
         message: `I'd love to help you achieve your goals. Would you like to schedule a quick call to discuss how ${businessName} can help?`,
         delay: 1440
+      },
+      {
+        message: `Quick reminder - we have availability this week if you'd like to chat about your ${websiteData.targetAudience || 'business'} needs.`,
+        delay: 2880
+      },
+      {
+        message: `${stats || 'Many of our clients have seen great results.'} Would you like to learn more?`,
+        delay: 4320
+      },
+      {
+        message: `Last check-in! I'm here if you have any questions about ${businessName}. No pressure - just want to make sure you have what you need.`,
+        delay: 5760
       }
     ],
     customActions: [],
@@ -899,11 +998,53 @@ function createProfessionalFallback(businessName, websiteData, goal) {
       bookingReadiness: 3,
       messageDelayInitial: 30,
       messageDelayStandard: 5,
-      cta: `I'd love to help you get started! Here's our booking link:`,
+      cta: goal === 'aiBooks' ? 'Let me get you scheduled. What time works best for you?' : 'Here\'s our booking link to schedule a time:',
       turnOffAiAfterCta: false,
-      turnOffFollowUps: false
+      turnOffFollowUps: goal === 'sendLink'
     }
   };
+}
+
+// Ensure strategy settings are correct types before returning
+function normalizeStrategySettings(strategy) {
+  if (strategy.settings) {
+    strategy.settings = {
+      botTemperature: parseFloat(strategy.settings.botTemperature || 0.4),
+      resiliancy: parseInt(strategy.settings.resiliancy || 3),
+      bookingReadiness: parseInt(strategy.settings.bookingReadiness || 3),
+      messageDelayInitial: parseInt(strategy.settings.messageDelayInitial || 30),
+      messageDelayStandard: parseInt(strategy.settings.messageDelayStandard || 5),
+      cta: strategy.settings.cta || 'Let me get you scheduled. What time works best for you?',
+      turnOffAiAfterCta: Boolean(strategy.settings.turnOffAiAfterCta),
+      turnOffFollowUps: Boolean(strategy.settings.turnOffFollowUps)
+    };
+  }
+
+  // Ensure FAQs have correct delay type
+  if (strategy.faqs) {
+    strategy.faqs = strategy.faqs.map(faq => ({
+      ...faq,
+      delay: parseInt(faq.delay || 1)
+    }));
+  }
+
+  // Ensure qualification questions have correct delay type
+  if (strategy.qualificationQuestions) {
+    strategy.qualificationQuestions = strategy.qualificationQuestions.map(q => ({
+      ...q,
+      delay: parseInt(q.delay || 1)
+    }));
+  }
+
+  // Ensure follow-ups have correct delay type
+  if (strategy.followUps) {
+    strategy.followUps = strategy.followUps.map(f => ({
+      ...f,
+      delay: parseInt(f.delay || 180)
+    }));
+  }
+
+  return strategy;
 }
 
 module.exports = router;

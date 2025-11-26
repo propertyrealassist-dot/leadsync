@@ -88,13 +88,6 @@ function CoPilot() {
 
       const aiStrategy = aiStrategyResponse.data.strategy;
 
-      // Check if we actually got AI data
-      if (!aiStrategy || !aiStrategy.brief || !aiStrategy.qualificationQuestions || !aiStrategy.faqs) {
-        console.error('❌ AI STRATEGY MISSING KEY FIELDS!');
-        console.error('Strategy object:', aiStrategy);
-        alert('AI strategy generation incomplete. Using fallback data. Please try again.');
-      }
-
       console.log('📋 AI Strategy received from backend:', {
         name: aiStrategy?.name || 'MISSING',
         brief: aiStrategy?.brief ? aiStrategy.brief.substring(0, 200) + '...' : 'MISSING',
@@ -103,8 +96,25 @@ function CoPilot() {
         faqs: aiStrategy?.faqs?.length || 0,
         followUps: aiStrategy?.followUps?.length || 0,
         companyInformation: aiStrategy?.companyInformation ? aiStrategy.companyInformation.substring(0, 200) + '...' : 'MISSING',
-        companyInfoLength: aiStrategy?.companyInformation?.length || 0
+        companyInfoLength: aiStrategy?.companyInformation?.length || 0,
+        wasFallback: aiStrategyResponse.data.fallback || false
       });
+
+      // Check if we actually got AI data
+      if (!aiStrategy || !aiStrategy.brief || !aiStrategy.qualificationQuestions || !aiStrategy.faqs) {
+        console.error('❌ AI STRATEGY MISSING KEY FIELDS!');
+        console.error('Strategy object:', aiStrategy);
+
+        // Don't show alert if backend already used fallback
+        if (!aiStrategyResponse.data.fallback) {
+          console.warn('⚠️ Incomplete strategy received, but continuing with what we have');
+        }
+      }
+
+      // Validate we have minimum required data
+      if (!aiStrategy) {
+        throw new Error('No strategy data received from backend');
+      }
 
       // Step 2: Create the template with AI-generated content (USE AI DATA, NOT HARDCODED!)
       const strategyData = {
@@ -121,16 +131,16 @@ function CoPilot() {
         faqs: aiStrategy.faqs || generateFAQs(), // USE AI FAQs!
         qualificationQuestions: aiStrategy.qualificationQuestions || generateQuestions(), // USE AI QUESTIONS!
         followUps: aiStrategy.followUps || generateFollowUps(), // USE AI FOLLOW-UPS!
-        // Settings from AI
-        settings: aiStrategy.settings || {
-          botTemperature: 0.4,
-          resiliancy: 3,
-          bookingReadiness: 3,
-          messageDelayInitial: 30,
-          messageDelayStandard: 5,
+        // Settings from AI (ensure numbers are numbers, not strings)
+        settings: {
+          botTemperature: parseFloat(aiStrategy.settings?.botTemperature || 0.4),
+          resiliancy: parseInt(aiStrategy.settings?.resiliancy || 3),
+          bookingReadiness: parseInt(aiStrategy.settings?.bookingReadiness || 3),
+          messageDelayInitial: parseInt(aiStrategy.settings?.messageDelayInitial || 30),
+          messageDelayStandard: parseInt(aiStrategy.settings?.messageDelayStandard || 5),
           cta: aiStrategy.settings?.cta || 'Let me get you scheduled. What time works best for you?',
-          turnOffAiAfterCta: false,
-          turnOffFollowUps: data.goal === 'sendLink'
+          turnOffAiAfterCta: aiStrategy.settings?.turnOffAiAfterCta ?? (data.postBooking === 'turnOffAI'),
+          turnOffFollowUps: aiStrategy.settings?.turnOffFollowUps ?? (data.postBooking === 'turnOffFollowUps' || data.goal === 'sendLink')
         }
       };
 
