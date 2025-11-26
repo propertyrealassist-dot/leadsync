@@ -1,16 +1,12 @@
 /* ==================== CONVERSATION TEST - FULL PAGE FIT ==================== */
 
 .conversation-test-page {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: var(--spacing-md);
-  z-index: 2;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  margin: calc(var(--spacing-2xl) * -1);
+  padding: var(--spacing-lg);
 }
 
 /* Header */
