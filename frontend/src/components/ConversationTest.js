@@ -277,28 +277,6 @@ function ConversationTest() {
           </div>
         </div>
       )}
-
-      {/* Test Scenarios Sidebar */}
-      {conversationId && (
-        <div className="test-scenarios">
-          <h3>💡 Test Scenarios</h3>
-          <p>Try these messages to test AI behavior:</p>
-          <div className="scenario-list">
-            <button className="scenario-item" onClick={() => setInputMessage('Yes')}>
-              ✓ "Yes" - Agree
-            </button>
-            <button className="scenario-item" onClick={() => setInputMessage('I want to book')}>
-              📅 "I want to book" - Trigger booking
-            </button>
-            <button className="scenario-item" onClick={() => setInputMessage('How much?')}>
-              💰 "How much?" - Ask pricing
-            </button>
-            <button className="scenario-item" onClick={() => setInputMessage('Not interested')}>
-              ✕ "Not interested" - Decline
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
