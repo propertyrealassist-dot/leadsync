@@ -116,6 +116,18 @@ class ClaudeAIService {
       prompt += `CALL TO ACTION: ${this.template.cta}\n\n`;
     }
 
+    // Include follow-ups for context (they're scheduled separately, but AI should know they exist)
+    if (this.template.followUps && this.template.followUps.length > 0) {
+      prompt += `FOLLOW-UP MESSAGES (these will be sent automatically if the lead doesn't respond):\n`;
+      this.template.followUps.forEach((followUp, idx) => {
+        const delayText = followUp.delay >= 1440 ? `${Math.round(followUp.delay / 1440)} day(s)` :
+                         followUp.delay >= 60 ? `${Math.round(followUp.delay / 60)} hour(s)` :
+                         `${followUp.delay} min(s)`;
+        prompt += `${idx + 1}. (After ${delayText}): ${followUp.body}\n`;
+      });
+      prompt += `\n`;
+    }
+
     prompt += `INTERACTION GUIDELINES:\n`;
     prompt += `- Keep messages concise - aim for under 160 characters when possible\n`;
     prompt += `- Be friendly and professional\n`;
