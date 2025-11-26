@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Icons from './Icons';
+import './ConversationTest.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -250,22 +251,27 @@ function ConversationTest() {
           </div>
 
           {/* Input Area */}
-          <div className="message-input-area">
-            <form onSubmit={sendMessage} className="message-input-form">
-              <input
-                type="text"
+          <div className="input-area">
+            <form onSubmit={sendMessage} className="input-form">
+              <textarea
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Type your message..."
                 disabled={loading}
                 className="message-input"
+                rows="1"
+                onInput={(e) => {
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
               />
-              <button 
-                type="submit" 
-                className="btn-send"
+              <button
+                type="submit"
+                className="send-button"
                 disabled={loading || !inputMessage.trim()}
               >
-                <span className="send-icon">➤</span>
+                <Icons.Send size={20} color="#fff" />
+                Send
               </button>
             </form>
           </div>
