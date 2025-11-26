@@ -330,9 +330,14 @@ function TestAI() {
                     )}
                   </div>
                 </div>
-                <button className="btn-end-conversation" onClick={endConversation}>
-                  End conversation
-                </button>
+                <div className="conversation-controls">
+                  <button className="btn-restart" onClick={resetConversation}>
+                    🔄 Restart
+                  </button>
+                  <button className="btn-end-conversation" onClick={endConversation}>
+                    End conversation
+                  </button>
+                </div>
               </div>
 
               <div className="messages-container">
