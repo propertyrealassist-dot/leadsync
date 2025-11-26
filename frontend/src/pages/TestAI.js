@@ -228,15 +228,14 @@ function TestAI() {
       <div className="test-ai-header">
         <div className="header-content">
           <div className="header-icon">⭐</div>
-          <div className="header-text">
-            <h1>Test Your AI Agent</h1>
-            <p>Test conversations in real-time with your AI agent</p>
-          </div>
+          <h1>Test AI Agent</h1>
         </div>
-        <button className="btn-reset" onClick={resetConversation}>
-          <span>🔄</span>
-          Reset Test
-        </button>
+        {conversationStarted && (
+          <button className="btn-reset" onClick={resetConversation}>
+            <span>🔄</span>
+            Reset Test
+          </button>
+        )}
       </div>
 
       <div className="test-ai-content">
