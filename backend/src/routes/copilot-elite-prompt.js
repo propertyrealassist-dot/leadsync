@@ -142,7 +142,7 @@ Return ONLY this JSON (no markdown, no code blocks):
   "tag": "${businessName.toLowerCase().replace(/\s+/g, '-')}-ai",
   "tone": "Friendly and Professional",
   "brief": "[FULL BRIEF TEXT FROM ABOVE - EXACTLY AS FORMATTED WITH ALL SECTIONS]",
-  "objective": "${goal === 'aiBooks' ? 'Book appointments automatically through conversational AI' : goal === 'sendLink' ? 'Qualify leads and share booking links' : 'Convert and qualify leads'}",
+  "objective": "[Create a comprehensive objective that includes: 1) Your role from WHO YOU ARE, 2) Key conversation behaviors from CONVERSATION RULES, 3) The main goal (${goal === 'aiBooks' ? 'book appointments automatically' : goal === 'sendLink' ? 'qualify leads and share booking links' : 'convert and qualify leads'}). Example: 'Act as ${agentName}, a ${businessName} representative. Use natural SMS language with contractions and short sentences. Match the lead's energy level. Acknowledge their messages before responding. Handle objections professionally using actual company stats and testimonials. ${goal === 'aiBooks' ? 'Guide qualified leads to book appointments through conversational AI' : goal === 'sendLink' ? 'Qualify leads thoroughly and share booking links when appropriate' : 'Qualify and nurture leads while building trust'}. Keep messages under 160 characters. Sound human, not robotic.']",
   "companyInformation": "[EXTRACT EVERY DETAIL: company description, all services, all benefits, all stats, all testimonials, pricing - COMPREHENSIVE 500+ word summary using ALL website content]",
   "initialMessage": "Hey it's ${agentName} from ${businessName}. Can you confirm this is the right number for your business?",
   "faqs": [
@@ -240,26 +240,32 @@ CRITICAL REQUIREMENTS - DO NOT IGNORE
 
 ABSOLUTE MANDATORY REQUIREMENTS:
 
-1. **MINIMUM 5 QUALIFICATION QUESTIONS** - All ultra-specific based on actual services
+1. **COMPREHENSIVE OBJECTIVE** - Must include:
+   - Your specific role from WHO YOU ARE section
+   - Key conversation rules (natural SMS language, acknowledge messages, match energy, stay under 160 chars)
+   - The main goal (book appointments / qualify & share links / qualify leads)
+   - Make it sound like instructions for a real person, not a robot
+
+2. **MINIMUM 5 QUALIFICATION QUESTIONS** - All ultra-specific based on actual services
    Example: "What's your average shipment volume per week?" NOT "What services interest you?"
 
-2. **EXACTLY 5 FOLLOW-UPS** with these EXACT delays:
+3. **EXACTLY 5 FOLLOW-UPS** with these EXACT delays:
    - delay: 180 (3 hours)
    - delay: 1440 (1 day)
    - delay: 2880 (2 days)
    - delay: 4320 (3 days)
    - delay: 5760 (4 days)
 
-3. **SCAN EVERY WORD** - Use ALL paragraphs, headings, stats, testimonials from website data
+4. **SCAN EVERY WORD** - Use ALL paragraphs, headings, stats, testimonials from website data
 
-4. **ZERO PLACEHOLDERS ALLOWED** - Replace EVERY [bracket] with actual content:
+5. **ZERO PLACEHOLDERS ALLOWED** - Replace EVERY [bracket] with actual content:
    ❌ WRONG: "Role: [Specific role based on company]"
    ✅ CORRECT: "Role: Senior Logistics Coordinator with 15+ years expertise"
 
    ❌ WRONG: "Price: [Create specific response using pricing]"
    ✅ CORRECT: "Price: Our rates start at $X per shipment, with volume discounts available"
 
-5. **COMPREHENSIVE companyInformation** - MINIMUM 500 words including:
+6. **COMPREHENSIVE companyInformation** - MINIMUM 500 words including:
    - Full company description
    - ALL services listed
    - ALL benefits mentioned
@@ -267,18 +273,18 @@ ABSOLUTE MANDATORY REQUIREMENTS:
    - ALL testimonials word-for-word
    - Pricing information (even if "custom pricing")
 
-6. **ULTRA-SPECIFIC brief** - All 8 sections MUST have real data:
+7. **ULTRA-SPECIFIC brief** - All 8 sections MUST have real data:
    - WHO YOU ARE: Real role, real stats, real pain points from website
    - OBJECTION HANDLING: Actual prices, actual testimonials, actual value props
    - QUALIFICATION STRATEGY: Specific green/red flags for THIS industry
    - PSYCHOLOGICAL TRIGGERS: Actual client names, actual numbers, actual proof
    - LANGUAGE CALIBRATION: Actual power words FROM THEIR WEBSITE
 
-7. **REAL qualification questions** based on actual services:
+8. **REAL qualification questions** based on actual services:
    Example for logistics: "What's your typical delivery window requirement - same day, next day, or standard?"
    NOT generic: "When do you need this?"
 
-8. **REAL follow-ups** with actual data:
+9. **REAL follow-ups** with actual data:
    Example: "Just helped a client reduce their shipping costs by 30% - would you like to hear how?"
    NOT generic: "Still interested?"
 
