@@ -1,17 +1,25 @@
 .test-ai-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   padding: 0;
-  min-height: 100vh;
   background: #0a0118;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .test-ai-header {
-  padding: 32px 40px;
+  padding: 20px 40px;
   background: rgba(26, 10, 46, 0.6);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(139, 92, 246, 0.2);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .header-content {
@@ -71,7 +79,9 @@
   grid-template-columns: 1fr 300px;
   gap: 24px;
   padding: 24px 40px;
-  min-height: calc(100vh - 180px);
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .strategy-selector-panel {
@@ -291,7 +301,8 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  height: calc(100vh - 230px);
+  height: 100%;
+  min-height: 0;
 }
 
 .chat-header {
