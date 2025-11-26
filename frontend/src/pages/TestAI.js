@@ -410,28 +410,6 @@ function TestAI() {
                 </div>
               </div>
             </div>
-
-            {/* Test Scenarios Sidebar */}
-            <div className="test-scenarios-sidebar">
-              <div className="sidebar-header">
-                <span className="icon">🧪</span>
-                <h3>Test Scenarios</h3>
-              </div>
-              <p className="sidebar-subtitle">Quick test messages</p>
-
-              <div className="scenario-list">
-                {testScenarios.map((scenario, index) => (
-                  <button
-                    key={index}
-                    className="scenario-item"
-                    onClick={() => setInputMessage(scenario.text)}
-                  >
-                    <span className="scenario-icon">{scenario.icon}</span>
-                    <span className="scenario-text">{scenario.text}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
           </>
         )}
       </div>
