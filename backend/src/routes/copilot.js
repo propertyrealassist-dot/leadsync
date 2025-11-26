@@ -679,7 +679,7 @@ router.post('/generate-strategy', async (req, res) => {
       apiKey: process.env.GROQ_API_KEY
     });
 
-    const systemPrompt = 'You are an ELITE AI strategy architect who creates world-class conversation strategies. You write ultra-detailed briefs with conversation rules, psychological triggers, objection handling, and strategic qualification flows. You use ALL available data to create hyper-specific, industry-tailored strategies. NEVER use generic content or placeholders - every strategy must be completely customized. Return ONLY valid JSON with no markdown code blocks.';
+    const systemPrompt = 'You are an ELITE AI strategy architect who creates world-class conversation strategies. You write ultra-detailed briefs with conversation rules, psychological triggers, objection handling, and strategic qualification flows. You use ALL available data to create hyper-specific, industry-tailored strategies. NEVER use generic content or placeholders - every strategy must be completely customized. CRITICAL: Return ONLY valid JSON with NO markdown code blocks, NO backticks (```), NO explanatory text - JUST the raw JSON object starting with { and ending with }.';
 
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
@@ -698,15 +698,53 @@ router.post('/generate-strategy', async (req, res) => {
     });
 
     let strategy;
-    const aiResponse = response.choices[0].message.content;
+    let aiResponse = response.choices[0].message.content;
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🤖 Groq AI Response received');
     console.log('📏 Response length:', aiResponse.length, 'characters');
+    console.log('📝 First 500 chars of raw response:');
+    console.log(aiResponse.substring(0, 500));
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     try {
+      // CRITICAL: Remove markdown code blocks if AI wrapped the JSON
+      if (aiResponse.includes('```')) {
+        console.log('⚠️ Detected markdown code blocks in AI response, extracting JSON...');
+        // Extract JSON from markdown code blocks
+        const jsonMatch = aiResponse.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch && jsonMatch[1]) {
+          aiResponse = jsonMatch[1].trim();
+          console.log('✅ Extracted JSON from markdown, length:', aiResponse.length);
+        } else {
+          // Try to find JSON by looking for { to }
+          const startIndex = aiResponse.indexOf('{');
+          const lastIndex = aiResponse.lastIndexOf('}');
+          if (startIndex !== -1 && lastIndex !== -1) {
+            aiResponse = aiResponse.substring(startIndex, lastIndex + 1);
+            console.log('✅ Extracted JSON by finding braces, length:', aiResponse.length);
+          }
+        }
+      }
+
       strategy = JSON.parse(aiResponse);
+
+      // Validate critical fields
+      if (!strategy.brief || strategy.brief.length < 200) {
+        throw new Error('Brief is missing or too short');
+      }
+      if (!strategy.qualificationQuestions || strategy.qualificationQuestions.length < 5) {
+        throw new Error('Missing required 5 qualification questions');
+      }
+      if (!strategy.faqs || strategy.faqs.length < 5) {
+        throw new Error('Missing required 5 FAQs');
+      }
+      if (!strategy.followUps || strategy.followUps.length < 5) {
+        throw new Error('Missing required 5 follow-ups');
+      }
+      if (!strategy.companyInformation || strategy.companyInformation.length < 300) {
+        throw new Error('Company information is missing or too short (needs 500+ words)');
+      }
 
       // Post-process to remove any remaining noise
       strategy = cleanStrategy(strategy);
@@ -724,7 +762,10 @@ router.post('/generate-strategy', async (req, res) => {
       console.log(strategy.brief?.substring(0, 300) + '...');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     } catch (parseError) {
-      console.error('❌ JSON parse error, using fallback');
+      console.error('❌ JSON parse error:', parseError.message);
+      console.error('❌ Raw response that failed to parse (first 1000 chars):');
+      console.error(aiResponse.substring(0, 1000));
+      console.error('❌ Using professional fallback strategy');
       strategy = createProfessionalFallback(businessName, websiteData, goal);
     }
 

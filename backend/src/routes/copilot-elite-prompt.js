@@ -325,7 +325,34 @@ Return ONLY this JSON (no markdown, no code blocks):
 
 USE EVERY PIECE OF DATA FROM THE WEBSITE. SCAN EVERYTHING.
 
-Return ONLY valid JSON with no markdown code blocks.`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 FINAL OUTPUT FORMAT REQUIREMENTS 🚨
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CRITICAL: Your response MUST be ONLY the JSON object.
+
+❌ DO NOT include:
+- Markdown code blocks (```)
+- The word "json" before the JSON
+- Any explanatory text before or after the JSON
+- Any backticks or formatting
+- Any comments or notes
+
+✅ DO include:
+- ONLY the raw JSON object
+- Starting with {
+- Ending with }
+- Nothing else
+
+Example of CORRECT output format:
+{
+  "name": "Business Name AI Agent",
+  "tag": "business-ai",
+  ...rest of JSON...
+}
+
+Return your JSON response now (raw JSON only, no markdown):`;
+
 }
 
 module.exports = { generateElitePrompt };

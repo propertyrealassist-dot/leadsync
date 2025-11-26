@@ -86,15 +86,24 @@ function CoPilot() {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('Full Response:', aiStrategyResponse.data);
 
-      const aiStrategy = aiStrategyResponse.data.strategy || {};
+      const aiStrategy = aiStrategyResponse.data.strategy;
+
+      // Check if we actually got AI data
+      if (!aiStrategy || !aiStrategy.brief || !aiStrategy.qualificationQuestions || !aiStrategy.faqs) {
+        console.error('❌ AI STRATEGY MISSING KEY FIELDS!');
+        console.error('Strategy object:', aiStrategy);
+        alert('AI strategy generation incomplete. Using fallback data. Please try again.');
+      }
 
       console.log('📋 AI Strategy received from backend:', {
-        name: aiStrategy.name,
-        brief: aiStrategy.brief?.substring(0, 200) + '...',
-        qualificationQuestions: aiStrategy.qualificationQuestions?.length,
-        faqs: aiStrategy.faqs?.length,
-        followUps: aiStrategy.followUps?.length,
-        companyInformation: aiStrategy.companyInformation?.substring(0, 200) + '...'
+        name: aiStrategy?.name || 'MISSING',
+        brief: aiStrategy?.brief ? aiStrategy.brief.substring(0, 200) + '...' : 'MISSING',
+        briefLength: aiStrategy?.brief?.length || 0,
+        qualificationQuestions: aiStrategy?.qualificationQuestions?.length || 0,
+        faqs: aiStrategy?.faqs?.length || 0,
+        followUps: aiStrategy?.followUps?.length || 0,
+        companyInformation: aiStrategy?.companyInformation ? aiStrategy.companyInformation.substring(0, 200) + '...' : 'MISSING',
+        companyInfoLength: aiStrategy?.companyInformation?.length || 0
       });
 
       // Step 2: Create the template with AI-generated content (USE AI DATA, NOT HARDCODED!)
