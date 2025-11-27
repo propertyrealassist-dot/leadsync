@@ -5,6 +5,21 @@ import './TestAI.css'
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.realassistagents.com'
 
+// Message Templates
+const MESSAGE_TEMPLATES = [
+  { id: 1, label: 'Interested', text: "I'm interested in learning more about your services" },
+  { id: 2, label: 'Pricing Question', text: "Can you tell me more about your pricing?" },
+  { id: 3, label: 'Schedule Call', text: "I'd like to schedule a call to discuss this further" },
+  { id: 4, label: 'Not Interested', text: "Thanks, but I'm not interested right now" },
+  { id: 5, label: 'Need More Info', text: "Can you provide more information about this?" },
+]
+
+// Common Emojis
+const EMOJI_LIST = [
+  '😊', '👍', '❤️', '😂', '🎉', '🔥', '✨', '💯', '🙌', '👏',
+  '😍', '🤔', '😎', '🚀', '💪', '🎯', '✅', '❌', '⭐', '💡'
+]
+
 function TestAI() {
   const navigate = useNavigate()
   const messagesEndRef = useRef(null)
@@ -17,11 +32,29 @@ function TestAI() {
   const [isLoading, setIsLoading] = useState(false)
   const [conversationId, setConversationId] = useState(null)
 
+  // Modal and toolbar states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [conversationToDelete, setConversationToDelete] = useState(null)
+  const [showTemplates, setShowTemplates] = useState(false)
+  const [showEmojis, setShowEmojis] = useState(false)
+  const [aiSuggestions, setAiSuggestions] = useState([])
+  const [showAiSuggestions, setShowAiSuggestions] = useState(false)
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+
+  // Load conversations from localStorage on mount
   useEffect(() => {
     loadStrategies()
     loadTestConversations()
   }, [])
 
+  // Save conversations to localStorage whenever they change
+  useEffect(() => {
+    if (conversations.length > 0) {
+      localStorage.setItem('testAI_conversations', JSON.stringify(conversations))
+    }
+  }, [conversations])
+
+  // Load messages when conversation selected
   useEffect(() => {
     if (selectedConversation) {
       loadConversationMessages(selectedConversation.id)
@@ -48,26 +81,19 @@ function TestAI() {
   }
 
   const loadTestConversations = () => {
-    // Mock test conversations
-    const mockConversations = [
-      {
-        id: 'test-1',
-        lead_name: 'Test Lead #1',
-        last_message_at: new Date().toISOString(),
-        last_message_preview: 'Hey, I\'m interested in your services...',
-        unread_count: 0,
-        is_active: true
-      },
-      {
-        id: 'test-2',
-        lead_name: 'Test Lead #2',
-        last_message_at: new Date(Date.now() - 3600000).toISOString(),
-        last_message_preview: 'Can you tell me more about pricing?',
-        unread_count: 0,
-        is_active: true
+    // Load from localStorage instead of mock data
+    const saved = localStorage.getItem('testAI_conversations')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        setConversations(parsed)
+      } catch (error) {
+        console.error('Failed to parse saved conversations:', error)
+        setConversations([])
       }
-    ]
-    setConversations(mockConversations)
+    } else {
+      setConversations([])
+    }
   }
 
   const loadConversationMessages = (convId) => {
@@ -114,7 +140,8 @@ function TestAI() {
 
       const newConv = {
         id: response.data.conversationId || `test-${Date.now()}`,
-        lead_name: 'New Test Conversation',
+        lead_name: selectedStrategy.name, // Use strategy name
+        strategyId: selectedStrategy.id,
         last_message_at: new Date().toISOString(),
         last_message_preview: response.data.response.substring(0, 50) + '...',
         unread_count: 0,
@@ -218,21 +245,95 @@ function TestAI() {
   }
 
   const endConversation = () => {
-    if (window.confirm('End this test conversation?')) {
+    setConversationToDelete(selectedConversation)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = () => {
+    if (conversationToDelete) {
       const updatedConversations = conversations.filter(
-        c => c.id !== selectedConversation?.id
+        c => c.id !== conversationToDelete.id
       )
       setConversations(updatedConversations)
+
+      // Update localStorage
+      if (updatedConversations.length === 0) {
+        localStorage.removeItem('testAI_conversations')
+      }
+
       setSelectedConversation(null)
       setMessages([])
       setConversationId(null)
+      setShowDeleteModal(false)
+      setConversationToDelete(null)
     }
+  }
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false)
+    setConversationToDelete(null)
   }
 
   const restartConversation = () => {
     setMessages([])
     setConversationId(null)
     startNewConversation()
+  }
+
+  const insertTemplate = (text) => {
+    setNewMessage(text)
+    setShowTemplates(false)
+  }
+
+  const insertEmoji = (emoji) => {
+    setNewMessage(newMessage + emoji)
+    setShowEmojis(false)
+  }
+
+  const getAiSuggestions = async () => {
+    if (messages.length === 0) {
+      alert('Start a conversation first to get AI suggestions')
+      return
+    }
+
+    setLoadingSuggestions(true)
+    setShowAiSuggestions(true)
+
+    try {
+      const token = localStorage.getItem('token')
+
+      // Get conversation context
+      const conversationHistory = messages.slice(-3).map(msg => ({
+        role: msg.direction === 'outbound' ? 'user' : 'assistant',
+        content: msg.body
+      }))
+
+      const response = await axios.post(
+        `${API_URL}/api/test-ai/suggestions`,
+        {
+          conversationHistory: conversationHistory
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+
+      setAiSuggestions(response.data.suggestions || [
+        "That sounds great! Tell me more.",
+        "I'm interested. What's the next step?",
+        "Can we schedule a time to discuss this?"
+      ])
+    } catch (error) {
+      console.error('Failed to get AI suggestions:', error)
+      // Fallback suggestions
+      setAiSuggestions([
+        "That sounds great! Tell me more.",
+        "I'm interested. What's the next step?",
+        "Can we schedule a time to discuss this?"
+      ])
+    } finally {
+      setLoadingSuggestions(false)
+    }
   }
 
   return (
@@ -387,16 +488,112 @@ function TestAI() {
               {/* Input Area */}
               <div className="message-input-area">
                 <div className="input-toolbar">
-                  <button className="toolbar-btn" title="Templates">
+                  <button
+                    className="toolbar-btn"
+                    title="Templates"
+                    onClick={() => {
+                      setShowTemplates(!showTemplates)
+                      setShowEmojis(false)
+                      setShowAiSuggestions(false)
+                    }}
+                  >
                     📄
                   </button>
-                  <button className="toolbar-btn" title="AI Suggestions">
+                  <button
+                    className="toolbar-btn"
+                    title="AI Suggestions"
+                    onClick={() => {
+                      getAiSuggestions()
+                      setShowTemplates(false)
+                      setShowEmojis(false)
+                    }}
+                  >
                     ✨
                   </button>
-                  <button className="toolbar-btn" title="Emoji">
+                  <button
+                    className="toolbar-btn"
+                    title="Emoji"
+                    onClick={() => {
+                      setShowEmojis(!showEmojis)
+                      setShowTemplates(false)
+                      setShowAiSuggestions(false)
+                    }}
+                  >
                     😊
                   </button>
                 </div>
+
+                {/* Templates Popup */}
+                {showTemplates && (
+                  <div className="toolbar-popup">
+                    <div className="popup-header">
+                      <h4>Message Templates</h4>
+                      <button className="close-popup" onClick={() => setShowTemplates(false)}>✕</button>
+                    </div>
+                    <div className="popup-content">
+                      {MESSAGE_TEMPLATES.map(template => (
+                        <button
+                          key={template.id}
+                          className="template-item"
+                          onClick={() => insertTemplate(template.text)}
+                        >
+                          <span className="template-label">{template.label}</span>
+                          <span className="template-text">{template.text}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* AI Suggestions Popup */}
+                {showAiSuggestions && (
+                  <div className="toolbar-popup">
+                    <div className="popup-header">
+                      <h4>AI Suggestions</h4>
+                      <button className="close-popup" onClick={() => setShowAiSuggestions(false)}>✕</button>
+                    </div>
+                    <div className="popup-content">
+                      {loadingSuggestions ? (
+                        <div className="loading-suggestions">Generating suggestions...</div>
+                      ) : (
+                        aiSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            className="template-item"
+                            onClick={() => {
+                              setNewMessage(suggestion)
+                              setShowAiSuggestions(false)
+                            }}
+                          >
+                            <span className="template-text">{suggestion}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Emoji Popup */}
+                {showEmojis && (
+                  <div className="toolbar-popup emoji-popup">
+                    <div className="popup-header">
+                      <h4>Emojis</h4>
+                      <button className="close-popup" onClick={() => setShowEmojis(false)}>✕</button>
+                    </div>
+                    <div className="popup-content emoji-grid">
+                      {EMOJI_LIST.map((emoji, index) => (
+                        <button
+                          key={index}
+                          className="emoji-item"
+                          onClick={() => insertEmoji(emoji)}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="input-container">
                   <textarea
                     className="message-input"
@@ -440,6 +637,32 @@ function TestAI() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={cancelDelete}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>End Conversation</h3>
+              <button className="modal-close" onClick={cancelDelete}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to end this test conversation?</p>
+              <p className="modal-subtitle">
+                This will delete the conversation: <strong>{conversationToDelete?.lead_name}</strong>
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="modal-btn cancel-btn" onClick={cancelDelete}>
+                Cancel
+              </button>
+              <button className="modal-btn delete-btn" onClick={confirmDelete}>
+                End Conversation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
