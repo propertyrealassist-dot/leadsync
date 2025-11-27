@@ -5,7 +5,7 @@ import { useNavigation } from '../context/NavigationContext';
 import { toast } from 'react-toastify';
 import PromptBuilder from './PromptBuilder';
 import Modal from './Modal';
-import WorkflowBuilder from './WorkflowBuilder';
+import WorkflowBuilder, { getDefaultWorkflowTemplates } from './WorkflowBuilder';
 import './StrategyEditor.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -52,7 +52,7 @@ function StrategyEditor() {
     turnOffFollowUps: false,
     ghlContactId: '',
     ghlCalendarId: '',
-    customWorkflow: null
+    savedWorkflows: []
   });
 
   const [qualificationQuestions, setQualificationQuestionsRaw] = useState([]);
@@ -102,6 +102,40 @@ function StrategyEditor() {
   const isNewAgent = !id || id === 'new' || id === 'undefined' || id === undefined;
 
   console.log('🆕 Is New Agent:', isNewAgent);
+
+  // Workflow handlers
+  const handleSaveWorkflow = (workflow) => {
+    const existingIndex = formData.savedWorkflows.findIndex(w => w.id === workflow.id);
+
+    if (existingIndex >= 0) {
+      // Update existing workflow
+      const updatedWorkflows = [...formData.savedWorkflows];
+      updatedWorkflows[existingIndex] = workflow;
+      setFormData({
+        ...formData,
+        savedWorkflows: updatedWorkflows
+      });
+      toast.success('Workflow updated successfully!');
+    } else {
+      // Add new workflow
+      setFormData({
+        ...formData,
+        savedWorkflows: [...formData.savedWorkflows, workflow]
+      });
+      toast.success('Workflow saved successfully!');
+    }
+    setHasUnsavedChanges(true);
+  };
+
+  const handleDeleteWorkflow = (workflowId) => {
+    const updatedWorkflows = formData.savedWorkflows.filter(w => w.id !== workflowId);
+    setFormData({
+      ...formData,
+      savedWorkflows: updatedWorkflows
+    });
+    setHasUnsavedChanges(true);
+    toast.success('Workflow deleted successfully!');
+  };
 
   // Define handleSave with useCallback to capture current state
   const handleSave = useCallback(async () => {
@@ -283,7 +317,12 @@ function StrategyEditor() {
   useEffect(() => {
     // Don't load if creating new strategy or invalid ID
     if (!id || id === 'new' || id === 'undefined' || id === undefined) {
-      console.log('📝 Creating new agent - skipping load');
+      console.log('📝 Creating new agent - initializing with default workflows');
+      // Initialize new strategy with default workflow templates
+      setFormData(prev => ({
+        ...prev,
+        savedWorkflows: getDefaultWorkflowTemplates()
+      }));
       return;
     }
 
@@ -346,7 +385,14 @@ function StrategyEditor() {
 
       // Set main form data
       console.log('🔧 Setting formData...');
-      setFormData(res.data);
+      // Initialize savedWorkflows with defaults if not present
+      const dataWithDefaults = {
+        ...res.data,
+        savedWorkflows: res.data.savedWorkflows && res.data.savedWorkflows.length > 0
+          ? res.data.savedWorkflows
+          : getDefaultWorkflowTemplates()
+      };
+      setFormData(dataWithDefaults);
 
       // Save original data for comparison
       setOriginalFormData(JSON.stringify({
@@ -1069,16 +1115,9 @@ function StrategyEditor() {
         {activeStep === 5 && (
           <div className="step-panel" style={{ padding: 0, height: 'calc(100vh - 220px)' }}>
             <WorkflowBuilder
-              onSave={(workflow) => {
-                console.log('💾 Workflow saved:', workflow);
-                setFormData({
-                  ...formData,
-                  customWorkflow: workflow
-                });
-                setHasUnsavedChanges(true);
-                toast.success('Workflow saved to strategy!');
-              }}
-              initialWorkflow={formData.customWorkflow}
+              savedWorkflows={formData.savedWorkflows || []}
+              onSave={handleSaveWorkflow}
+              onDelete={handleDeleteWorkflow}
             />
           </div>
         )}

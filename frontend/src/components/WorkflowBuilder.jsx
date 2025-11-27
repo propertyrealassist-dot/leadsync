@@ -63,7 +63,215 @@ const nodeTypes = {
   logic: LogicNode,
 }
 
-function WorkflowBuilder({ onSave, initialWorkflow }) {
+// Export default templates so StrategyEditor can use them
+export const getDefaultWorkflowTemplates = () => {
+  return [
+    {
+      id: 'booked-appointment',
+      name: 'BOOKED_APPOINTMENT',
+      description: 'Trigger when you agree and confirm a booking slot with a lead',
+      nodes: [
+        {
+          id: 'trigger-booked-1',
+          type: 'trigger',
+          position: { x: 250, y: 50 },
+          data: {
+            id: 'booked-appointment-trigger',
+            label: 'BOOKED_APPOINTMENT',
+            icon: '📅',
+            type: 'Trigger',
+            description: 'Trigger when you agree and confirm a booking slot with a lead'
+          }
+        },
+        {
+          id: 'action-confirm-1',
+          type: 'action',
+          position: { x: 250, y: 180 },
+          data: {
+            id: 'handle-booking',
+            label: 'Confirm Appointment',
+            icon: '📅',
+            type: 'Universal',
+            description: 'Handles booking when agreed time is provided',
+            ghlIntegration: true
+          }
+        },
+        {
+          id: 'action-followups-1',
+          type: 'action',
+          position: { x: 250, y: 310 },
+          data: {
+            id: 'turn-off-followups',
+            label: 'Turn Follow-ups off',
+            icon: '💤',
+            type: 'Universal',
+            description: 'Keep AI active but disable follow-up messages',
+            ghlIntegration: false
+          }
+        }
+      ],
+      edges: [
+        {
+          id: 'e1-2',
+          source: 'trigger-booked-1',
+          target: 'action-confirm-1',
+          type: 'smoothstep',
+          animated: true,
+          style: { stroke: '#8b5cf6', strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
+        },
+        {
+          id: 'e2-3',
+          source: 'action-confirm-1',
+          target: 'action-followups-1',
+          type: 'smoothstep',
+          animated: true,
+          style: { stroke: '#8b5cf6', strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'appointment-rescheduled',
+      name: 'APPOINTMENT_RESCHEDULED',
+      description: 'Trigger when you confirm a leads appointment has been rescheduled',
+      nodes: [
+        {
+          id: 'trigger-reschedule-1',
+          type: 'trigger',
+          position: { x: 250, y: 50 },
+          data: {
+            id: 'appointment-rescheduled-trigger',
+            label: 'APPOINTMENT_RESCHEDULED',
+            icon: '🔄',
+            type: 'Trigger',
+            description: 'Trigger when you confirm a leads appointment has been rescheduled'
+          }
+        },
+        {
+          id: 'action-confirm-reschedule-1',
+          type: 'action',
+          position: { x: 250, y: 180 },
+          data: {
+            id: 'handle-booking',
+            label: 'Confirm Appointment',
+            icon: '📅',
+            type: 'Universal',
+            description: 'Handles booking when agreed time is provided',
+            ghlIntegration: true
+          }
+        }
+      ],
+      edges: [
+        {
+          id: 'e1-2',
+          source: 'trigger-reschedule-1',
+          target: 'action-confirm-reschedule-1',
+          type: 'smoothstep',
+          animated: true,
+          style: { stroke: '#8b5cf6', strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'lead-complete',
+      name: 'LEAD_COMPLETE',
+      description: 'Trigger when you send the primary call-to-action or achieves the conversation goal',
+      nodes: [
+        {
+          id: 'trigger-complete-1',
+          type: 'trigger',
+          position: { x: 250, y: 50 },
+          data: {
+            id: 'lead-complete-trigger',
+            label: 'LEAD_COMPLETE',
+            icon: '✅',
+            type: 'Trigger',
+            description: 'Trigger when you send the primary call-to-action or achieves the conversation goal'
+          }
+        },
+        {
+          id: 'action-after-cta-1',
+          type: 'action',
+          position: { x: 250, y: 180 },
+          data: {
+            id: 'turn-off-followups',
+            label: 'After CTA',
+            icon: '💤',
+            type: 'Universal',
+            description: 'Keep AI active but disable follow-up messages',
+            ghlIntegration: false
+          }
+        }
+      ],
+      edges: [
+        {
+          id: 'e1-2',
+          source: 'trigger-complete-1',
+          target: 'action-after-cta-1',
+          type: 'smoothstep',
+          animated: true,
+          style: { stroke: '#8b5cf6', strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'lead-lost',
+      name: 'LEAD_LOST',
+      description: 'Trigger when the lead is disqualified, opts out, or requests to stop receiving messages',
+      nodes: [
+        {
+          id: 'trigger-lost-1',
+          type: 'trigger',
+          position: { x: 250, y: 50 },
+          data: {
+            id: 'lead-lost-trigger',
+            label: 'LEAD_LOST',
+            icon: '❌',
+            type: 'Trigger',
+            description: 'Trigger when the lead is disqualified, opts out, or requests to stop receiving messages'
+          }
+        },
+        {
+          id: 'action-turn-off-ai-1',
+          type: 'action',
+          position: { x: 250, y: 180 },
+          data: {
+            id: 'turn-off-ai',
+            label: 'Turn Off the AI',
+            icon: '🤖',
+            type: 'Universal',
+            description: 'Disable AI automation for contact',
+            ghlIntegration: false
+          }
+        }
+      ],
+      edges: [
+        {
+          id: 'e1-2',
+          source: 'trigger-lost-1',
+          target: 'action-turn-off-ai-1',
+          type: 'smoothstep',
+          animated: true,
+          style: { stroke: '#8b5cf6', strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ]
+}
+
+function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
   const reactFlowWrapper = useRef(null)
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
@@ -73,6 +281,7 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
   const [workflowName, setWorkflowName] = useState('New Workflow')
   const [searchQuery, setSearchQuery] = useState('')
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false)
+  const [currentWorkflowId, setCurrentWorkflowId] = useState(null)
 
   // Available Triggers
   const availableTriggers = [
@@ -470,14 +679,7 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
     logic.description.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // Load initial workflow if provided
-  useEffect(() => {
-    if (initialWorkflow) {
-      setNodes(initialWorkflow.nodes || [])
-      setEdges(initialWorkflow.edges || [])
-      setWorkflowName(initialWorkflow.name || 'New Workflow')
-    }
-  }, [initialWorkflow])
+  // No auto-load - users select from saved workflows
 
   const onConnect = useCallback(
     (params) => {
@@ -540,18 +742,39 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
   }
 
   const handleSaveWorkflow = () => {
+    if (!workflowName || workflowName.trim() === '' || workflowName === 'New Workflow') {
+      alert('Please enter a name for your workflow before saving')
+      return
+    }
+
+    if (nodes.length === 0) {
+      alert('Please add at least one node to your workflow before saving')
+      return
+    }
+
     const workflow = {
+      id: currentWorkflowId || `workflow-${Date.now()}`,
       name: workflowName,
       nodes: nodes,
       edges: edges,
-      createdAt: new Date().toISOString(),
+      createdAt: currentWorkflowId ? (savedWorkflows.find(w => w.id === currentWorkflowId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
 
     if (onSave) {
       onSave(workflow)
     }
 
-    console.log('Workflow saved:', workflow)
+    setCurrentWorkflowId(workflow.id)
+    console.log('✅ Workflow saved:', workflow)
+  }
+
+  const handleNewWorkflow = () => {
+    setNodes([])
+    setEdges([])
+    setWorkflowName('New Workflow')
+    setCurrentWorkflowId(null)
+    setShowActionPanel(false)
   }
 
   const handleTestWorkflow = () => {
@@ -565,8 +788,30 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
       setNodes(template.nodes)
       setEdges(template.edges)
       setWorkflowName(template.name)
+      setCurrentWorkflowId(null)
       setShowActionPanel(false)
       console.log('Template loaded:', template.name)
+    }
+  }
+
+  const loadWorkflow = (workflow) => {
+    setNodes(workflow.nodes || [])
+    setEdges(workflow.edges || [])
+    setWorkflowName(workflow.name || 'Unnamed Workflow')
+    setCurrentWorkflowId(workflow.id)
+    setShowActionPanel(false)
+    console.log('Workflow loaded:', workflow.name)
+  }
+
+  const handleDeleteWorkflow = (workflowId) => {
+    if (window.confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
+      if (onDelete) {
+        onDelete(workflowId)
+      }
+      // If deleting current workflow, clear the canvas
+      if (currentWorkflowId === workflowId) {
+        handleNewWorkflow()
+      }
     }
   }
 
@@ -954,6 +1199,9 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
           </span>
         </div>
         <div className="workflow-header-right">
+          <button className="workflow-btn secondary" onClick={handleNewWorkflow}>
+            ➕ New Workflow
+          </button>
           <div className="template-dropdown-container">
             <button
               className="workflow-btn secondary"
@@ -991,6 +1239,38 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
       <div className="workflow-container">
         {/* Sidebar */}
         <div className="workflow-sidebar">
+          {/* Saved Workflows Section */}
+          {savedWorkflows.length > 0 && (
+            <div className="saved-workflows-section">
+              <h3 className="sidebar-title">📁 Saved Workflows</h3>
+              <div className="saved-workflows-list">
+                {savedWorkflows.map((workflow) => (
+                  <div
+                    key={workflow.id}
+                    className={`saved-workflow-item ${currentWorkflowId === workflow.id ? 'active' : ''}`}
+                  >
+                    <div
+                      className="saved-workflow-info"
+                      onClick={() => loadWorkflow(workflow)}
+                    >
+                      <div className="saved-workflow-name">{workflow.name}</div>
+                      <div className="saved-workflow-meta">
+                        {workflow.nodes?.length || 0} nodes
+                      </div>
+                    </div>
+                    <button
+                      className="delete-workflow-btn"
+                      onClick={() => handleDeleteWorkflow(workflow.id)}
+                      title="Delete workflow"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <h3 className="sidebar-title">Add New Task</h3>
 
           {/* Search */}
