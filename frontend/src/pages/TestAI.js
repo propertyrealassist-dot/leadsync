@@ -1,419 +1,440 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import './TestAI.css';
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import './TestAI.css'
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.realassistagents.com'
 
 function TestAI() {
-  const navigate = useNavigate();
-  const [strategies, setStrategies] = useState([]);
-  const [selectedStrategy, setSelectedStrategy] = useState(null);
-  const [userName, setUserName] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [conversationHistory, setConversationHistory] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [conversationStarted, setConversationStarted] = useState(false);
-  const [conversationId, setConversationId] = useState(null);
+  const navigate = useNavigate()
+  const messagesEndRef = useRef(null)
+  const [strategies, setStrategies] = useState([])
+  const [selectedStrategy, setSelectedStrategy] = useState(null)
+  const [conversations, setConversations] = useState([])
+  const [selectedConversation, setSelectedConversation] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [newMessage, setNewMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [conversationId, setConversationId] = useState(null)
 
   useEffect(() => {
-    loadStrategies();
-  }, []);
+    loadStrategies()
+    loadTestConversations()
+  }, [])
+
+  useEffect(() => {
+    if (selectedConversation) {
+      loadConversationMessages(selectedConversation.id)
+    }
+  }, [selectedConversation])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   const loadStrategies = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       const response = await axios.get(`${API_URL}/api/templates`, {
         headers: { Authorization: `Bearer ${token}` }
-      });
-      setStrategies(response.data);
+      })
+      setStrategies(response.data)
       if (response.data.length > 0) {
-        setSelectedStrategy(response.data[0].id);
+        setSelectedStrategy(response.data[0])
       }
     } catch (error) {
-      console.error('Failed to load strategies:', error);
+      console.error('Failed to load strategies:', error)
     }
-  };
+  }
 
-  const startConversation = async () => {
-    if (!selectedStrategy || !userName.trim()) return;
-
-    setConversationStarted(true);
-    setLoading(true);
-
-    // Generate a simple conversation ID
-    const newConversationId = `conv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setConversationId(newConversationId);
-
-    try {
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        throw new Error('Not authenticated - please log in again');
+  const loadTestConversations = () => {
+    // Mock test conversations
+    const mockConversations = [
+      {
+        id: 'test-1',
+        lead_name: 'Test Lead #1',
+        last_message_at: new Date().toISOString(),
+        last_message_preview: 'Hey, I\'m interested in your services...',
+        unread_count: 0,
+        is_active: true
+      },
+      {
+        id: 'test-2',
+        lead_name: 'Test Lead #2',
+        last_message_at: new Date(Date.now() - 3600000).toISOString(),
+        last_message_preview: 'Can you tell me more about pricing?',
+        unread_count: 0,
+        is_active: true
       }
+    ]
+    setConversations(mockConversations)
+  }
 
-      // Get the initial greeting from the AI
+  const loadConversationMessages = (convId) => {
+    // Load messages for selected conversation from state
+    const conv = conversations.find(c => c.id === convId)
+    if (conv && conv.messages) {
+      setMessages(conv.messages)
+      setConversationId(convId)
+    } else {
+      setMessages([])
+      setConversationId(convId)
+    }
+  }
+
+  const startNewConversation = async () => {
+    if (!selectedStrategy) {
+      alert('Please select a strategy first')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const token = localStorage.getItem('token')
       const response = await axios.post(
         `${API_URL}/api/test-ai/conversation`,
         {
-          strategyId: selectedStrategy,
-          userName: userName,
-          message: '__INIT__', // Special message to trigger initial greeting
-          conversationHistory: []
+          strategyId: selectedStrategy.id,
+          leadName: 'Test User',
+          leadEmail: 'test@example.com',
+          leadPhone: '+1234567890'
         },
         {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: { Authorization: `Bearer ${token}` }
         }
-      );
+      )
 
       const initialMessage = {
-        role: 'assistant',
-        content: response.data.response,
-        timestamp: new Date()
-      };
-
-      setMessages([initialMessage]);
-      setConversationHistory([initialMessage]);
-
-    } catch (error) {
-      console.error('❌ Failed to start conversation:', error);
-
-      // Fallback to generic greeting if API fails
-      const fallbackMessage = {
-        role: 'assistant',
-        content: 'Hello! How can I help you today?',
-        timestamp: new Date()
-      };
-
-      setMessages([fallbackMessage]);
-      setConversationHistory([fallbackMessage]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sendMessage = async () => {
-    if (!inputMessage.trim() || loading) return;
-
-    const userMessage = inputMessage.trim();
-
-    // Debug logging
-    console.log('🤖 Sending message to AI...');
-    console.log('Selected Strategy:', selectedStrategy);
-    console.log('Selected Strategy Type:', typeof selectedStrategy);
-
-    // Get the actual strategy ID (handle both string and object cases)
-    const strategyId = typeof selectedStrategy === 'string'
-      ? selectedStrategy
-      : selectedStrategy?.id;
-
-    console.log('Strategy ID to send:', strategyId);
-
-    if (!strategyId) {
-      alert('Please select a strategy first');
-      return;
-    }
-
-    const userMsg = {
-      role: 'user',
-      content: userMessage,
-      timestamp: new Date()
-    };
-
-    const newHistory = [...conversationHistory, userMsg];
-
-    setConversationHistory(newHistory);
-    setMessages(newHistory);
-    setInputMessage('');
-    setLoading(true);
-
-    try {
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        throw new Error('Not authenticated - please log in again');
+        id: Date.now(),
+        body: response.data.response,
+        direction: 'inbound',
+        created_at: new Date().toISOString(),
+        is_ai_generated: true
       }
 
-      console.log('Message:', userMessage);
+      const newConv = {
+        id: response.data.conversationId || `test-${Date.now()}`,
+        lead_name: 'New Test Conversation',
+        last_message_at: new Date().toISOString(),
+        last_message_preview: response.data.response.substring(0, 50) + '...',
+        unread_count: 0,
+        is_active: true,
+        messages: [initialMessage]
+      }
 
+      setConversations([newConv, ...conversations])
+      setSelectedConversation(newConv)
+      setMessages([initialMessage])
+      setConversationId(newConv.id)
+    } catch (error) {
+      console.error('Failed to start conversation:', error)
+      alert('Failed to start conversation. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation || !selectedStrategy) return
+
+    const userMessage = {
+      id: Date.now(),
+      body: newMessage,
+      direction: 'outbound',
+      created_at: new Date().toISOString(),
+      is_ai_generated: false
+    }
+
+    setMessages([...messages, userMessage])
+    setNewMessage('')
+    setIsLoading(true)
+
+    try {
+      const token = localStorage.getItem('token')
       const response = await axios.post(
         `${API_URL}/api/test-ai/conversation`,
         {
-          strategyId: strategyId,
-          userName: userName,
-          message: userMessage,
-          conversationHistory: conversationHistory
+          strategyId: selectedStrategy.id,
+          conversationId: conversationId,
+          message: newMessage,
+          leadName: selectedConversation.lead_name
         },
         {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: { Authorization: `Bearer ${token}` }
         }
-      );
-
-      console.log('✅ AI response received:', response.data);
+      )
 
       const aiMessage = {
-        role: 'assistant',
-        content: response.data.response,
-        timestamp: new Date()
-      };
-
-      const updatedHistory = [...newHistory, aiMessage];
-      setConversationHistory(updatedHistory);
-      setMessages(updatedHistory);
-
-    } catch (error) {
-      console.error('❌ Failed to get AI response:', error);
-
-      let errorMessage = 'Failed to get response. ';
-
-      if (error.response?.status === 403) {
-        errorMessage += 'Authentication failed. Please log in again.';
-        setTimeout(() => navigate('/login'), 2000);
-      } else if (error.response?.status === 404) {
-        errorMessage += 'Strategy not found.';
-      } else if (error.response?.data?.error) {
-        errorMessage += error.response.data.error;
-      } else {
-        errorMessage += error.message;
+        id: Date.now() + 1,
+        body: response.data.response,
+        direction: 'inbound',
+        created_at: new Date().toISOString(),
+        is_ai_generated: true
       }
 
-      const errorMsg = {
-        role: 'assistant',
-        content: `⚠️ ${errorMessage}`,
-        timestamp: new Date()
-      };
+      const updatedMessages = [...messages, userMessage, aiMessage]
+      setMessages(updatedMessages)
 
-      const updatedHistory = [...newHistory, errorMsg];
-      setConversationHistory(updatedHistory);
-      setMessages(updatedHistory);
+      // Update conversation in list
+      const updatedConversations = conversations.map(conv =>
+        conv.id === selectedConversation.id
+          ? {
+              ...conv,
+              last_message_preview: response.data.response.substring(0, 50) + '...',
+              last_message_at: new Date().toISOString(),
+              messages: updatedMessages
+            }
+          : conv
+      )
+      setConversations(updatedConversations)
+    } catch (error) {
+      console.error('Failed to send message:', error)
+      alert('Failed to send message. Please try again.')
     } finally {
-      setLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  const resetConversation = () => {
-    setConversationStarted(false);
-    setMessages([]);
-    setConversationHistory([]);
-    setConversationId(null);
-    setUserName('');
-  };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diff = now - date
+
+    if (diff < 60000) return 'Just now'
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
+    if (diff < 86400000) return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
 
   const endConversation = () => {
-    if (window.confirm('Are you sure you want to end this conversation?')) {
-      resetConversation();
+    if (window.confirm('End this test conversation?')) {
+      const updatedConversations = conversations.filter(
+        c => c.id !== selectedConversation?.id
+      )
+      setConversations(updatedConversations)
+      setSelectedConversation(null)
+      setMessages([])
+      setConversationId(null)
     }
-  };
+  }
 
-  const testScenarios = [
-    { icon: '👋', text: 'Greeting test' },
-    { icon: '📅', text: 'Book appointment' },
-    { icon: '❓', text: 'Ask about pricing' },
-    { icon: '🔄', text: 'Reschedule request' }
-  ];
-
-  const selectedStrategyData = strategies.find(s => s.id === selectedStrategy);
+  const restartConversation = () => {
+    setMessages([])
+    setConversationId(null)
+    startNewConversation()
+  }
 
   return (
-    <div className="test-ai-page">
-      {/* Header */}
+    <div className="test-ai-modern-page">
       <div className="test-ai-header">
-        <div className="header-content">
-          <div className="header-icon">⭐</div>
-          <h1>Test AI Agent</h1>
+        <div className="test-ai-header-left">
+          <h1>🧪 Test AI</h1>
+          <p>Test your AI agents with real-time conversations</p>
         </div>
-        {conversationStarted && (
-          <button className="btn-reset" onClick={resetConversation}>
-            <span>🔄</span>
-            Reset Test
+        <div className="test-ai-header-right">
+          <div className="strategy-selector">
+            <label>Strategy:</label>
+            <select
+              value={selectedStrategy?.id || ''}
+              onChange={(e) => {
+                const strategy = strategies.find(s => s.id === e.target.value)
+                setSelectedStrategy(strategy)
+              }}
+              className="strategy-dropdown"
+            >
+              {strategies.map(strategy => (
+                <option key={strategy.id} value={strategy.id}>
+                  {strategy.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            className="new-conversation-btn"
+            onClick={startNewConversation}
+            disabled={isLoading || !selectedStrategy}
+          >
+            ✨ New Conversation
           </button>
-        )}
+        </div>
       </div>
 
-      <div className="test-ai-content">
-        {!conversationStarted ? (
-          /* Strategy Selector */
-          <div className="strategy-selector-panel">
-            <div className="selector-card">
-              <div className="card-icon">💬</div>
-              <h2>Choose a Strategy to Test</h2>
-              <p>Select an AI agent below and start a test conversation</p>
-
-              <div className="strategy-dropdown">
-                <label>SELECT AI AGENT</label>
-                <select
-                  className="strategy-select"
-                  value={selectedStrategy || ''}
-                  onChange={(e) => {
-                    console.log('🔍 Dropdown changed to:', e.target.value);
-                    setSelectedStrategy(e.target.value);
-                  }}
-                >
-                  {strategies.map(strategy => (
-                    <option key={strategy.id} value={strategy.id}>
-                      {strategy.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {selectedStrategyData && (
-                <div className="strategy-preview">
-                  <h3>{selectedStrategyData.name}</h3>
-                  <p>{selectedStrategyData.description || 'No description available'}</p>
-                  <div className="strategy-stats">
-                    <div className="stat">
-                      <span className="stat-icon">💬</span>
-                      <span className="stat-label">Messages</span>
-                      <span className="stat-value">
-                        {selectedStrategyData.conversationSteps?.length || 0}
-                      </span>
-                    </div>
-                    <div className="stat">
-                      <span className="stat-icon">🎯</span>
-                      <span className="stat-label">Steps</span>
-                      <span className="stat-value">
-                        {selectedStrategyData.conversationSteps?.length || 0}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="name-input-section">
-                <label>YOUR NAME</label>
-                <input
-                  type="text"
-                  placeholder="Enter your name"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && startConversation()}
-                />
-              </div>
-
-              <button
-                className="btn-start"
-                onClick={startConversation}
-                disabled={!selectedStrategy || !userName.trim()}
-              >
-                <span>▶️</span>
-                Start Conversation
-              </button>
-            </div>
+      <div className="test-ai-container">
+        {/* Conversations List */}
+        <div className="conversations-panel">
+          <div className="panel-header">
+            <h3>Test Conversations</h3>
+            <span className="conversation-count">{conversations.length}</span>
           </div>
-        ) : (
-          <>
-            {/* Chat Interface */}
-            <div className="chat-interface">
-              <div className="chat-header">
-                <div className="agent-info">
-                  <div className="agent-avatar">🤖</div>
-                  <div className="agent-details">
-                    <h3>{selectedStrategyData?.name || 'AI Agent'}</h3>
-                    <div className="status">
-                      <span className="status-dot"></span>
-                      Active
+          <div className="conversations-list">
+            {conversations.length === 0 ? (
+              <div className="empty-conversations">
+                <span className="empty-icon">💬</span>
+                <p>No test conversations yet</p>
+                <p className="empty-hint">Click "New Conversation" to start</p>
+              </div>
+            ) : (
+              conversations.map(conv => (
+                <div
+                  key={conv.id}
+                  className={`conversation-item ${selectedConversation?.id === conv.id ? 'active' : ''}`}
+                  onClick={() => setSelectedConversation(conv)}
+                >
+                  <div className="conversation-avatar">
+                    🤖
+                  </div>
+                  <div className="conversation-info">
+                    <div className="conversation-header">
+                      <span className="conversation-name">{conv.lead_name}</span>
+                      <span className="conversation-time">{formatTime(conv.last_message_at)}</span>
                     </div>
-                    {conversationId && (
-                      <div className="conversation-id">
-                        ID: {conversationId.substring(5, 13)}...
-                      </div>
-                    )}
+                    <div className="conversation-preview">
+                      <span className="preview-text">{conv.last_message_preview}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="conversation-controls">
-                  <button className="btn-restart" onClick={resetConversation}>
-                    🔄 Restart
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Messages Panel */}
+        <div className="messages-panel">
+          {selectedConversation ? (
+            <>
+              {/* Chat Header */}
+              <div className="chat-header">
+                <div className="chat-header-info">
+                  <h3>{selectedConversation.lead_name}</h3>
+                  <p>
+                    {conversationId && (
+                      <span className="conversation-id">
+                        ID: {conversationId.substring(0, 8)}...
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div className="chat-header-actions">
+                  <button
+                    className="icon-btn"
+                    onClick={restartConversation}
+                    title="Restart Conversation"
+                    disabled={isLoading}
+                  >
+                    🔄
                   </button>
-                  <button className="btn-end-conversation" onClick={endConversation}>
-                    End conversation
+                  <button
+                    className="icon-btn"
+                    onClick={endConversation}
+                    title="End Conversation"
+                  >
+                    ❌
                   </button>
                 </div>
               </div>
 
+              {/* Messages */}
               <div className="messages-container">
-                <div className="conversation-start">
-                  <div className="start-icon">🚀</div>
-                  <p>Conversation started</p>
-                </div>
-
-                {messages.map((message, index) => (
-                  <div key={index} className={`message ${message.role}`}>
-                    <div className="message-avatar">
-                      {message.role === 'assistant' ? (
-                        <div className="avatar-bot">🤖</div>
-                      ) : (
-                        <div className="avatar-user">👤</div>
-                      )}
-                    </div>
-                    <div className="message-content">
-                      <div className="message-bubble">
-                        {message.content}
-                      </div>
-                      <div className="message-time">
-                        {message.timestamp.toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </div>
-                    </div>
+                {messages.length === 0 ? (
+                  <div className="empty-messages">
+                    <span className="empty-icon">💬</span>
+                    <p>Start the conversation</p>
+                    <p className="empty-hint">Send a message to begin testing</p>
                   </div>
-                ))}
-
-                {isTyping && (
-                  <div className="message assistant">
-                    <div className="message-avatar">
-                      <div className="avatar-bot">🤖</div>
+                ) : (
+                  messages.map(message => (
+                    <div
+                      key={message.id}
+                      className={`message ${message.direction === 'outbound' ? 'outbound' : 'inbound'}`}
+                    >
+                      <div className="message-bubble">
+                        <p className="message-text">{message.body}</p>
+                        <div className="message-meta">
+                          <span className="message-time">{formatTime(message.created_at)}</span>
+                          {message.is_ai_generated && (
+                            <span className="ai-badge" title="AI Generated">✨ AI</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="message-content">
-                      <div className="message-bubble typing">
-                        <div className="typing-dot"></div>
-                        <div className="typing-dot"></div>
-                        <div className="typing-dot"></div>
+                  ))
+                )}
+                {isLoading && (
+                  <div className="message inbound">
+                    <div className="message-bubble typing">
+                      <div className="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
                       </div>
                     </div>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
 
-              <div className="chat-input-area">
+              {/* Input Area */}
+              <div className="message-input-area">
+                <div className="input-toolbar">
+                  <button className="toolbar-btn" title="Templates">
+                    📄
+                  </button>
+                  <button className="toolbar-btn" title="AI Suggestions">
+                    ✨
+                  </button>
+                  <button className="toolbar-btn" title="Emoji">
+                    😊
+                  </button>
+                </div>
                 <div className="input-container">
                   <textarea
                     className="message-input"
                     placeholder="Type your message..."
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
+                        e.preventDefault()
+                        sendMessage()
                       }
                     }}
-                    rows={1}
+                    rows={3}
+                    disabled={isLoading}
                   />
                   <button
-                    className="btn-send"
+                    className="send-btn"
                     onClick={sendMessage}
-                    disabled={!inputMessage.trim()}
+                    disabled={!newMessage.trim() || isLoading}
                   >
-                    ➤
+                    Send →
                   </button>
                 </div>
               </div>
+            </>
+          ) : (
+            <div className="no-conversation-selected">
+              <div className="empty-state">
+                <span className="empty-icon">🤖</span>
+                <h3>Select or start a test conversation</h3>
+                <p>Choose a conversation from the list or create a new one to start testing your AI agent</p>
+                <button
+                  className="primary-btn"
+                  onClick={startNewConversation}
+                  disabled={isLoading || !selectedStrategy}
+                >
+                  ✨ Start New Conversation
+                </button>
+              </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default TestAI;
+export default TestAI
