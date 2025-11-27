@@ -8,23 +8,27 @@ import ReactFlow, {
   Background,
   MiniMap,
   MarkerType,
+  Handle,
+  Position,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import '../styles/WorkflowBuilder.css'
 
-// Custom Node Types
+// Custom Node Types with connection handles
 const TriggerNode = ({ data }) => (
   <div className="custom-node trigger-node">
-    <div className="node-icon">⚡</div>
+    <div className="node-icon">{data.icon || '⚡'}</div>
     <div className="node-content">
       <div className="node-title">{data.label}</div>
       <div className="node-subtitle">Trigger</div>
     </div>
+    <Handle type="source" position={Position.Bottom} />
   </div>
 )
 
 const ActionNode = ({ data }) => (
   <div className="custom-node action-node">
+    <Handle type="target" position={Position.Top} />
     <div className="node-icon">{data.icon}</div>
     <div className="node-content">
       <div className="node-title">{data.label}</div>
@@ -36,16 +40,20 @@ const ActionNode = ({ data }) => (
     {data.ghlIntegration && (
       <div className="ghl-badge">GHL</div>
     )}
+    <Handle type="source" position={Position.Bottom} />
   </div>
 )
 
 const LogicNode = ({ data }) => (
   <div className="custom-node logic-node">
+    <Handle type="target" position={Position.Top} />
     <div className="node-icon">{data.icon}</div>
     <div className="node-content">
       <div className="node-title">{data.label}</div>
       <div className="node-subtitle">Logic</div>
     </div>
+    <Handle type="source" position={Position.Bottom} id="true" style={{ left: '30%' }} />
+    <Handle type="source" position={Position.Bottom} id="false" style={{ left: '70%' }} />
   </div>
 )
 
@@ -64,6 +72,58 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
   const [showActionPanel, setShowActionPanel] = useState(false)
   const [workflowName, setWorkflowName] = useState('New Workflow')
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Available Triggers
+  const availableTriggers = [
+    {
+      id: 'lead-created',
+      label: 'Lead Created',
+      icon: '⚡',
+      type: 'Trigger',
+      nodeType: 'trigger',
+      description: 'When a new lead is added to the system'
+    },
+    {
+      id: 'message-received',
+      label: 'Message Received',
+      icon: '💬',
+      type: 'Trigger',
+      nodeType: 'trigger',
+      description: 'When a contact sends a message'
+    },
+    {
+      id: 'booking-confirmed',
+      label: 'Booking Confirmed',
+      icon: '✅',
+      type: 'Trigger',
+      nodeType: 'trigger',
+      description: 'When a booking is confirmed'
+    },
+    {
+      id: 'tag-added',
+      label: 'Tag Added',
+      icon: '🏷️',
+      type: 'Trigger',
+      nodeType: 'trigger',
+      description: 'When a specific tag is added to contact'
+    },
+    {
+      id: 'form-submitted',
+      label: 'Form Submitted',
+      icon: '📝',
+      type: 'Trigger',
+      nodeType: 'trigger',
+      description: 'When a contact submits a form'
+    },
+    {
+      id: 'keyword-detected',
+      label: 'Keyword Detected',
+      icon: '🔍',
+      type: 'Trigger',
+      nodeType: 'trigger',
+      description: 'When specific keywords are detected in messages'
+    },
+  ]
 
   // Universal Tasks
   const universalTasks = [
@@ -201,6 +261,11 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
   ]
 
   // Filter tasks based on search
+  const filteredTriggers = availableTriggers.filter(trigger =>
+    trigger.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    trigger.description.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   const filteredUniversalTasks = universalTasks.filter(task =>
     task.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
     task.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -216,20 +281,9 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
     logic.description.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // Initialize with trigger node if empty
+  // Load initial workflow if provided
   useEffect(() => {
-    if (nodes.length === 0 && !initialWorkflow) {
-      const triggerNode = {
-        id: 'trigger-1',
-        type: 'trigger',
-        position: { x: 400, y: 100 },
-        data: {
-          label: 'Lead Created',
-          type: 'trigger',
-        },
-      }
-      setNodes([triggerNode])
-    } else if (initialWorkflow) {
+    if (initialWorkflow) {
       setNodes(initialWorkflow.nodes || [])
       setEdges(initialWorkflow.edges || [])
       setWorkflowName(initialWorkflow.name || 'New Workflow')
@@ -327,6 +381,362 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
     setShowActionPanel(true)
   }
 
+  const updateNodeData = (field, value) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === selectedNode.id
+          ? {
+              ...node,
+              data: { ...node.data, [field]: value },
+            }
+          : node
+      )
+    )
+  }
+
+  const renderNodeConfiguration = () => {
+    if (!selectedNode) return null
+
+    const baseId = selectedNode.id.split('-')[0]
+
+    return (
+      <>
+        {/* Common Fields */}
+        <div className="property-group">
+          <label>Node Type</label>
+          <div className="property-value">
+            {selectedNode.data.icon} {selectedNode.data.type}
+          </div>
+        </div>
+        <div className="property-group">
+          <label>Label</label>
+          <input
+            type="text"
+            value={selectedNode.data.label || ''}
+            onChange={(e) => updateNodeData('label', e.target.value)}
+            className="property-input"
+          />
+        </div>
+
+        {/* Trigger-Specific Configuration */}
+        {selectedNode.type === 'trigger' && (
+          <>
+            {baseId === 'keyword' && (
+              <div className="property-group">
+                <label>Keywords (comma-separated)</label>
+                <input
+                  type="text"
+                  value={selectedNode.data.keywords || ''}
+                  onChange={(e) => updateNodeData('keywords', e.target.value)}
+                  className="property-input"
+                  placeholder="e.g., pricing, schedule, demo"
+                />
+              </div>
+            )}
+            {baseId === 'tag' && (
+              <div className="property-group">
+                <label>Tag Name</label>
+                <input
+                  type="text"
+                  value={selectedNode.data.tagName || ''}
+                  onChange={(e) => updateNodeData('tagName', e.target.value)}
+                  className="property-input"
+                  placeholder="Enter tag name"
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Action-Specific Configuration */}
+        {selectedNode.type === 'action' && (
+          <>
+            {selectedNode.data.ghlIntegration && (
+              <div className="ghl-integration-notice">
+                <div className="ghl-integration-notice-icon">🔗</div>
+                <div className="ghl-integration-notice-content">
+                  <div className="ghl-integration-notice-title">GHL Integration</div>
+                  <div className="ghl-integration-notice-text">
+                    This task integrates with GoHighLevel CRM and requires proper API configuration.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Handle Booking */}
+            {baseId === 'handle' && (
+              <>
+                <div className="property-group">
+                  <label>Calendar Provider</label>
+                  <select
+                    value={selectedNode.data.calendarProvider || 'ghl'}
+                    onChange={(e) => updateNodeData('calendarProvider', e.target.value)}
+                    className="property-input"
+                  >
+                    <option value="ghl">GoHighLevel</option>
+                    <option value="google">Google Calendar</option>
+                    <option value="outlook">Outlook</option>
+                  </select>
+                </div>
+                <div className="property-group">
+                  <label>Calendar ID</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.calendarId || ''}
+                    onChange={(e) => updateNodeData('calendarId', e.target.value)}
+                    className="property-input"
+                    placeholder="Enter calendar ID"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Update Custom Field */}
+            {baseId === 'update' && selectedNode.data.id?.includes('custom') && (
+              <>
+                <div className="property-group">
+                  <label>Field Name</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.fieldName || ''}
+                    onChange={(e) => updateNodeData('fieldName', e.target.value)}
+                    className="property-input"
+                    placeholder="Custom field name"
+                  />
+                </div>
+                <div className="property-group">
+                  <label>Field Value</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.fieldValue || ''}
+                    onChange={(e) => updateNodeData('fieldValue', e.target.value)}
+                    className="property-input"
+                    placeholder="Value to set"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Update Standard Field */}
+            {baseId === 'update' && selectedNode.data.id?.includes('standard') && (
+              <>
+                <div className="property-group">
+                  <label>Field Name</label>
+                  <select
+                    value={selectedNode.data.fieldName || ''}
+                    onChange={(e) => updateNodeData('fieldName', e.target.value)}
+                    className="property-input"
+                  >
+                    <option value="">Select field</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                    <option value="firstName">First Name</option>
+                    <option value="lastName">Last Name</option>
+                    <option value="company">Company</option>
+                    <option value="address">Address</option>
+                  </select>
+                </div>
+                <div className="property-group">
+                  <label>Field Value</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.fieldValue || ''}
+                    onChange={(e) => updateNodeData('fieldValue', e.target.value)}
+                    className="property-input"
+                    placeholder="Value to set"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Add Tags */}
+            {baseId === 'add' && selectedNode.data.id?.includes('tags') && (
+              <div className="property-group">
+                <label>Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  value={selectedNode.data.tags || ''}
+                  onChange={(e) => updateNodeData('tags', e.target.value)}
+                  className="property-input"
+                  placeholder="e.g., qualified, interested, hot-lead"
+                />
+              </div>
+            )}
+
+            {/* Ask AI */}
+            {baseId === 'ask' && (
+              <div className="property-group">
+                <label>AI Prompt</label>
+                <textarea
+                  value={selectedNode.data.aiPrompt || ''}
+                  onChange={(e) => updateNodeData('aiPrompt', e.target.value)}
+                  className="property-textarea"
+                  rows={4}
+                  placeholder="Enter the question or task for AI..."
+                />
+              </div>
+            )}
+
+            {/* Generate Summary */}
+            {baseId === 'generate' && (
+              <div className="property-group">
+                <label>Summary Type</label>
+                <select
+                  value={selectedNode.data.summaryType || 'conversation'}
+                  onChange={(e) => updateNodeData('summaryType', e.target.value)}
+                  className="property-input"
+                >
+                  <option value="conversation">Conversation Summary</option>
+                  <option value="lead">Lead Summary</option>
+                  <option value="interaction">Interaction Summary</option>
+                </select>
+              </div>
+            )}
+
+            {/* Update Agent */}
+            {selectedNode.data.id?.includes('agent') && (
+              <div className="property-group">
+                <label>Strategy/Agent</label>
+                <input
+                  type="text"
+                  value={selectedNode.data.strategyId || ''}
+                  onChange={(e) => updateNodeData('strategyId', e.target.value)}
+                  className="property-input"
+                  placeholder="Strategy ID or name"
+                />
+              </div>
+            )}
+
+            {/* Update Calendar */}
+            {selectedNode.data.id?.includes('calendar') && (
+              <>
+                <div className="property-group">
+                  <label>Calendar Provider</label>
+                  <select
+                    value={selectedNode.data.calendarProvider || 'ghl'}
+                    onChange={(e) => updateNodeData('calendarProvider', e.target.value)}
+                    className="property-input"
+                  >
+                    <option value="ghl">GoHighLevel</option>
+                    <option value="google">Google Calendar</option>
+                    <option value="outlook">Outlook</option>
+                  </select>
+                </div>
+                <div className="property-group">
+                  <label>Calendar ID</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.calendarId || ''}
+                    onChange={(e) => updateNodeData('calendarId', e.target.value)}
+                    className="property-input"
+                    placeholder="Enter calendar ID"
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="property-group">
+              <label>Description</label>
+              <textarea
+                value={selectedNode.data.description || ''}
+                onChange={(e) => updateNodeData('description', e.target.value)}
+                className="property-textarea"
+                rows={3}
+                placeholder="Optional notes..."
+              />
+            </div>
+          </>
+        )}
+
+        {/* Logic-Specific Configuration */}
+        {selectedNode.type === 'logic' && (
+          <>
+            {baseId === 'if' && (
+              <>
+                <div className="property-group">
+                  <label>Condition Type</label>
+                  <select
+                    value={selectedNode.data.conditionType || 'contains'}
+                    onChange={(e) => updateNodeData('conditionType', e.target.value)}
+                    className="property-input"
+                  >
+                    <option value="contains">Contains Keyword</option>
+                    <option value="equals">Equals</option>
+                    <option value="greater">Greater Than</option>
+                    <option value="less">Less Than</option>
+                    <option value="hasTag">Has Tag</option>
+                  </select>
+                </div>
+                <div className="property-group">
+                  <label>Condition Value</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.conditionValue || ''}
+                    onChange={(e) => updateNodeData('conditionValue', e.target.value)}
+                    className="property-input"
+                    placeholder="Enter value to check"
+                  />
+                </div>
+              </>
+            )}
+            {baseId === 'delay' && (
+              <>
+                <div className="property-group">
+                  <label>Delay Amount</label>
+                  <input
+                    type="number"
+                    value={selectedNode.data.delayAmount || '1'}
+                    onChange={(e) => updateNodeData('delayAmount', e.target.value)}
+                    className="property-input"
+                    min="1"
+                  />
+                </div>
+                <div className="property-group">
+                  <label>Time Unit</label>
+                  <select
+                    value={selectedNode.data.delayUnit || 'minutes'}
+                    onChange={(e) => updateNodeData('delayUnit', e.target.value)}
+                    className="property-input"
+                  >
+                    <option value="minutes">Minutes</option>
+                    <option value="hours">Hours</option>
+                    <option value="days">Days</option>
+                  </select>
+                </div>
+              </>
+            )}
+            {baseId === 'filter' && (
+              <>
+                <div className="property-group">
+                  <label>Filter Type</label>
+                  <select
+                    value={selectedNode.data.filterType || 'tag'}
+                    onChange={(e) => updateNodeData('filterType', e.target.value)}
+                    className="property-input"
+                  >
+                    <option value="tag">Has Tag</option>
+                    <option value="field">Field Value</option>
+                    <option value="score">Lead Score</option>
+                  </select>
+                </div>
+                <div className="property-group">
+                  <label>Filter Value</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.filterValue || ''}
+                    onChange={(e) => updateNodeData('filterValue', e.target.value)}
+                    className="property-input"
+                    placeholder="Enter filter criteria"
+                  />
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </>
+    )
+  }
+
   return (
     <div className="workflow-builder">
       {/* Header */}
@@ -369,6 +779,27 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
             />
             <span className="search-icon">🔍</span>
           </div>
+
+          {/* Triggers Section */}
+          {filteredTriggers.length > 0 && (
+            <div className="sidebar-section">
+              <h4 className="section-title">⚡ TRIGGERS</h4>
+              {filteredTriggers.map((trigger) => (
+                <div
+                  key={trigger.id}
+                  className="sidebar-item trigger-item"
+                  draggable
+                  onDragStart={(e) => onDragStart(e, trigger)}
+                >
+                  <div className="sidebar-item-icon">{trigger.icon}</div>
+                  <div className="sidebar-item-content">
+                    <div className="sidebar-item-label">{trigger.label}</div>
+                    <div className="sidebar-item-type">{trigger.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Universal Tasks Section */}
           {filteredUniversalTasks.length > 0 && (
@@ -438,7 +869,7 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
           )}
 
           {/* No Results */}
-          {searchQuery && filteredUniversalTasks.length === 0 && filteredGhlTasks.length === 0 && filteredLogic.length === 0 && (
+          {searchQuery && filteredTriggers.length === 0 && filteredUniversalTasks.length === 0 && filteredGhlTasks.length === 0 && filteredLogic.length === 0 && (
             <div className="no-results">
               <span className="no-results-icon">🔍</span>
               <p>No tasks found</p>
@@ -514,70 +945,7 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
               </button>
             </div>
             <div className="properties-content">
-              <div className="property-group">
-                <label>Node Type</label>
-                <div className="property-value">
-                  {selectedNode.data.icon} {selectedNode.data.type}
-                </div>
-              </div>
-              <div className="property-group">
-                <label>Label</label>
-                <input
-                  type="text"
-                  value={selectedNode.data.label}
-                  onChange={(e) => {
-                    setNodes((nds) =>
-                      nds.map((node) =>
-                        node.id === selectedNode.id
-                          ? {
-                              ...node,
-                              data: { ...node.data, label: e.target.value },
-                            }
-                          : node
-                      )
-                    )
-                  }}
-                  className="property-input"
-                />
-              </div>
-              {selectedNode.type === 'action' && (
-                <>
-                  {selectedNode.data.ghlIntegration && (
-                    <div className="ghl-integration-notice">
-                      <div className="ghl-integration-notice-icon">🔗</div>
-                      <div className="ghl-integration-notice-content">
-                        <div className="ghl-integration-notice-title">GHL Integration</div>
-                        <div className="ghl-integration-notice-text">
-                          This task integrates with GoHighLevel CRM and requires proper API configuration.
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div className="property-group">
-                    <label>Description</label>
-                    <textarea
-                      value={selectedNode.data.description || ''}
-                      onChange={(e) => {
-                        setNodes((nds) =>
-                          nds.map((node) =>
-                            node.id === selectedNode.id
-                              ? {
-                                  ...node,
-                                  data: {
-                                    ...node.data,
-                                    description: e.target.value,
-                                  },
-                                }
-                              : node
-                          )
-                        )
-                      }}
-                      className="property-textarea"
-                      rows={3}
-                    />
-                  </div>
-                </>
-              )}
+              {renderNodeConfiguration()}
               <div className="property-actions">
                 <button
                   className="delete-node-btn"
