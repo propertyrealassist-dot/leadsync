@@ -95,9 +95,9 @@ function TestAI() {
         `${API_URL}/api/test-ai/conversation`,
         {
           strategyId: selectedStrategy.id,
-          leadName: 'Test User',
-          leadEmail: 'test@example.com',
-          leadPhone: '+1234567890'
+          userName: 'Test User',
+          message: '__INIT__',
+          conversationHistory: []
         },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -151,13 +151,20 @@ function TestAI() {
 
     try {
       const token = localStorage.getItem('token')
+
+      // Build conversation history from messages
+      const conversationHistory = messages.map(msg => ({
+        role: msg.direction === 'outbound' ? 'user' : 'assistant',
+        content: msg.body
+      }))
+
       const response = await axios.post(
         `${API_URL}/api/test-ai/conversation`,
         {
           strategyId: selectedStrategy.id,
-          conversationId: conversationId,
+          userName: selectedConversation.lead_name,
           message: newMessage,
-          leadName: selectedConversation.lead_name
+          conversationHistory: conversationHistory
         },
         {
           headers: { Authorization: `Bearer ${token}` }
