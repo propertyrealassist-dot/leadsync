@@ -1,243 +1,369 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Icons from './Icons';
-import './ConversationTest.css';
+import { useState, useEffect, useRef } from 'react'
+import axios from 'axios'
+import './ConversationTest.css'
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const API_URL = process.env.REACT_APP_API_URL || 'https://api.realassistagents.com'
 
 function ConversationTest() {
-  const [templates, setTemplates] = useState([]);
-  const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [conversationId, setConversationId] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [contactName, setContactName] = useState('John');
-  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null)
+  const [strategies, setStrategies] = useState([])
+  const [selectedStrategy, setSelectedStrategy] = useState(null)
+  const [conversations, setConversations] = useState([])
+  const [selectedConversation, setSelectedConversation] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [newMessage, setNewMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [conversationId, setConversationId] = useState(null)
 
   useEffect(() => {
-    loadTemplates();
-  }, []);
+    loadStrategies()
+    loadTestConversations()
+  }, [])
 
-  const loadTemplates = async () => {
+  useEffect(() => {
+    if (selectedConversation) {
+      loadConversationMessages(selectedConversation.id)
+    }
+  }, [selectedConversation])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const loadStrategies = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/templates`);
-      setTemplates(res.data);
-      if (res.data.length > 0) {
-        setSelectedTemplate(res.data[0].id);
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`${API_URL}/api/templates`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setStrategies(response.data)
+      if (response.data.length > 0) {
+        setSelectedStrategy(response.data[0])
       }
     } catch (error) {
-      console.error('Error loading templates:', error);
+      console.error('Failed to load strategies:', error)
     }
-  };
+  }
 
-  const startConversation = async () => {
-    if (!selectedTemplate) {
-      alert('Please select a template');
-      return;
+  const loadTestConversations = () => {
+    // Mock test conversations
+    const mockConversations = [
+      {
+        id: 'test-1',
+        lead_name: 'Test Lead #1',
+        last_message_at: new Date().toISOString(),
+        last_message_preview: 'Hey, I\'m interested in your services...',
+        unread_count: 0,
+        is_active: true
+      },
+      {
+        id: 'test-2',
+        lead_name: 'Test Lead #2',
+        last_message_at: new Date(Date.now() - 3600000).toISOString(),
+        last_message_preview: 'Can you tell me more about pricing?',
+        unread_count: 0,
+        is_active: true
+      }
+    ]
+    setConversations(mockConversations)
+  }
+
+  const loadConversationMessages = (convId) => {
+    // Load messages for selected conversation from state
+    const conv = conversations.find(c => c.id === convId)
+    if (conv && conv.messages) {
+      setMessages(conv.messages)
+      setConversationId(convId)
+    } else {
+      setMessages([])
+      setConversationId(convId)
+    }
+  }
+
+  const startNewConversation = async () => {
+    if (!selectedStrategy) {
+      alert('Please select a strategy first')
+      return
     }
 
-    setLoading(true);
+    setIsLoading(true)
     try {
-      const res = await axios.post(`${API_URL}/api/conversations/start`, {
-        templateId: selectedTemplate,
-        contactName: contactName,
-        contactPhone: '+1234567890'
-      });
-      
-      setConversationId(res.data.conversationId);
-      setMessages(res.data.messages);
+      const token = localStorage.getItem('token')
+      const response = await axios.post(
+        `${API_URL}/api/test-ai/conversation`,
+        {
+          strategyId: selectedStrategy.id,
+          leadName: 'Test User',
+          leadEmail: 'test@example.com',
+          leadPhone: '+1234567890'
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+
+      const initialMessage = {
+        id: Date.now(),
+        body: response.data.response,
+        direction: 'inbound',
+        created_at: new Date().toISOString(),
+        is_ai_generated: true
+      }
+
+      const newConv = {
+        id: response.data.conversationId || `test-${Date.now()}`,
+        lead_name: 'New Test Conversation',
+        last_message_at: new Date().toISOString(),
+        last_message_preview: response.data.response.substring(0, 50) + '...',
+        unread_count: 0,
+        is_active: true,
+        messages: [initialMessage]
+      }
+
+      setConversations([newConv, ...conversations])
+      setSelectedConversation(newConv)
+      setMessages([initialMessage])
+      setConversationId(newConv.id)
     } catch (error) {
-      console.error('Error starting conversation:', error);
-      alert('Error starting conversation');
+      console.error('Failed to start conversation:', error)
+      alert('Failed to start conversation. Please try again.')
     } finally {
-      setLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || !conversationId) return;
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation || !selectedStrategy) return
 
-    const userMessage = inputMessage;
-    setInputMessage('');
-    setLoading(true);
+    const userMessage = {
+      id: Date.now(),
+      body: newMessage,
+      direction: 'outbound',
+      created_at: new Date().toISOString(),
+      is_ai_generated: false
+    }
+
+    setMessages([...messages, userMessage])
+    setNewMessage('')
+    setIsLoading(true)
 
     try {
-      const res = await axios.post(`${API_URL}/api/conversations/${conversationId}/message`, {
-        message: userMessage
-      });
-      
-      setMessages(res.data.messages);
+      const token = localStorage.getItem('token')
+      const response = await axios.post(
+        `${API_URL}/api/test-ai/conversation`,
+        {
+          strategyId: selectedStrategy.id,
+          conversationId: conversationId,
+          message: newMessage,
+          leadName: selectedConversation.lead_name
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+
+      const aiMessage = {
+        id: Date.now() + 1,
+        body: response.data.response,
+        direction: 'inbound',
+        created_at: new Date().toISOString(),
+        is_ai_generated: true
+      }
+
+      const updatedMessages = [...messages, userMessage, aiMessage]
+      setMessages(updatedMessages)
+
+      // Update conversation in list
+      const updatedConversations = conversations.map(conv =>
+        conv.id === selectedConversation.id
+          ? {
+              ...conv,
+              last_message_preview: response.data.response.substring(0, 50) + '...',
+              last_message_at: new Date().toISOString(),
+              messages: updatedMessages
+            }
+          : conv
+      )
+      setConversations(updatedConversations)
     } catch (error) {
-      console.error('Error sending message:', error);
-      alert('Error sending message');
+      console.error('Failed to send message:', error)
+      alert('Failed to send message. Please try again.')
     } finally {
-      setLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  const resetConversation = () => {
-    setConversationId(null);
-    setMessages([]);
-    setInputMessage('');
-  };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
-  const getTimeOnly = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
-  };
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diff = now - date
+
+    if (diff < 60000) return 'Just now'
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
+    if (diff < 86400000) return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+
+  const endConversation = () => {
+    if (window.confirm('End this test conversation?')) {
+      const updatedConversations = conversations.filter(
+        c => c.id !== selectedConversation?.id
+      )
+      setConversations(updatedConversations)
+      setSelectedConversation(null)
+      setMessages([])
+      setConversationId(null)
+    }
+  }
+
+  const restartConversation = () => {
+    setMessages([])
+    setConversationId(null)
+    startNewConversation()
+  }
 
   return (
-    <div className="conversation-test-page">
-      <div className="test-header">
-        <div>
-          <h1>
-            <Icons.TestAI size={32} style={{ marginRight: '12px', verticalAlign: 'middle' }} color="#8B5CF6" />
-            Test Your AI Agent
-          </h1>
-          <p className="page-subtitle">Test conversations in real-time with your AI agent</p>
+    <div className="test-ai-modern-page">
+      <div className="test-ai-header">
+        <div className="test-ai-header-left">
+          <h1>🧪 Test AI</h1>
+          <p>Test your AI agents with real-time conversations</p>
         </div>
-        {conversationId && (
-          <button className="btn btn-secondary" onClick={resetConversation}>
-            <Icons.RotateCcw size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
-            Reset Conversation
+        <div className="test-ai-header-right">
+          <div className="strategy-selector">
+            <label>Strategy:</label>
+            <select
+              value={selectedStrategy?.id || ''}
+              onChange={(e) => {
+                const strategy = strategies.find(s => s.id === e.target.value)
+                setSelectedStrategy(strategy)
+              }}
+              className="strategy-dropdown"
+            >
+              {strategies.map(strategy => (
+                <option key={strategy.id} value={strategy.id}>
+                  {strategy.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            className="new-conversation-btn"
+            onClick={startNewConversation}
+            disabled={isLoading || !selectedStrategy}
+          >
+            ✨ New Conversation
           </button>
-        )}
+        </div>
       </div>
 
-      {!conversationId ? (
-        <div className="test-setup-card">
-          <div className="setup-content">
-            <div className="setup-icon">
-              <Icons.CoPilot size={64} color="#8B5CF6" />
-            </div>
-            <h2>Choose a Strategy to Test</h2>
-            <p>Select an AI agent below and start a test conversation</p>
-            
-            <div className="form-group">
-              <label>Select AI Agent</label>
-              <select 
-                value={selectedTemplate} 
-                onChange={(e) => setSelectedTemplate(e.target.value)}
-                className="select-large"
-              >
-                {templates.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Your Name</label>
-              <input
-                type="text"
-                value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
-                placeholder="Enter your name"
-                className="input-large"
-              />
-            </div>
-
-            {templates.length === 0 ? (
-              <div className="empty-state" style={{ marginTop: '2rem' }}>
-                <h3>No AI agents available</h3>
-                <p>Create an AI agent first to test conversations</p>
+      <div className="test-ai-container">
+        {/* Conversations List */}
+        <div className="conversations-panel">
+          <div className="panel-header">
+            <h3>Test Conversations</h3>
+            <span className="conversation-count">{conversations.length}</span>
+          </div>
+          <div className="conversations-list">
+            {conversations.length === 0 ? (
+              <div className="empty-conversations">
+                <span className="empty-icon">💬</span>
+                <p>No test conversations yet</p>
+                <p className="empty-hint">Click "New Conversation" to start</p>
               </div>
             ) : (
-              <button
-                className="btn btn-mint btn-large"
-                onClick={startConversation}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Icons.Clock size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
-                    Starting...
-                  </>
-                ) : (
-                  <>
-                    <Icons.Send size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
-                    Start Conversation
-                  </>
-                )}
-              </button>
+              conversations.map(conv => (
+                <div
+                  key={conv.id}
+                  className={`conversation-item ${selectedConversation?.id === conv.id ? 'active' : ''}`}
+                  onClick={() => setSelectedConversation(conv)}
+                >
+                  <div className="conversation-avatar">
+                    🤖
+                  </div>
+                  <div className="conversation-info">
+                    <div className="conversation-header">
+                      <span className="conversation-name">{conv.lead_name}</span>
+                      <span className="conversation-time">{formatTime(conv.last_message_at)}</span>
+                    </div>
+                    <div className="conversation-preview">
+                      <span className="preview-text">{conv.last_message_preview}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>
-      ) : (
-        <div className="conversation-interface">
-          {/* Conversation Header */}
-          <div className="conversation-header">
-            <div className="contact-info">
-              <div className="contact-avatar">{contactName.charAt(0).toUpperCase()}</div>
-              <div>
-                <h3>{contactName}</h3>
-                <p className="contact-status">
-                  <span className="status-dot active"></span>
-                  Active conversation
-                </p>
+
+        {/* Messages Panel */}
+        <div className="messages-panel">
+          {selectedConversation ? (
+            <>
+              {/* Chat Header */}
+              <div className="chat-header">
+                <div className="chat-header-info">
+                  <h3>{selectedConversation.lead_name}</h3>
+                  <p>
+                    {conversationId && (
+                      <span className="conversation-id">
+                        ID: {conversationId.substring(0, 8)}...
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div className="chat-header-actions">
+                  <button
+                    className="icon-btn"
+                    onClick={restartConversation}
+                    title="Restart Conversation"
+                    disabled={isLoading}
+                  >
+                    🔄
+                  </button>
+                  <button
+                    className="icon-btn"
+                    onClick={endConversation}
+                    title="End Conversation"
+                  >
+                    ❌
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="conversation-actions">
-              <button className="btn-icon-action icon-spin" title="View Details">
-                <Icons.Info size={20} color="#8B5CF6" />
-              </button>
-              <button className="btn-icon-action icon-spin" title="Full Screen">
-                <Icons.Maximize size={20} color="#8B5CF6" />
-              </button>
-            </div>
-          </div>
 
-          {/* Messages Area */}
-          <div className="messages-container">
-            <div className="system-message">
-              <span className="system-icon">
-                <Icons.Zap size={16} color="#10b981" />
-              </span>
-              <span>Conversation started at {getTimeOnly(messages[0]?.timestamp)}</span>
-            </div>
-
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`message-wrapper ${msg.sender}`}>
-                {msg.sender === 'bot' ? (
-                  <div className="message-group bot-message">
-                    <div className="message-avatar bot">
-                      <Icons.CoPilot size={20} color="#fff" />
-                    </div>
-                    <div className="message-content-wrapper">
-                      <div className="message-bubble bot">
-                        <p>{msg.content}</p>
-                      </div>
-                      <span className="message-timestamp">{getTimeOnly(msg.timestamp)}</span>
-                    </div>
+              {/* Messages */}
+              <div className="messages-container">
+                {messages.length === 0 ? (
+                  <div className="empty-messages">
+                    <span className="empty-icon">💬</span>
+                    <p>Start the conversation</p>
+                    <p className="empty-hint">Send a message to begin testing</p>
                   </div>
                 ) : (
-                  <div className="message-group user-message">
-                    <div className="message-content-wrapper">
-                      <div className="message-bubble user">
-                        <p>{msg.content}</p>
+                  messages.map(message => (
+                    <div
+                      key={message.id}
+                      className={`message ${message.direction === 'outbound' ? 'outbound' : 'inbound'}`}
+                    >
+                      <div className="message-bubble">
+                        <p className="message-text">{message.body}</p>
+                        <div className="message-meta">
+                          <span className="message-time">{formatTime(message.created_at)}</span>
+                          {message.is_ai_generated && (
+                            <span className="ai-badge" title="AI Generated">✨ AI</span>
+                          )}
+                        </div>
                       </div>
-                      <span className="message-timestamp">{getTimeOnly(msg.timestamp)}</span>
                     </div>
-                    <div className="message-avatar user">
-                      <span>{contactName.charAt(0).toUpperCase()}</span>
-                    </div>
-                  </div>
+                  ))
                 )}
-              </div>
-            ))}
-
-            {loading && (
-              <div className="message-wrapper bot">
-                <div className="message-group bot-message">
-                  <div className="message-avatar bot">
-                    <Icons.CoPilot size={20} color="#fff" />
-                  </div>
-                  <div className="message-content-wrapper">
-                    <div className="message-bubble bot typing">
+                {isLoading && (
+                  <div className="message inbound">
+                    <div className="message-bubble typing">
                       <div className="typing-indicator">
                         <span></span>
                         <span></span>
@@ -245,40 +371,68 @@ function ConversationTest() {
                       </div>
                     </div>
                   </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Area */}
+              <div className="message-input-area">
+                <div className="input-toolbar">
+                  <button className="toolbar-btn" title="Templates">
+                    📄
+                  </button>
+                  <button className="toolbar-btn" title="AI Suggestions">
+                    ✨
+                  </button>
+                  <button className="toolbar-btn" title="Emoji">
+                    😊
+                  </button>
+                </div>
+                <div className="input-container">
+                  <textarea
+                    className="message-input"
+                    placeholder="Type your message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        sendMessage()
+                      }
+                    }}
+                    rows={3}
+                    disabled={isLoading}
+                  />
+                  <button
+                    className="send-btn"
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim() || isLoading}
+                  >
+                    Send →
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Input Area */}
-          <div className="input-area">
-            <form onSubmit={sendMessage} className="input-form">
-              <textarea
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Type your message..."
-                disabled={loading}
-                className="message-input"
-                rows="1"
-                onInput={(e) => {
-                  e.target.style.height = 'auto';
-                  e.target.style.height = e.target.scrollHeight + 'px';
-                }}
-              />
-              <button
-                type="submit"
-                className="send-button"
-                disabled={loading || !inputMessage.trim()}
-              >
-                <Icons.Send size={20} color="#fff" />
-                Send
-              </button>
-            </form>
-          </div>
+            </>
+          ) : (
+            <div className="no-conversation-selected">
+              <div className="empty-state">
+                <span className="empty-icon">🤖</span>
+                <h3>Select or start a test conversation</h3>
+                <p>Choose a conversation from the list or create a new one to start testing your AI agent</p>
+                <button
+                  className="primary-btn"
+                  onClick={startNewConversation}
+                  disabled={isLoading || !selectedStrategy}
+                >
+                  ✨ Start New Conversation
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
-  );
+  )
 }
 
-export default ConversationTest;
+export default ConversationTest
