@@ -5,6 +5,7 @@ import { useNavigation } from '../context/NavigationContext';
 import { toast } from 'react-toastify';
 import PromptBuilder from './PromptBuilder';
 import Modal from './Modal';
+import WorkflowBuilder from './WorkflowBuilder';
 import './StrategyEditor.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -50,7 +51,8 @@ function StrategyEditor() {
     turnOffAiAfterCta: false,
     turnOffFollowUps: false,
     ghlContactId: '',
-    ghlCalendarId: ''
+    ghlCalendarId: '',
+    customWorkflow: null
   });
 
   const [qualificationQuestions, setQualificationQuestionsRaw] = useState([]);
@@ -1065,14 +1067,19 @@ function StrategyEditor() {
         )}
 
         {activeStep === 5 && (
-          <div className="step-panel">
-            <div className="coming-soon">
-              <h2>🚀 Custom Tasks & Workflows</h2>
-              <p>Visual workflow builder coming soon!</p>
-              <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>
-                This feature allows you to create custom automation workflows with triggers and actions.
-              </p>
-            </div>
+          <div className="step-panel" style={{ padding: 0, height: 'calc(100vh - 220px)' }}>
+            <WorkflowBuilder
+              onSave={(workflow) => {
+                console.log('💾 Workflow saved:', workflow);
+                setFormData({
+                  ...formData,
+                  customWorkflow: workflow
+                });
+                setHasUnsavedChanges(true);
+                toast.success('Workflow saved to strategy!');
+              }}
+              initialWorkflow={formData.customWorkflow}
+            />
           </div>
         )}
       </div>
