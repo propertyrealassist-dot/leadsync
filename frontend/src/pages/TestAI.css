@@ -505,12 +505,14 @@
   padding: 20px 24px;
   background: rgba(26, 29, 46, 0.8);
   border-top: 1px solid rgba(139, 92, 246, 0.1);
+  position: relative;
 }
 
 .input-toolbar {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  position: relative;
 }
 
 .toolbar-btn {
@@ -528,6 +530,12 @@
   background: rgba(139, 92, 246, 0.15);
   border-color: rgba(139, 92, 246, 0.4);
   transform: translateY(-2px);
+}
+
+.toolbar-btn:active,
+.toolbar-btn.active {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
 }
 
 .input-container {
