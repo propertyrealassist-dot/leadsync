@@ -280,7 +280,6 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
   const [showActionPanel, setShowActionPanel] = useState(false)
   const [workflowName, setWorkflowName] = useState('New Workflow')
   const [searchQuery, setSearchQuery] = useState('')
-  const [showTemplateDropdown, setShowTemplateDropdown] = useState(false)
   const [currentWorkflowId, setCurrentWorkflowId] = useState(null)
 
   // Available Triggers
@@ -460,204 +459,6 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
     },
   ]
 
-  // Default Workflow Templates
-  const defaultTemplates = [
-    {
-      id: 'booked-appointment',
-      name: 'BOOKED_APPOINTMENT',
-      description: 'Trigger when you agree and confirm a booking slot with a lead',
-      nodes: [
-        {
-          id: 'trigger-booked-1',
-          type: 'trigger',
-          position: { x: 250, y: 50 },
-          data: {
-            id: 'booked-appointment-trigger',
-            label: 'BOOKED_APPOINTMENT',
-            icon: '📅',
-            type: 'Trigger',
-            description: 'Trigger when you agree and confirm a booking slot with a lead'
-          }
-        },
-        {
-          id: 'action-confirm-1',
-          type: 'action',
-          position: { x: 250, y: 180 },
-          data: {
-            id: 'handle-booking',
-            label: 'Confirm Appointment',
-            icon: '📅',
-            type: 'Universal',
-            description: 'Handles booking when agreed time is provided',
-            ghlIntegration: true
-          }
-        },
-        {
-          id: 'action-followups-1',
-          type: 'action',
-          position: { x: 250, y: 310 },
-          data: {
-            id: 'turn-off-followups',
-            label: 'Turn Follow-ups off',
-            icon: '💤',
-            type: 'Universal',
-            description: 'Keep AI active but disable follow-up messages',
-            ghlIntegration: false
-          }
-        }
-      ],
-      edges: [
-        {
-          id: 'e1-2',
-          source: 'trigger-booked-1',
-          target: 'action-confirm-1',
-          type: 'smoothstep',
-          animated: true,
-          style: { stroke: '#8b5cf6', strokeWidth: 2 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
-        },
-        {
-          id: 'e2-3',
-          source: 'action-confirm-1',
-          target: 'action-followups-1',
-          type: 'smoothstep',
-          animated: true,
-          style: { stroke: '#8b5cf6', strokeWidth: 2 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
-        }
-      ]
-    },
-    {
-      id: 'appointment-rescheduled',
-      name: 'APPOINTMENT_RESCHEDULED',
-      description: 'Trigger when you confirm a leads appointment has been rescheduled',
-      nodes: [
-        {
-          id: 'trigger-reschedule-1',
-          type: 'trigger',
-          position: { x: 250, y: 50 },
-          data: {
-            id: 'appointment-rescheduled-trigger',
-            label: 'APPOINTMENT_RESCHEDULED',
-            icon: '🔄',
-            type: 'Trigger',
-            description: 'Trigger when you confirm a leads appointment has been rescheduled'
-          }
-        },
-        {
-          id: 'action-confirm-reschedule-1',
-          type: 'action',
-          position: { x: 250, y: 180 },
-          data: {
-            id: 'handle-booking',
-            label: 'Confirm Appointment',
-            icon: '📅',
-            type: 'Universal',
-            description: 'Handles booking when agreed time is provided',
-            ghlIntegration: true
-          }
-        }
-      ],
-      edges: [
-        {
-          id: 'e1-2',
-          source: 'trigger-reschedule-1',
-          target: 'action-confirm-reschedule-1',
-          type: 'smoothstep',
-          animated: true,
-          style: { stroke: '#8b5cf6', strokeWidth: 2 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
-        }
-      ]
-    },
-    {
-      id: 'lead-complete',
-      name: 'LEAD_COMPLETE',
-      description: 'Trigger when you send the primary call-to-action or achieves the conversation goal',
-      nodes: [
-        {
-          id: 'trigger-complete-1',
-          type: 'trigger',
-          position: { x: 250, y: 50 },
-          data: {
-            id: 'lead-complete-trigger',
-            label: 'LEAD_COMPLETE',
-            icon: '✅',
-            type: 'Trigger',
-            description: 'Trigger when you send the primary call-to-action or achieves the conversation goal'
-          }
-        },
-        {
-          id: 'action-after-cta-1',
-          type: 'action',
-          position: { x: 250, y: 180 },
-          data: {
-            id: 'turn-off-followups',
-            label: 'After CTA',
-            icon: '💤',
-            type: 'Universal',
-            description: 'Keep AI active but disable follow-up messages',
-            ghlIntegration: false
-          }
-        }
-      ],
-      edges: [
-        {
-          id: 'e1-2',
-          source: 'trigger-complete-1',
-          target: 'action-after-cta-1',
-          type: 'smoothstep',
-          animated: true,
-          style: { stroke: '#8b5cf6', strokeWidth: 2 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
-        }
-      ]
-    },
-    {
-      id: 'lead-lost',
-      name: 'LEAD_LOST',
-      description: 'Trigger when the lead is disqualified, opts out, or requests to stop receiving messages',
-      nodes: [
-        {
-          id: 'trigger-lost-1',
-          type: 'trigger',
-          position: { x: 250, y: 50 },
-          data: {
-            id: 'lead-lost-trigger',
-            label: 'LEAD_LOST',
-            icon: '❌',
-            type: 'Trigger',
-            description: 'Trigger when the lead is disqualified, opts out, or requests to stop receiving messages'
-          }
-        },
-        {
-          id: 'action-turn-off-ai-1',
-          type: 'action',
-          position: { x: 250, y: 180 },
-          data: {
-            id: 'turn-off-ai',
-            label: 'Turn Off the AI',
-            icon: '🤖',
-            type: 'Universal',
-            description: 'Disable AI automation for contact',
-            ghlIntegration: false
-          }
-        }
-      ],
-      edges: [
-        {
-          id: 'e1-2',
-          source: 'trigger-lost-1',
-          target: 'action-turn-off-ai-1',
-          type: 'smoothstep',
-          animated: true,
-          style: { stroke: '#8b5cf6', strokeWidth: 2 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' }
-        }
-      ]
-    }
-  ]
-
   // Filter tasks based on search
   const filteredTriggers = availableTriggers.filter(trigger =>
     trigger.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -775,18 +576,6 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
     setWorkflowName('New Workflow')
     setCurrentWorkflowId(null)
     setShowActionPanel(false)
-  }
-
-  const loadTemplate = (templateId) => {
-    const template = defaultTemplates.find(t => t.id === templateId)
-    if (template) {
-      setNodes(template.nodes)
-      setEdges(template.edges)
-      setWorkflowName(template.name)
-      setCurrentWorkflowId(null)
-      setShowActionPanel(false)
-      console.log('Template loaded:', template.name)
-    }
   }
 
   const loadWorkflow = (workflow) => {
@@ -1197,31 +986,6 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
           <button className="workflow-btn secondary" onClick={handleNewWorkflow}>
             ➕ New Workflow
           </button>
-          <div className="template-dropdown-container">
-            <button
-              className="workflow-btn secondary"
-              onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
-            >
-              📋 Load Template
-            </button>
-            {showTemplateDropdown && (
-              <div className="template-dropdown">
-                {defaultTemplates.map((template) => (
-                  <div
-                    key={template.id}
-                    className="template-item"
-                    onClick={() => {
-                      loadTemplate(template.id)
-                      setShowTemplateDropdown(false)
-                    }}
-                  >
-                    <div className="template-item-name">{template.name}</div>
-                    <div className="template-item-desc">{template.description}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
           <button className="workflow-btn primary" onClick={handleSaveWorkflow}>
             💾 Save Workflow
           </button>
