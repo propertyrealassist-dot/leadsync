@@ -777,11 +777,6 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
     setShowActionPanel(false)
   }
 
-  const handleTestWorkflow = () => {
-    console.log('Testing workflow with:', { nodes, edges })
-    alert('Workflow test initiated! Check console for details.')
-  }
-
   const loadTemplate = (templateId) => {
     const template = defaultTemplates.find(t => t.id === templateId)
     if (template) {
@@ -1227,9 +1222,6 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
               </div>
             )}
           </div>
-          <button className="workflow-btn secondary" onClick={handleTestWorkflow}>
-            ⚡ Test Workflow
-          </button>
           <button className="workflow-btn primary" onClick={handleSaveWorkflow}>
             💾 Save Workflow
           </button>
