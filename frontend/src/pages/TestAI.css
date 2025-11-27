@@ -246,6 +246,30 @@
   text-overflow: ellipsis;
 }
 
+.conversation-strategy-badge {
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #a78bfa;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.locked-strategy-badge {
+  padding: 4px 10px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #a78bfa;
+  font-weight: 600;
+  display: inline-block;
+  margin-right: 4px;
+}
+
 .empty-conversations {
   display: flex;
   flex-direction: column;

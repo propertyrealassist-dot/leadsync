@@ -162,7 +162,15 @@ function TestAI() {
   }
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !selectedStrategy) return
+    if (!newMessage.trim() || !selectedConversation) return
+
+    // CRITICAL: Use the conversation's LOCKED strategyId, not the dropdown selection
+    const conversationStrategyId = selectedConversation.strategyId
+
+    if (!conversationStrategyId) {
+      alert('Error: This conversation is missing a strategy ID')
+      return
+    }
 
     const userMessage = {
       id: Date.now(),
@@ -185,10 +193,12 @@ function TestAI() {
         content: msg.body
       }))
 
+      console.log(`🎯 Sending message with LOCKED strategy ID: ${conversationStrategyId} for conversation: ${selectedConversation.lead_name}`)
+
       const response = await axios.post(
         `${API_URL}/api/test-ai/conversation`,
         {
-          strategyId: selectedStrategy.id,
+          strategyId: conversationStrategyId,  // FIXED: Use conversation's locked strategy
           userName: selectedConversation.lead_name,
           message: newMessage,
           conversationHistory: conversationHistory
@@ -403,6 +413,9 @@ function TestAI() {
                     <div className="conversation-preview">
                       <span className="preview-text">{conv.last_message_preview}</span>
                     </div>
+                    <div className="conversation-strategy-badge">
+                      🎯 {conv.lead_name}
+                    </div>
                   </div>
                 </div>
               ))
@@ -419,10 +432,16 @@ function TestAI() {
                 <div className="chat-header-info">
                   <h3>{selectedConversation.lead_name}</h3>
                   <p>
+                    <span className="locked-strategy-badge">
+                      🔒 Using: {selectedConversation.lead_name} Strategy
+                    </span>
                     {conversationId && (
-                      <span className="conversation-id">
-                        ID: {conversationId.substring(0, 8)}...
-                      </span>
+                      <>
+                        <span style={{ margin: '0 8px', color: '#475569' }}>•</span>
+                        <span className="conversation-id">
+                          ID: {conversationId.substring(0, 8)}...
+                        </span>
+                      </>
                     )}
                   </p>
                 </div>
