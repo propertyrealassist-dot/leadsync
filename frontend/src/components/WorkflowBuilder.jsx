@@ -33,6 +33,9 @@ const ActionNode = ({ data }) => (
     {data.description && (
       <div className="node-description">{data.description}</div>
     )}
+    {data.ghlIntegration && (
+      <div className="ghl-badge">GHL</div>
+    )}
   </div>
 )
 
@@ -60,72 +63,113 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
   const [selectedNode, setSelectedNode] = useState(null)
   const [showActionPanel, setShowActionPanel] = useState(false)
   const [workflowName, setWorkflowName] = useState('New Workflow')
+  const [searchQuery, setSearchQuery] = useState('')
 
-  // Available actions
-  const availableActions = [
+  // Universal Tasks
+  const universalTasks = [
     {
-      id: 'send-sms',
-      label: 'Send SMS',
-      icon: '💬',
-      type: 'Communication',
-      nodeType: 'action',
-      description: 'Send text message'
-    },
-    {
-      id: 'send-email',
-      label: 'Send Email',
-      icon: '📧',
-      type: 'Communication',
-      nodeType: 'action',
-      description: 'Send email message'
-    },
-    {
-      id: 'assign-agent',
-      label: 'Assign Agent',
-      icon: '👤',
-      type: 'Routing',
-      nodeType: 'action',
-      description: 'Route to agent'
-    },
-    {
-      id: 'add-tag',
-      label: 'Add Tag',
-      icon: '🏷️',
-      type: 'Organization',
-      nodeType: 'action',
-      description: 'Organize leads'
-    },
-    {
-      id: 'update-status',
-      label: 'Update Status',
-      icon: '📊',
-      type: 'Organization',
-      nodeType: 'action',
-      description: 'Change status'
-    },
-    {
-      id: 'webhook',
-      label: 'Webhook',
-      icon: '🔗',
-      type: 'Integration',
-      nodeType: 'action',
-      description: 'Send to URL'
-    },
-    {
-      id: 'create-opportunity',
-      label: 'Create Opportunity',
-      icon: '💼',
-      type: 'CRM',
-      nodeType: 'action',
-      description: 'Create deal'
-    },
-    {
-      id: 'book-appointment',
-      label: 'Book Appointment',
+      id: 'handle-booking',
+      label: 'Handle Booking',
       icon: '📅',
-      type: 'Calendar',
+      type: 'Universal',
+      category: 'UNIVERSAL TASKS',
       nodeType: 'action',
-      description: 'Schedule meeting'
+      description: 'Handles booking when agreed time is provided',
+      ghlIntegration: true
+    },
+    {
+      id: 'turn-off-ai',
+      label: 'Turn Off AI',
+      icon: '🤖',
+      type: 'Universal',
+      category: 'UNIVERSAL TASKS',
+      nodeType: 'action',
+      description: 'Disable AI automation for contact',
+      ghlIntegration: false
+    },
+    {
+      id: 'turn-off-followups',
+      label: 'Turn Off Follow-ups',
+      icon: '💤',
+      type: 'Universal',
+      category: 'UNIVERSAL TASKS',
+      nodeType: 'action',
+      description: 'Keep AI active but disable follow-up messages',
+      ghlIntegration: false
+    },
+    {
+      id: 'generate-summary',
+      label: 'Generate Summary',
+      icon: '📝',
+      type: 'Universal',
+      category: 'UNIVERSAL TASKS',
+      nodeType: 'action',
+      description: 'Create AI-powered summaries from content',
+      ghlIntegration: false
+    },
+    {
+      id: 'ask-ai',
+      label: 'Ask AI',
+      icon: '✨',
+      type: 'Universal',
+      category: 'UNIVERSAL TASKS',
+      nodeType: 'action',
+      description: 'Use AI to process data and generate responses',
+      ghlIntegration: false
+    },
+    {
+      id: 'update-agent',
+      label: 'Update Agent',
+      icon: '👤',
+      type: 'Universal',
+      category: 'UNIVERSAL TASKS',
+      nodeType: 'action',
+      description: 'Assign or update the agent/strategy for this contact',
+      ghlIntegration: true
+    },
+    {
+      id: 'update-calendar',
+      label: 'Update Calendar',
+      icon: '📆',
+      type: 'Universal',
+      category: 'UNIVERSAL TASKS',
+      nodeType: 'action',
+      description: 'Set the calendar provider and calendar to use for bookings',
+      ghlIntegration: true
+    },
+  ]
+
+  // GHL Tasks
+  const ghlTasks = [
+    {
+      id: 'update-custom-field',
+      label: 'Update Custom Field',
+      icon: '🔧',
+      type: 'GHL',
+      category: 'GHL TASKS',
+      nodeType: 'action',
+      description: 'Modify custom fields on contact records',
+      ghlIntegration: true
+    },
+    {
+      id: 'update-standard-field',
+      label: 'Update Standard Field',
+      icon: '📋',
+      type: 'GHL',
+      category: 'GHL TASKS',
+      nodeType: 'action',
+      description: 'Update standard contact information',
+      ghlIntegration: true
+    },
+    {
+      id: 'add-tags',
+      label: 'Add Tags',
+      icon: '🏷️',
+      type: 'GHL',
+      category: 'GHL TASKS',
+      nodeType: 'action',
+      description: 'Apply tags to organize contacts',
+      ghlIntegration: true
     },
   ]
 
@@ -155,6 +199,22 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
       description: 'Filter contacts'
     },
   ]
+
+  // Filter tasks based on search
+  const filteredUniversalTasks = universalTasks.filter(task =>
+    task.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.description.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const filteredGhlTasks = ghlTasks.filter(task =>
+    task.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.description.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const filteredLogic = availableLogic.filter(logic =>
+    logic.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    logic.description.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   // Initialize with trigger node if empty
   useEffect(() => {
@@ -296,44 +356,95 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
       <div className="workflow-container">
         {/* Sidebar */}
         <div className="workflow-sidebar">
-          <h3 className="sidebar-title">Add Nodes</h3>
-          <p className="sidebar-subtitle">Drag onto canvas to add</p>
+          <h3 className="sidebar-title">Add New Task</h3>
 
-          <div className="sidebar-section">
-            <h4 className="section-title">⚡ ACTIONS</h4>
-            {availableActions.map((action) => (
-              <div
-                key={action.id}
-                className="sidebar-item action-item"
-                draggable
-                onDragStart={(e) => onDragStart(e, action)}
-              >
-                <div className="sidebar-item-icon">{action.icon}</div>
-                <div className="sidebar-item-content">
-                  <div className="sidebar-item-label">{action.label}</div>
-                  <div className="sidebar-item-type">{action.description}</div>
-                </div>
-              </div>
-            ))}
+          {/* Search */}
+          <div className="search-container">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <span className="search-icon">🔍</span>
           </div>
 
-          <div className="sidebar-section">
-            <h4 className="section-title">🎯 LOGIC</h4>
-            {availableLogic.map((logic) => (
-              <div
-                key={logic.id}
-                className="sidebar-item logic-item"
-                draggable
-                onDragStart={(e) => onDragStart(e, logic)}
-              >
-                <div className="sidebar-item-icon">{logic.icon}</div>
-                <div className="sidebar-item-content">
-                  <div className="sidebar-item-label">{logic.label}</div>
-                  <div className="sidebar-item-type">{logic.description}</div>
+          {/* Universal Tasks Section */}
+          {filteredUniversalTasks.length > 0 && (
+            <div className="sidebar-section">
+              <h4 className="section-title">UNIVERSAL TASKS</h4>
+              {filteredUniversalTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="sidebar-item action-item"
+                  draggable
+                  onDragStart={(e) => onDragStart(e, task)}
+                >
+                  <div className="sidebar-item-icon">{task.icon}</div>
+                  <div className="sidebar-item-content">
+                    <div className="sidebar-item-label">{task.label}</div>
+                    <div className="sidebar-item-type">{task.description}</div>
+                  </div>
+                  {task.ghlIntegration && (
+                    <div className="ghl-mini-badge">GHL</div>
+                  )}
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {/* GHL Tasks Section */}
+          {filteredGhlTasks.length > 0 && (
+            <div className="sidebar-section">
+              <h4 className="section-title">GHL TASKS</h4>
+              {filteredGhlTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="sidebar-item ghl-item"
+                  draggable
+                  onDragStart={(e) => onDragStart(e, task)}
+                >
+                  <div className="sidebar-item-icon">{task.icon}</div>
+                  <div className="sidebar-item-content">
+                    <div className="sidebar-item-label">{task.label}</div>
+                    <div className="sidebar-item-type">{task.description}</div>
+                  </div>
+                  <div className="ghl-mini-badge">GHL</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Logic Section */}
+          {filteredLogic.length > 0 && (
+            <div className="sidebar-section">
+              <h4 className="section-title">🎯 LOGIC</h4>
+              {filteredLogic.map((logic) => (
+                <div
+                  key={logic.id}
+                  className="sidebar-item logic-item"
+                  draggable
+                  onDragStart={(e) => onDragStart(e, logic)}
+                >
+                  <div className="sidebar-item-icon">{logic.icon}</div>
+                  <div className="sidebar-item-content">
+                    <div className="sidebar-item-label">{logic.label}</div>
+                    <div className="sidebar-item-type">{logic.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No Results */}
+          {searchQuery && filteredUniversalTasks.length === 0 && filteredGhlTasks.length === 0 && filteredLogic.length === 0 && (
+            <div className="no-results">
+              <span className="no-results-icon">🔍</span>
+              <p>No tasks found</p>
+              <p className="no-results-hint">Try a different search term</p>
+            </div>
+          )}
         </div>
 
         {/* Canvas */}
@@ -431,6 +542,17 @@ function WorkflowBuilder({ onSave, initialWorkflow }) {
               </div>
               {selectedNode.type === 'action' && (
                 <>
+                  {selectedNode.data.ghlIntegration && (
+                    <div className="ghl-integration-notice">
+                      <div className="ghl-integration-notice-icon">🔗</div>
+                      <div className="ghl-integration-notice-content">
+                        <div className="ghl-integration-notice-title">GHL Integration</div>
+                        <div className="ghl-integration-notice-text">
+                          This task integrates with GoHighLevel CRM and requires proper API configuration.
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="property-group">
                     <label>Description</label>
                     <textarea
