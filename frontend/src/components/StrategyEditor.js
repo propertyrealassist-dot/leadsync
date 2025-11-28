@@ -736,6 +736,7 @@ function StrategyEditor() {
 
               {/* Sliders */}
               <div className="slider-list">
+                {/* Objection Handling Slider */}
                 <div className="slider-item">
                   <div className="slider-header">
                     <span className="slider-label">Objection Handling</span>
@@ -746,13 +747,36 @@ function StrategyEditor() {
                       type="range"
                       min="0"
                       max="100"
+                      step="25"
                       value={formData.objectionHandling}
                       onChange={(e) => setFormData({...formData, objectionHandling: e.target.value})}
                     />
                   </div>
-                  <span className="slider-description">Top Closer</span>
+                  <div className="slider-markers">
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Accept Everything</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Don't Object</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">More Persuasive</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Top Closer</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Don't Let Anything Pass</span>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Qualification Priority Slider */}
                 <div className="slider-item">
                   <div className="slider-header">
                     <span className="slider-label">Qualification Priority</span>
@@ -763,13 +787,36 @@ function StrategyEditor() {
                       type="range"
                       min="0"
                       max="100"
+                      step="25"
                       value={formData.qualificationPriority}
                       onChange={(e) => setFormData({...formData, qualificationPriority: e.target.value})}
                     />
                   </div>
-                  <span className="slider-description">Balanced</span>
+                  <div className="slider-markers">
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Own Thoughts</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Conservative</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Balanced</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Attacking</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Get Aggressive</span>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Creativity Slider */}
                 <div className="slider-item">
                   <div className="slider-header">
                     <span className="slider-label">Creativity</span>
@@ -780,11 +827,33 @@ function StrategyEditor() {
                       type="range"
                       min="0"
                       max="100"
+                      step="25"
                       value={formData.creativity}
                       onChange={(e) => setFormData({...formData, creativity: e.target.value})}
                     />
                   </div>
-                  <span className="slider-description">Stick to the Script</span>
+                  <div className="slider-markers">
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Stick to Script</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Little Creative</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Get Creative</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Have Fun</span>
+                    </div>
+                    <div className="slider-marker">
+                      <div className="marker-dot"></div>
+                      <span className="marker-label">Take the Reigns</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
