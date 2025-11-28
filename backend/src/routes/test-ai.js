@@ -156,7 +156,13 @@ router.post('/conversations', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error creating test conversation:', error);
-    res.status(500).json({ error: 'Failed to create conversation' });
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    res.status(500).json({
+      error: 'Failed to create conversation',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

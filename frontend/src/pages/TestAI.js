@@ -175,7 +175,10 @@ function TestAI() {
       await loadConversationMessages(response.data.id)
     } catch (error) {
       console.error('Failed to start conversation:', error)
-      alert('Failed to start conversation. Please try again.')
+      console.error('Error details:', error.response?.data)
+      console.error('Error status:', error.response?.status)
+      const errorMsg = error.response?.data?.error || error.message || 'Unknown error'
+      alert(`Failed to start conversation: ${errorMsg}`)
     } finally {
       setIsLoading(false)
     }
