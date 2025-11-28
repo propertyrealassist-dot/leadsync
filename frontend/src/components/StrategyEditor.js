@@ -753,23 +753,23 @@ function StrategyEditor() {
                     />
                   </div>
                   <div className="slider-markers">
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.objectionHandling == 0 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Accept Everything</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.objectionHandling == 25 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Don't Object</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.objectionHandling == 50 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">More Persuasive</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.objectionHandling == 75 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Top Closer</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.objectionHandling == 100 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Don't Let Anything Pass</span>
                     </div>
@@ -793,23 +793,23 @@ function StrategyEditor() {
                     />
                   </div>
                   <div className="slider-markers">
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.qualificationPriority == 0 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Own Thoughts</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.qualificationPriority == 25 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Conservative</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.qualificationPriority == 50 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Balanced</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.qualificationPriority == 75 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Attacking</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.qualificationPriority == 100 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Get Aggressive</span>
                     </div>
@@ -833,23 +833,23 @@ function StrategyEditor() {
                     />
                   </div>
                   <div className="slider-markers">
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.creativity == 0 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Stick to Script</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.creativity == 25 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Little Creative</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.creativity == 50 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Get Creative</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.creativity == 75 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Have Fun</span>
                     </div>
-                    <div className="slider-marker">
+                    <div className={`slider-marker ${formData.creativity == 100 ? 'active' : ''}`}>
                       <div className="marker-dot"></div>
                       <span className="marker-label">Take the Reigns</span>
                     </div>

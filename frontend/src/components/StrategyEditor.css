@@ -483,19 +483,23 @@
 /* Slider Markers */
 .slider-markers {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-start;
   margin-top: 0.75rem;
   padding: 0 4px;
 }
 
 .slider-marker {
-  display: flex;
+  display: none; /* Hide all markers by default */
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   flex: 1;
   max-width: 80px;
+}
+
+.slider-marker.active {
+  display: flex; /* Show only active marker */
 }
 
 .marker-dot {
