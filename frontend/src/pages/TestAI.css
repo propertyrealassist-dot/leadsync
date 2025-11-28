@@ -14,7 +14,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 32px;
+  padding: 16px 24px;
   background: rgba(26, 29, 46, 0.6);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(139, 92, 246, 0.1);
@@ -22,9 +22,9 @@
 }
 
 .test-ai-header-left h1 {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
-  margin: 0 0 4px 0;
+  margin: 0 0 2px 0;
   background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -32,40 +32,40 @@
 }
 
 .test-ai-header-left p {
-  font-size: 14px;
+  font-size: 13px;
   color: #94a3b8;
   margin: 0;
 }
 
 .test-ai-header-right {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
 }
 
 .strategy-selector {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .strategy-selector label {
-  font-size: 14px;
+  font-size: 13px;
   color: #94a3b8;
   font-weight: 500;
 }
 
 .strategy-dropdown {
-  padding: 10px 16px;
+  padding: 8px 12px;
   background: linear-gradient(135deg, #2d1b4e 0%, #1a1d2e 100%);
   border: 1px solid rgba(139, 92, 246, 0.4);
-  border-radius: 8px;
+  border-radius: 6px;
   color: #ffffff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 200px;
+  min-width: 180px;
 }
 
 .strategy-dropdown option {
@@ -87,12 +87,12 @@
 }
 
 .new-conversation-btn {
-  padding: 10px 20px;
+  padding: 8px 16px;
   background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
