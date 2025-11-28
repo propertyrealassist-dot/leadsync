@@ -116,8 +116,9 @@ router.post('/conversations', authenticateToken, async (req, res) => {
     strategy.qualificationQuestions = qualificationQuestions;
     strategy.faqs = faqs;
 
-    // Create conversation ID
-    const conversationId = `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Create conversation ID (proper UUID for CockroachDB)
+    const { v4: uuidv4 } = require('uuid');
+    const conversationId = uuidv4();
 
     // Insert conversation
     await db.run(
