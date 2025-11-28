@@ -7,19 +7,29 @@ const { db } = require('../config/database');
 // Get all test conversations for authenticated user
 router.get('/conversations', authenticateToken, async (req, res) => {
   try {
-    console.log('📋 Fetching test conversations for user:', req.user.id);
+    const orgId = req.user.currentOrganizationId;
+    console.log('📋 Fetching test conversations for user:', req.user.id, 'organization:', orgId);
 
-    // Get all conversations for this user ONLY
-    const conversations = await db.all(
-      `SELECT c.*, t.name as strategy_name
-       FROM conversations c
-       LEFT JOIN templates t ON c.template_id = t.id
-       WHERE c.user_id = ?
-       ORDER BY c.last_message_at DESC`,
-      [req.user.id]
-    );
+    // Strict organization filtering - only show data for current organization
+    const conversations = orgId
+      ? await db.all(
+          `SELECT c.*, t.name as strategy_name
+           FROM conversations c
+           LEFT JOIN templates t ON c.template_id = t.id
+           WHERE c.organization_id = ?
+           ORDER BY c.last_message_at DESC`,
+          [orgId]
+        )
+      : await db.all(
+          `SELECT c.*, t.name as strategy_name
+           FROM conversations c
+           LEFT JOIN templates t ON c.template_id = t.id
+           WHERE c.user_id = ? AND c.organization_id IS NULL
+           ORDER BY c.last_message_at DESC`,
+          [req.user.id]
+        );
 
-    console.log(`✅ Found ${conversations.length} conversations for user ${req.user.id}`);
+    console.log(`✅ Found ${conversations.length} conversations for org ${orgId || 'personal'}`);
 
     // Get message counts for each conversation
     const conversationsWithCounts = await Promise.all(
@@ -50,17 +60,17 @@ router.get('/conversations', authenticateToken, async (req, res) => {
   }
 });
 
-// Get specific conversation with messages (user-filtered)
+// Get specific conversation with messages (organization-filtered)
 router.get('/conversations/:id', authenticateToken, async (req, res) => {
   try {
     const conversationId = req.params.id;
-    console.log('📋 Fetching conversation:', conversationId, 'for user:', req.user.id);
+    const orgId = req.user.currentOrganizationId;
+    console.log('📋 Fetching conversation:', conversationId, 'for user:', req.user.id, 'organization:', orgId);
 
-    // Get conversation with user_id check
-    const conversation = await db.get(
-      'SELECT * FROM conversations WHERE id = ? AND user_id = ?',
-      [conversationId, req.user.id]
-    );
+    // Strict organization filtering
+    const conversation = orgId
+      ? await db.get('SELECT * FROM conversations WHERE id = ? AND organization_id = ?', [conversationId, orgId])
+      : await db.get('SELECT * FROM conversations WHERE id = ? AND user_id = ? AND organization_id IS NULL', [conversationId, req.user.id]);
 
     if (!conversation) {
       console.log('❌ Conversation not found or access denied');
@@ -89,13 +99,13 @@ router.get('/conversations/:id', authenticateToken, async (req, res) => {
 router.post('/conversations', authenticateToken, async (req, res) => {
   try {
     const { strategyId, contactName } = req.body;
-    console.log('🆕 Creating new test conversation for user:', req.user.id);
+    const orgId = req.user.currentOrganizationId;
+    console.log('🆕 Creating new test conversation for user:', req.user.id, 'organization:', orgId);
 
-    // Verify user owns this strategy
-    const strategy = await db.get(
-      'SELECT * FROM templates WHERE id = ? AND user_id = ?',
-      [strategyId, req.user.id]
-    );
+    // Verify user owns this strategy with organization filtering
+    const strategy = orgId
+      ? await db.get('SELECT * FROM templates WHERE id = ? AND organization_id = ?', [strategyId, orgId])
+      : await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ? AND organization_id IS NULL', [strategyId, req.user.id]);
 
     if (!strategy) {
       return res.status(404).json({ error: 'Strategy not found' });
@@ -120,11 +130,11 @@ router.post('/conversations', authenticateToken, async (req, res) => {
     const { v4: uuidv4 } = require('uuid');
     const conversationId = uuidv4();
 
-    // Insert conversation
+    // Insert conversation with organization_id
     await db.run(
-      `INSERT INTO conversations (id, user_id, template_id, contact_name, status, started_at, last_message_at)
-       VALUES (?, ?, ?, ?, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [conversationId, req.user.id, strategyId, contactName || 'Test User']
+      `INSERT INTO conversations (id, user_id, template_id, contact_name, status, organization_id, started_at, last_message_at)
+       VALUES (?, ?, ?, ?, 'active', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [conversationId, req.user.id, strategyId, contactName || 'Test User', orgId]
     );
 
     // Get initial AI message
@@ -167,17 +177,17 @@ router.post('/conversations', authenticateToken, async (req, res) => {
   }
 });
 
-// Delete test conversation (user-filtered)
+// Delete test conversation (organization-filtered)
 router.delete('/conversations/:id', authenticateToken, async (req, res) => {
   try {
     const conversationId = req.params.id;
-    console.log('🗑️ Deleting conversation:', conversationId, 'for user:', req.user.id);
+    const orgId = req.user.currentOrganizationId;
+    console.log('🗑️ Deleting conversation:', conversationId, 'for user:', req.user.id, 'organization:', orgId);
 
-    // Verify user owns this conversation
-    const conversation = await db.get(
-      'SELECT * FROM conversations WHERE id = ? AND user_id = ?',
-      [conversationId, req.user.id]
-    );
+    // Strict organization filtering
+    const conversation = orgId
+      ? await db.get('SELECT * FROM conversations WHERE id = ? AND organization_id = ?', [conversationId, orgId])
+      : await db.get('SELECT * FROM conversations WHERE id = ? AND user_id = ? AND organization_id IS NULL', [conversationId, req.user.id]);
 
     if (!conversation) {
       return res.status(404).json({ error: 'Conversation not found' });
@@ -198,32 +208,20 @@ router.delete('/conversations/:id', authenticateToken, async (req, res) => {
 router.post('/conversation', authenticateToken, async (req, res) => {
   try {
     const { strategyId, userName, message, conversationHistory, conversationId } = req.body;
+    const orgId = req.user.currentOrganizationId;
 
     console.log('🤖 Test AI request received');
     console.log('Strategy ID:', strategyId);
     console.log('User ID from auth:', req.user.id);
+    console.log('Organization ID:', orgId);
     console.log('User Name:', userName);
     console.log('Message:', message);
     console.log('Conversation ID:', conversationId);
 
-    // DEBUG: Show ALL strategies in database
-    const allStrategies = await db.all('SELECT id, user_id, name FROM templates', []);
-    console.log('\n📊 ALL STRATEGIES IN DATABASE:');
-    allStrategies.forEach(s => {
-      console.log(`   - ${s.name} | ID: ${s.id} | user_id: ${s.user_id}`);
-    });
-
-    // DEBUG: Check if this specific strategy ID exists at all (any user)
-    const strategyAny = await db.get('SELECT * FROM templates WHERE id = ?', [strategyId]);
-    console.log('\n📊 Strategy exists (any user)?', strategyAny ? 'YES' : 'NO');
-    if (strategyAny) {
-      console.log('   Found with user_id:', strategyAny.user_id);
-      console.log('   Expected user_id:', req.user.id);
-      console.log('   Match?', strategyAny.user_id === req.user.id ? 'YES ✅' : 'NO ❌');
-    }
-
-    // Get strategy with proper user_id check
-    const strategy = await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ?', [strategyId, req.user.id]);
+    // Get strategy with strict organization filtering
+    const strategy = orgId
+      ? await db.get('SELECT * FROM templates WHERE id = ? AND organization_id = ?', [strategyId, orgId])
+      : await db.get('SELECT * FROM templates WHERE id = ? AND user_id = ? AND organization_id IS NULL', [strategyId, req.user.id]);
 
     if (!strategy) {
       console.log('\n❌ Strategy not found for this user');
@@ -284,11 +282,10 @@ router.post('/conversation', authenticateToken, async (req, res) => {
     // Save messages to database if conversationId provided
     if (conversationId) {
       try {
-        // Verify conversation exists and belongs to this user
-        const conversation = await db.get(
-          'SELECT * FROM conversations WHERE id = ? AND user_id = ?',
-          [conversationId, req.user.id]
-        );
+        // Verify conversation exists and belongs to this organization/user
+        const conversation = orgId
+          ? await db.get('SELECT * FROM conversations WHERE id = ? AND organization_id = ?', [conversationId, orgId])
+          : await db.get('SELECT * FROM conversations WHERE id = ? AND user_id = ? AND organization_id IS NULL', [conversationId, req.user.id]);
 
         if (conversation) {
           // Save user message (skip if it's __INIT__)
