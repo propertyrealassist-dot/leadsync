@@ -41,18 +41,11 @@ function TestAI() {
   const [showAiSuggestions, setShowAiSuggestions] = useState(false)
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
-  // Load conversations from localStorage on mount
+  // Load conversations from database on mount
   useEffect(() => {
     loadStrategies()
     loadTestConversations()
   }, [])
-
-  // Save conversations to localStorage whenever they change
-  useEffect(() => {
-    if (conversations.length > 0) {
-      localStorage.setItem('testAI_conversations', JSON.stringify(conversations))
-    }
-  }, [conversations])
 
   // Load messages when conversation selected
   useEffect(() => {
@@ -80,29 +73,52 @@ function TestAI() {
     }
   }
 
-  const loadTestConversations = () => {
-    // Load from localStorage instead of mock data
-    const saved = localStorage.getItem('testAI_conversations')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setConversations(parsed)
-      } catch (error) {
-        console.error('Failed to parse saved conversations:', error)
-        setConversations([])
-      }
-    } else {
+  const loadTestConversations = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`${API_URL}/api/test-ai/conversations`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      // Transform database format to component format
+      const transformedConversations = response.data.map(conv => ({
+        id: conv.id,
+        lead_name: conv.contact_name || conv.strategy_name || 'Test User',
+        strategyId: conv.template_id,
+        last_message_at: conv.last_message_timestamp || conv.last_message_at,
+        last_message_preview: conv.last_message_preview || '',
+        unread_count: 0,
+        is_active: conv.status === 'active',
+        message_count: conv.message_count || 0
+      }))
+
+      setConversations(transformedConversations)
+    } catch (error) {
+      console.error('Failed to load test conversations:', error)
       setConversations([])
     }
   }
 
-  const loadConversationMessages = (convId) => {
-    // Load messages for selected conversation from state
-    const conv = conversations.find(c => c.id === convId)
-    if (conv && conv.messages) {
-      setMessages(conv.messages)
+  const loadConversationMessages = async (convId) => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`${API_URL}/api/test-ai/conversations/${convId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      // Transform database messages to component format
+      const transformedMessages = response.data.messages.map(msg => ({
+        id: msg.id,
+        body: msg.content,
+        direction: msg.sender === 'user' ? 'outbound' : 'inbound',
+        created_at: msg.timestamp,
+        is_ai_generated: msg.sender === 'assistant'
+      }))
+
+      setMessages(transformedMessages)
       setConversationId(convId)
-    } else {
+    } catch (error) {
+      console.error('Failed to load conversation messages:', error)
       setMessages([])
       setConversationId(convId)
     }
@@ -118,41 +134,45 @@ function TestAI() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.post(
-        `${API_URL}/api/test-ai/conversation`,
+        `${API_URL}/api/test-ai/conversations`,
         {
           strategyId: selectedStrategy.id,
-          userName: 'Test User',
-          message: '__INIT__',
-          conversationHistory: []
+          contactName: selectedStrategy.name
         },
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       )
 
-      const initialMessage = {
-        id: Date.now(),
-        body: response.data.response,
-        direction: 'inbound',
-        created_at: new Date().toISOString(),
-        is_ai_generated: true
-      }
+      console.log('✅ New conversation created:', response.data.id)
 
+      // Reload conversations list from database
+      await loadTestConversations()
+
+      // Load the new conversation and its messages
+      const newConvResponse = await axios.get(
+        `${API_URL}/api/test-ai/conversations/${response.data.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+
+      // Transform and select the new conversation
       const newConv = {
-        id: response.data.conversationId || `test-${Date.now()}`,
-        lead_name: selectedStrategy.name, // Use strategy name
-        strategyId: selectedStrategy.id,
-        last_message_at: new Date().toISOString(),
-        last_message_preview: response.data.response.substring(0, 50) + '...',
+        id: newConvResponse.data.id,
+        lead_name: newConvResponse.data.contact_name || selectedStrategy.name,
+        strategyId: newConvResponse.data.template_id,
+        last_message_at: newConvResponse.data.last_message_at,
+        last_message_preview: response.data.initialMessage.substring(0, 50) + '...',
         unread_count: 0,
-        is_active: true,
-        messages: [initialMessage]
+        is_active: true
       }
 
-      setConversations([newConv, ...conversations])
       setSelectedConversation(newConv)
-      setMessages([initialMessage])
-      setConversationId(newConv.id)
+      setConversationId(response.data.id)
+
+      // Load messages
+      await loadConversationMessages(response.data.id)
     } catch (error) {
       console.error('Failed to start conversation:', error)
       alert('Failed to start conversation. Please try again.')
@@ -201,36 +221,21 @@ function TestAI() {
           strategyId: conversationStrategyId,  // FIXED: Use conversation's locked strategy
           userName: selectedConversation.lead_name,
           message: newMessage,
-          conversationHistory: conversationHistory
+          conversationHistory: conversationHistory,
+          conversationId: conversationId  // CRITICAL: Include conversationId for database persistence
         },
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       )
 
-      const aiMessage = {
-        id: Date.now() + 1,
-        body: response.data.response,
-        direction: 'inbound',
-        created_at: new Date().toISOString(),
-        is_ai_generated: true
-      }
+      console.log('✅ Message sent, reloading from database')
 
-      const updatedMessages = [...messages, userMessage, aiMessage]
-      setMessages(updatedMessages)
+      // Reload messages from database to ensure sync
+      await loadConversationMessages(conversationId)
 
-      // Update conversation in list
-      const updatedConversations = conversations.map(conv =>
-        conv.id === selectedConversation.id
-          ? {
-              ...conv,
-              last_message_preview: response.data.response.substring(0, 50) + '...',
-              last_message_at: new Date().toISOString(),
-              messages: updatedMessages
-            }
-          : conv
-      )
-      setConversations(updatedConversations)
+      // Reload conversations list to update preview
+      await loadTestConversations()
     } catch (error) {
       console.error('Failed to send message:', error)
       alert('Failed to send message. Please try again.')
@@ -259,23 +264,37 @@ function TestAI() {
     setShowDeleteModal(true)
   }
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (conversationToDelete) {
-      const updatedConversations = conversations.filter(
-        c => c.id !== conversationToDelete.id
-      )
-      setConversations(updatedConversations)
+      try {
+        const token = localStorage.getItem('token')
+        await axios.delete(
+          `${API_URL}/api/test-ai/conversations/${conversationToDelete.id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        )
 
-      // Update localStorage
-      if (updatedConversations.length === 0) {
-        localStorage.removeItem('testAI_conversations')
+        console.log('✅ Conversation deleted from database')
+
+        // Reload conversations from database
+        await loadTestConversations()
+
+        // Clear selected conversation if it was deleted
+        if (selectedConversation?.id === conversationToDelete.id) {
+          setSelectedConversation(null)
+          setMessages([])
+          setConversationId(null)
+        }
+
+        setShowDeleteModal(false)
+        setConversationToDelete(null)
+      } catch (error) {
+        console.error('Failed to delete conversation:', error)
+        alert('Failed to delete conversation. Please try again.')
+        setShowDeleteModal(false)
+        setConversationToDelete(null)
       }
-
-      setSelectedConversation(null)
-      setMessages([])
-      setConversationId(null)
-      setShowDeleteModal(false)
-      setConversationToDelete(null)
     }
   }
 
@@ -487,6 +506,30 @@ function TestAI() {
                           )}
                         </div>
                       </div>
+
+                      {/* Workflow Execution Indicator */}
+                      {message.workflow_executed && (
+                        <div className="workflow-execution-card">
+                          <div className="workflow-header">
+                            <span className="workflow-icon">🔄</span>
+                            <span className="workflow-title">Workflow Executed: {message.workflow_executed.name}</span>
+                          </div>
+                          <div className="workflow-actions">
+                            {message.workflow_executed.actions && message.workflow_executed.actions.map((action, idx) => (
+                              <div key={idx} className="workflow-action-item">
+                                <span className="action-icon">✅</span>
+                                <span className="action-label">{action.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {message.workflow_executed.result && (
+                            <div className="workflow-result">
+                              <span className="result-icon">📋</span>
+                              <span className="result-text">{message.workflow_executed.result}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
