@@ -80,9 +80,9 @@ function Settings() {
   };
 
   const handleConnectGHL = () => {
-    // Use the marketplace install link directly
+    // Use the marketplace install link directly with CORRECT version_id
     // This redirects to GHL marketplace for OAuth authorization
-    const marketplaceUrl = 'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&client_id=69218dacd101d3222ff1708c-mic4vq7j&scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+opportunities.write+locations.readonly&version_id=69218dacd101d3ab25f1708d';
+    const marketplaceUrl = 'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&client_id=69218dacd101d3222ff1708c-mic4vq7j&scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+opportunities.write+locations.readonly&version_id=69218dacd101d3222ff1708c';
 
     // Store current user in session for callback (optional)
     if (user?.id) {
