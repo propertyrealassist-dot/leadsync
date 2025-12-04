@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Icons from './Icons';
@@ -11,17 +10,11 @@ import '../styles/pages-modern.css';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function Integrations() {
-  const { user, isAuthenticated, updateUser } = useAuth();
-  const navigate = useNavigate();
-  const [ghlConnected, setGhlConnected] = useState(false);
+  const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [showApiKey, setShowApiKey] = useState(false);
   const [showClientId, setShowClientId] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
-  const [showGHLForm, setShowGHLForm] = useState(false);
-  const [ghlLocationId, setGhlLocationId] = useState('');
-  const [ghlAccessToken, setGhlAccessToken] = useState('');
-  const [connecting, setConnecting] = useState(false);
 
   const snapshotUrl = 'https://api.realassistagents.com/public/ghl-snapshot-template.json';
 
@@ -29,25 +22,11 @@ function Integrations() {
   const getToken = () => localStorage.getItem('token');
 
   useEffect(() => {
-    // Don't check auth on initial mount - let ProtectedRoute handle it
-    // This prevents false redirects during auth initialization
-    checkGHLConnection();
+    // Just set loading to false - no need to check GHL connection
+    // since GHLIntegrationCard handles its own connection status
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // No need for separate loadCredentials - user data comes from AuthContext
-
-  const checkGHLConnection = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/ghl/status`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      setGhlConnected(response.data.connected || false);
-    } catch (error) {
-      console.error('Error checking GHL connection:', error);
-      setGhlConnected(false);
-    }
-  };
 
   const handleRegenerateApiKey = async () => {
     if (!window.confirm('Are you sure you want to regenerate your API key? This will invalidate the old key and you will need to update your integrations.')) {
@@ -89,61 +68,6 @@ function Integrations() {
   const maskCredential = (credential) => {
     if (!credential) return '••••••••••••••••••••••••••••••••••••••••';
     return '•'.repeat(40);
-  };
-
-  const handleConnectGHL = async () => {
-    if (!ghlLocationId || !ghlAccessToken) {
-      alert('Please enter both Location ID and Access Token');
-      return;
-    }
-
-    setConnecting(true);
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/ghl/connect`,
-        {
-          locationId: ghlLocationId.trim(),
-          accessToken: ghlAccessToken.trim()
-        },
-        {
-          headers: { Authorization: `Bearer ${getToken()}` }
-        }
-      );
-
-      if (response.data.success) {
-        setGhlConnected(true);
-        setShowGHLForm(false);
-        setGhlLocationId('');
-        setGhlAccessToken('');
-        alert('GoHighLevel connected successfully!');
-      }
-    } catch (error) {
-      console.error('Error connecting GHL:', error);
-      alert(error.response?.data?.error || 'Failed to connect to GoHighLevel. Please check your credentials.');
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  const handleDisconnectGHL = async () => {
-    if (!window.confirm('Are you sure you want to disconnect GoHighLevel?')) {
-      return;
-    }
-
-    try {
-      await axios.post(
-        `${API_URL}/api/ghl/disconnect`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${getToken()}` }
-        }
-      );
-      setGhlConnected(false);
-      alert('Disconnected from GoHighLevel');
-    } catch (error) {
-      console.error('Error disconnecting GHL:', error);
-      alert('Failed to disconnect from GoHighLevel');
-    }
   };
 
   const handleMigrateSnapshot = () => {
@@ -408,9 +332,9 @@ function Integrations() {
             Documentation
           </h3>
           <ul>
-            <li><a href="/public/SNAPSHOT_IMPORT_GUIDE.md" target="_blank">Snapshot Import Guide</a></li>
-            <li><a href="#" target="_blank">API Documentation</a></li>
-            <li><a href="#" target="_blank">GHL Integration Setup</a></li>
+            <li><a href="https://github.com/propertyrealassist-dot/leadsync/blob/main/GHL_SNAPSHOT_SETUP.md" target="_blank" rel="noopener noreferrer">Snapshot Import Guide</a></li>
+            <li><a href="https://api.realassistagents.com/docs" target="_blank" rel="noopener noreferrer">API Documentation</a></li>
+            <li><a href="https://github.com/propertyrealassist-dot/leadsync" target="_blank" rel="noopener noreferrer">GHL Integration Setup</a></li>
           </ul>
         </div>
       </div>

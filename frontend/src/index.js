@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client';
 import axios from 'axios';
 import './index.css';
 import './styles/global.css';
+import './styles/leadsync-theme.css';
+import './styles/theme-override.css';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 

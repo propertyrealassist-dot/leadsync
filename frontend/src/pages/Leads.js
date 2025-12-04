@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Leads.css';
+import '../styles/LeadSync-DesignSystem.css';
+import '../styles/pages-modern.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -105,11 +107,11 @@ function Leads() {
   }
 
   return (
-    <div className="leads-page">
+    <div className="page-wrapper">
       {/* Header */}
-      <div className="page-header">
-        <div className="header-content">
-          <div className="header-icon">👥</div>
+      <div className="modern-page-header">
+        <div className="modern-page-title">
+          <div className="modern-page-icon">👥</div>
           <div className="header-text">
             <h1>Leads</h1>
             <p>Manage and track your leads</p>

@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NavigationProvider } from './context/NavigationContext';
 import { OrganizationProvider } from './context/OrganizationContext';
-import Sidebar from './components/Sidebar';
-import Home from './components/Home';
+import TopNav from './components/TopNav';
+import DashboardModern from './components/Dashboard-Modern';
 import AIAgents from './components/AIAgents';
 import StrategyEditor from './components/StrategyEditor';
 import ConversationViewer from './components/ConversationViewer';
@@ -14,7 +14,6 @@ import Appointments from './components/Appointments';
 import Analytics from './components/Analytics';
 import CoPilot from './components/CoPilot';
 import Integrations from './components/Integrations';
-import Settings from './components/Settings';
 // Removed for later implementation
 // import TeamManagement from './components/TeamManagement';
 // import AdvancedAnalytics from './components/AdvancedAnalytics';
@@ -26,7 +25,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import TestAI from './pages/TestAI';
 import Calendar from './pages/Calendar';
 import Leads from './pages/Leads';
-import Header from './components/Header';
 import AccountSettings from './components/AccountSettings';
 import Billing from './components/Billing';
 import APIKeys from './components/APIKeys';
@@ -106,20 +104,21 @@ function AppContent() {
   // Main authenticated layout
   return (
     <div className="App">
-      <Sidebar />
+      <TopNav />
       <main
         className="main-content"
         style={{
-          marginLeft: '260px',
-          width: 'calc(100% - 260px)',
-          minHeight: '100vh',
+          marginTop: '70px',
+          width: '100%',
+          minHeight: 'calc(100vh - 70px)',
           position: 'relative'
         }}
       >
-        <Header />
         <Routes>
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<Home />} />
+          <Route path="/" element={<Navigate to="/dashboard-modern" replace />} />
+          <Route path="/home" element={<DashboardModern />} />
+          <Route path="/dashboard" element={<DashboardModern />} />
+          <Route path="/dashboard-modern" element={<DashboardModern />} />
           <Route path="/strategies" element={<AIAgents />} />
           <Route path="/strategy/new" element={<StrategyEditor />} />
           <Route path="/strategy/edit/:id" element={<StrategyEditor />} />

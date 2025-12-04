@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './Conversations.css';
+import '../styles/LeadSync-DesignSystem.css';
+import '../styles/pages-modern.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -176,24 +178,27 @@ function Conversations() {
   }
 
   return (
-    <div className="conversations-container">
+    <div className="page-wrapper">
       {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1>📊 Lead Dashboard</h1>
-          <p className="page-subtitle">
-            {earliestDate
-              ? `Data available from ${earliestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-              : 'No data available yet'}
-          </p>
+      <div className="modern-page-header">
+        <div className="modern-page-title">
+          <div className="modern-page-icon">💬</div>
+          <div className="modern-page-title-text">
+            <h1>Lead Dashboard</h1>
+            <p>
+              {earliestDate
+                ? `Data available from ${earliestDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                : 'No data available yet'}
+            </p>
+          </div>
         </div>
 
         {/* Time Frame Selector */}
-        <div className="timeframe-selector">
+        <div className="modern-page-actions">
           {['1d', '1w', '1m', '6m', '1y', 'all'].map((tf) => (
             <button
               key={tf}
-              className={`timeframe-btn ${timeFrame === tf ? 'active' : ''}`}
+              className={`modern-btn ${timeFrame === tf ? 'modern-btn-primary' : 'modern-btn-secondary'}`}
               onClick={() => setTimeFrame(tf)}
             >
               {tf.toUpperCase()}

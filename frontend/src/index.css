@@ -8,13 +8,13 @@ html, body {
   perspective: none !important;
 }
 
-/* FORCE SIDEBAR TO BE FIXED TO VIEWPORT */
-.sidebar {
+/* FORCE TOP NAV TO BE FIXED TO VIEWPORT */
+.top-nav {
   position: fixed !important;
-  left: 0 !important;
   top: 0 !important;
-  bottom: 0 !important;
-  z-index: 9999 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 10000 !important;
 }
 
 * {
@@ -25,35 +25,39 @@ html, body {
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
 
-  /* Multi-layer animated gradient matching logo colors */
+  /* ULTRA-MODERN GRADIENT BACKGROUND - More vibrant and dynamic */
   background:
-    radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 70%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(167, 139, 250, 0.1) 0%, transparent 70%),
+    /* Vibrant accent orbs */
+    radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 85% 15%, rgba(236, 72, 153, 0.22) 0%, transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(59, 130, 246, 0.18) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.2) 0%, transparent 45%),
+    /* Main gradient base */
     linear-gradient(135deg,
-      #0a0118 0%,
-      #1a0b2e 15%,
-      #2d1b4e 30%,
-      #4c1d95 45%,
-      #6b21a8 60%,
-      #4c1d95 75%,
-      #1a0b2e 90%,
-      #0a0118 100%
+      #050014 0%,
+      #0a0628 15%,
+      #1a0b3e 30%,
+      #2d1558 45%,
+      #4c1d95 55%,
+      #5b21b6 65%,
+      #2d1558 80%,
+      #0a0628 95%,
+      #050014 100%
     );
   background-size:
-    200% 200%,
-    200% 200%,
-    200% 200%,
+    250% 250%,
+    280% 280%,
+    300% 300%,
+    260% 260%,
     400% 400%;
-  /* CRITICAL FIX: Only use gradientShift (background-position animation)
-     REMOVED gradientPulse because it uses filter: brightness() which BREAKS position: fixed! */
-  animation: gradientShift 20s ease infinite;
+  animation: gradientShift 25s ease infinite;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -392,7 +396,7 @@ code {
   color: #2d3748;
 }
 
-/* Universal shimmer effect for hoverable elements */
+/* ULTRA-MODERN SHIMMER EFFECTS */
 .stat-card,
 .member-card,
 .agent-card,
@@ -407,7 +411,7 @@ button:not(.btn-remove):not(.hamburger-menu) {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Shimmer overlay */
+/* Enhanced shimmer with gradient */
 .stat-card::before,
 .member-card::before,
 .agent-card::before,
@@ -424,15 +428,15 @@ button:not(.btn-remove):not(.hamburger-menu) {
   height: 200%;
   background: linear-gradient(
     45deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.03) 40%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(236, 72, 153, 0.2) 60%,
-    rgba(255, 255, 255, 0.03) 70%,
-    transparent 80%
+    transparent 25%,
+    rgba(255, 255, 255, 0.02) 35%,
+    rgba(139, 92, 246, 0.25) 48%,
+    rgba(236, 72, 153, 0.25) 52%,
+    rgba(255, 255, 255, 0.02) 65%,
+    transparent 75%
   );
   transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
   z-index: 1;
 }
@@ -448,7 +452,7 @@ button:not(.btn-remove):not(.hamburger-menu) {
   transform: translateX(100%) translateY(100%) rotate(45deg);
 }
 
-/* Enhanced glow on hover */
+/* Elevated glow on hover */
 .stat-card:hover,
 .member-card:hover,
 .agent-card:hover,
@@ -456,31 +460,46 @@ button:not(.btn-remove):not(.hamburger-menu) {
 .option-card:hover,
 .kpi-card:hover,
 .permission-card:hover {
-  transform: translateY(-8px) scale(1.02);
+  transform: translateY(-6px) scale(1.02);
   box-shadow:
-    0 0 30px rgba(139, 92, 246, 0.4),
-    0 0 60px rgba(139, 92, 246, 0.2),
-    0 20px 40px rgba(0, 0, 0, 0.3);
-  border-color: rgba(139, 92, 246, 0.8) !important;
+    0 0 40px rgba(139, 92, 246, 0.35),
+    0 0 80px rgba(139, 92, 246, 0.15),
+    0 24px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: rgba(139, 92, 246, 0.6) !important;
 }
 
-/* Animated border glow */
+/* Advanced border glow animation */
 @keyframes borderGlow {
   0%, 100% {
     box-shadow:
-      0 0 20px rgba(139, 92, 246, 0.3),
-      inset 0 0 20px rgba(139, 92, 246, 0.1);
+      0 0 24px rgba(139, 92, 246, 0.35),
+      0 0 48px rgba(139, 92, 246, 0.15),
+      0 24px 48px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 24px rgba(139, 92, 246, 0.1);
   }
-  50% {
+  33% {
     box-shadow:
-      0 0 40px rgba(236, 72, 153, 0.5),
-      inset 0 0 30px rgba(236, 72, 153, 0.2);
+      0 0 32px rgba(236, 72, 153, 0.4),
+      0 0 64px rgba(236, 72, 153, 0.2),
+      0 24px 48px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 0 32px rgba(236, 72, 153, 0.15);
+  }
+  66% {
+    box-shadow:
+      0 0 28px rgba(168, 85, 247, 0.38),
+      0 0 56px rgba(168, 85, 247, 0.18),
+      0 24px 48px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.11),
+      inset 0 0 28px rgba(168, 85, 247, 0.12);
   }
 }
 
 .stat-card:hover,
 .kpi-card:hover {
-  animation: borderGlow 2s ease-in-out infinite;
+  animation: borderGlow 3s ease-in-out infinite;
 }
 
 /* Button shimmer effect */

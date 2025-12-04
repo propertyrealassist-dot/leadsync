@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AccountSettings.css';
+import '../styles/LeadSync-DesignSystem.css';
+import '../styles/pages-modern.css';
 
 const AccountSettings = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -262,10 +264,15 @@ const AccountSettings = () => {
   }
 
   return (
-    <div className="account-settings">
-      <div className="settings-header">
-        <h1>👤 Account Settings</h1>
-        <p>Manage your personal information and preferences</p>
+    <div className="page-wrapper">
+      <div className="modern-page-header">
+        <div className="modern-page-title">
+          <div className="modern-page-icon">👤</div>
+          <div className="modern-page-title-text">
+            <h1>Account Settings</h1>
+            <p>Manage your personal information and preferences</p>
+          </div>
+        </div>
       </div>
 
       {message.text && (

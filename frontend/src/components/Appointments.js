@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Appointments.css';
+import '../styles/LeadSync-DesignSystem.css';
+import '../styles/pages-modern.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -211,19 +213,22 @@ function Appointments() {
   }
 
   return (
-    <div className="appointments-container">
-      <div className="page-header">
-        <div>
-          <h1>Appointments</h1>
-          <p className="page-subtitle">Manage and schedule your appointments</p>
+    <div className="page-wrapper">
+      <div className="modern-page-header">
+        <div className="modern-page-title">
+          <div className="modern-page-icon">📅</div>
+          <div className="modern-page-title-text">
+            <h1>Appointments</h1>
+            <p>Manage and schedule your appointments</p>
+          </div>
         </div>
-        <div className="header-actions">
+        <div className="modern-page-actions">
           {ghlConnected && calendars.length > 0 && (
-            <button className="btn-secondary" onClick={handleSyncFromGHL}>
+            <button className="modern-btn modern-btn-secondary" onClick={handleSyncFromGHL}>
               Sync from GHL
             </button>
           )}
-          <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+          <button className="modern-btn modern-btn-primary" onClick={() => setShowCreateModal(true)}>
             + New Appointment
           </button>
         </div>

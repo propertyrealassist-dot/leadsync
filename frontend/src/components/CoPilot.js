@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Icons from './Icons';
 import './CoPilot.css';
+import '../styles/LeadSync-DesignSystem.css';
+import '../styles/pages-modern.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -305,11 +307,15 @@ function CoPilot() {
   // INITIAL VIEW
   if (step === 'initial') {
     return (
-      <div className="copilot-container">
-        <div className="copilot-header">
-          <Icons.CoPilot size={64} color="#8B5CF6" />
-          <h1>AI Strategy Co-Pilot</h1>
-          <p>Build intelligent conversation strategies with guided assistance</p>
+      <div className="page-wrapper">
+        <div className="modern-page-header">
+          <div className="modern-page-title">
+            <div className="modern-page-icon">🤖</div>
+            <div className="modern-page-title-text">
+              <h1>AI Strategy Co-Pilot</h1>
+              <p>Build intelligent conversation strategies with guided assistance</p>
+            </div>
+          </div>
         </div>
 
         <div className="copilot-start">
@@ -349,7 +355,7 @@ function CoPilot() {
   // BUSINESS NAME
   if (step === 'business') {
     return (
-      <div className="copilot-container">
+      <div className="page-wrapper">
         <div className="copilot-progress">
           <div className="progress-bar" style={{ width: '20%' }}></div>
         </div>
@@ -390,7 +396,7 @@ function CoPilot() {
   if (step === 'website') {
     if (isScanning) {
       return (
-        <div className="copilot-container">
+        <div className="page-wrapper">
           <div className="copilot-progress">
             <div className="progress-bar" style={{ width: '40%' }}></div>
           </div>
@@ -428,7 +434,7 @@ function CoPilot() {
     }
 
     return (
-      <div className="copilot-container">
+      <div className="page-wrapper">
         <div className="copilot-progress">
           <div className="progress-bar" style={{ width: '40%' }}></div>
         </div>
@@ -510,7 +516,7 @@ function CoPilot() {
   // MANUAL ENTRY
   if (step === 'manual') {
     return (
-      <div className="copilot-container">
+      <div className="page-wrapper">
         <div className="copilot-progress">
           <div className="progress-bar" style={{ width: '45%' }}></div>
         </div>
@@ -618,7 +624,7 @@ function CoPilot() {
   // SERVICES
   if (step === 'services') {
     return (
-      <div className="copilot-container">
+      <div className="page-wrapper">
         <div className="copilot-progress">
           <div className="progress-bar" style={{ width: '50%' }}></div>
         </div>
@@ -655,7 +661,7 @@ function CoPilot() {
   // GOAL SELECTION
   if (step === 'goal') {
     return (
-      <div className="copilot-container">
+      <div className="page-wrapper">
         <div className="copilot-progress">
           <div className="progress-bar" style={{ width: '70%' }}></div>
         </div>
@@ -712,7 +718,7 @@ function CoPilot() {
   // POST-BOOKING
   if (step === 'postBooking') {
     return (
-      <div className="copilot-container">
+      <div className="page-wrapper">
         <div className="copilot-progress">
           <div className="progress-bar" style={{ width: '90%' }}></div>
         </div>
@@ -820,7 +826,7 @@ function CoPilot() {
   // GENERATING
   if (step === 'generating') {
     return (
-      <div className="copilot-container generating">
+      <div className="page-wrapper generating">
         <Icons.Settings size={80} color="#8B5CF6" className="spinning-icon" />
 
         <h2>Building Your AI Strategy</h2>
@@ -855,7 +861,7 @@ function CoPilot() {
   // COMPLETE
   if (step === 'complete') {
     return (
-      <div className="copilot-container complete">
+      <div className="page-wrapper complete">
         <Icons.CheckCircle size={100} color="#10b981" className="success-icon" />
 
         <h2>Strategy Created Successfully!</h2>

@@ -7,6 +7,8 @@ import Modal from './Modal';
 import Icons from './Icons';
 import StrategyOptionModal from './StrategyOptionModal';
 import './AIAgents.css';
+import '../styles/LeadSync-DesignSystem.css';
+import '../styles/pages-modern.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -153,7 +155,7 @@ function AIAgents() {
   };
 
   const handleDuplicateAgentOld = async (agent) => {
-    setShowMenu(null);
+    setOpenDropdown(null);
 
     // Create a custom modal with input for the new name
     const DuplicateModal = () => {
@@ -321,7 +323,7 @@ function AIAgents() {
     console.log('📝 Agent ID:', agent?.id);
     console.log('📝 Agent ID type:', typeof agent?.id);
 
-    setShowMenu(null);
+    setOpenDropdown(null);
 
     if (!agent || !agent.id) {
       console.error('❌ No agent or agent ID provided!');
@@ -341,6 +343,7 @@ function AIAgents() {
       message: `Are you sure you want to delete "${agent.name}"? This action cannot be undone.`,
       onConfirm: async () => {
         try {
+          const token = localStorage.getItem('token');
           console.log('🔑 Token exists:', !!token);
           const url = `${API_URL}/api/templates/${agent.id}`;
           console.log('🌐 DELETE URL:', url);
@@ -750,7 +753,7 @@ function AIAgents() {
       toast.error('Failed to export strategy: ' + (error.response?.data?.error || error.message));
     } finally {
       setExporting(false);
-      setShowMenu(null);
+      setOpenDropdown(null);
     }
   };
 
@@ -803,17 +806,17 @@ function AIAgents() {
   }
 
   return (
-    <div className="ai-agents-container">
+    <div className="page-wrapper">
       {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1>
-            <Icons.Target size={32} style={{ marginRight: '12px', verticalAlign: 'middle' }} color="#8B5CF6" />
-            AI Agents
-          </h1>
-          <p className="page-subtitle">Manage your AI conversation strategies</p>
+      <div className="modern-page-header">
+        <div className="modern-page-title">
+          <div className="modern-page-icon">🎯</div>
+          <div className="modern-page-title-text">
+            <h1>AI Agents</h1>
+            <p>Manage your AI conversation strategies</p>
+          </div>
         </div>
-        <div className="header-actions">
+        <div className="modern-page-actions">
           <input
             type="file"
             ref={fileInputRef}
@@ -822,24 +825,24 @@ function AIAgents() {
             style={{ display: 'none' }}
           />
           <button
-            className="btn-import-agent"
+            className="modern-btn modern-btn-secondary"
             onClick={handleImportClick}
             disabled={importing}
           >
             {importing ? (
               <>
-                <Icons.Clock size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+                <Icons.Clock size={18} color="#fff" />
                 Importing...
               </>
             ) : (
               <>
-                <Icons.Download size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+                <Icons.Download size={18} color="#fff" />
                 Import Strategy
               </>
             )}
           </button>
-          <button className="btn-create-agent" onClick={handleCreateNew}>
-            <Icons.Plus size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#fff" />
+          <button className="modern-btn modern-btn-primary" onClick={handleCreateNew}>
+            <Icons.Plus size={18} color="#fff" />
             Create New Agent
           </button>
         </div>

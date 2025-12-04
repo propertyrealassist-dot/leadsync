@@ -5,6 +5,8 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import Icons from './Icons';
 import { useToast } from './ToastContainer';
 import './Analytics.css';
+import '../styles/LeadSync-DesignSystem.css';
+import '../styles/pages-modern.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -135,17 +137,17 @@ function Analytics() {
   })) : [];
 
   return (
-    <div className="analytics-container">
+    <div className="page-wrapper">
       {/* Header */}
-      <div className="analytics-header">
-        <div>
-          <h1>
-            <Icons.Analytics size={32} color={COLORS.primary} />
-            Analytics Dashboard
-          </h1>
-          <p className="page-subtitle">Track your performance and metrics</p>
+      <div className="modern-page-header">
+        <div className="modern-page-title">
+          <div className="modern-page-icon">📊</div>
+          <div className="modern-page-title-text">
+            <h1>Analytics Dashboard</h1>
+            <p>Track your performance and metrics</p>
+          </div>
         </div>
-        <div className="date-range-selector">
+        <div className="modern-page-actions">
           <button
             className={dateRange === '7' ? 'active' : ''}
             onClick={() => handleDateRangeChange('7')}

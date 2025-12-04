@@ -13,7 +13,22 @@
       "Bash(taskkill:*)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(wmic process:*)"
+      "Bash(wmic process:*)",
+      "Bash(dir /s /b C:UsersKurtvDesktopleadsyncfrontendsrc*.tsx)",
+      "Bash(npm start)",
+      "Bash(node reset-test-password.js:*)",
+      "Bash(node reset-password.js:*)",
+      "Bash(node check-users.js:*)",
+      "Bash(node create-test-user.js:*)",
+      "Bash(node check-schema.js:*)",
+      "Bash(timeout:*)",
+      "Bash(exit 0)",
+      "Bash(ping:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx vercel --prod --yes --token=$VERCEL_TOKEN)",
+      "Bash(npx vercel deploy --prod)"
     ],
     "deny": [],
     "ask": []

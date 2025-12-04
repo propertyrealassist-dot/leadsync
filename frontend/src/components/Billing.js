@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Billing.css';
+import '../styles/LeadSync-DesignSystem.css';
+import '../styles/pages-modern.css';
 
 const Billing = () => {
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -104,10 +106,15 @@ const Billing = () => {
   const currentPlan = plans.find(p => p.id === selectedPlan);
 
   return (
-    <div className="billing-page">
-      <div className="billing-header">
-        <h1>💳 Billing & Subscription</h1>
-        <p>Manage your subscription and billing information</p>
+    <div className="page-wrapper">
+      <div className="modern-page-header">
+        <div className="modern-page-title">
+          <div className="modern-page-icon">💳</div>
+          <div className="modern-page-title-text">
+            <h1>Billing & Subscription</h1>
+            <p>Manage your subscription and billing information</p>
+          </div>
+        </div>
       </div>
 
       {/* Current Plan Banner */}

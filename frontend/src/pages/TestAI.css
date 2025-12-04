@@ -1,11 +1,11 @@
-/* TestAI-Modern.css - Beautiful Dark Theme */
+/* TestAI-Modern.css - LeadSync Design System */
 
 .test-ai-modern-page {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #1a1d2e 0%, #2d1b4e 100%);
-  color: #e2e8f0;
+  background: var(--ls-bg-primary, #0f172a);
+  color: var(--ls-text-primary, #f1f5f9);
   overflow: hidden;
 }
 

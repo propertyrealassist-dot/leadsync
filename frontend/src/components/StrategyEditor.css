@@ -27,8 +27,8 @@
   align-items: center;
   margin-bottom: var(--spacing-xl);
   padding: var(--spacing-lg);
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   backdrop-filter: blur(10px);
 }

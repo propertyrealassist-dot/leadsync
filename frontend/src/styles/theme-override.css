@@ -1,0 +1,136 @@
+/*
+  THEME OVERRIDE - Force theme on all pages
+  This file ensures ALL pages use the LeadSync theme
+*/
+
+/* Map old variable names to new theme variables */
+:root {
+  --bg-card: var(--bg-glass);
+  --border-primary: var(--border-color);
+  --primary: var(--leadsync-purple);
+  --secondary: var(--leadsync-pink);
+  --bg-hover: var(--bg-glass-hover);
+  --text-muted: var(--text-secondary);
+  --shadow-glow: 0 0 24px rgba(168, 85, 247, 0.3);
+  --transition-base: all 0.3s ease;
+  --primary-gradient: var(--gradient-primary);
+}
+
+/* Force background on all containers */
+body,
+#root,
+.App,
+.app-container,
+.main-content,
+.page-container,
+.page-wrapper,
+.ai-agents-container,
+.copilot-container,
+.test-ai-container,
+.analytics-container,
+.integrations-container,
+.conversations-container,
+.appointments-container,
+.leads-container,
+.dashboard-container,
+.home-container,
+.strategy-editor,
+div[class*="-container"],
+div[class*="-page"],
+div[class*="Page"],
+div[class*="-editor"] {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Force card styles */
+.card,
+.agent-card,
+.strategy-card,
+.test-card,
+.metric-card,
+.stat-card,
+.step-content,
+.editor-header,
+.section-card,
+div[class*="card"],
+div[class*="-content"] {
+  background: var(--bg-glass) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Force text colors */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary) !important;
+}
+
+p, span:not(.badge):not([class*="icon"]) {
+  color: var(--text-secondary) !important;
+}
+
+/* Force button styles */
+button[class*="create"],
+button[class*="Create"],
+button[class*="add"],
+button[class*="Add"],
+button[class*="primary"],
+.btn-primary,
+.btn-create,
+.btn-add {
+  background: var(--gradient-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Force input styles */
+input,
+textarea,
+select {
+  background: var(--bg-glass) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Force modal styles */
+.modal,
+.modal-overlay {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Force empty states */
+.empty-state,
+div[class*="empty"] {
+  color: var(--text-secondary) !important;
+}
+
+/* Force table styles */
+table {
+  background: var(--bg-glass) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+th {
+  background: rgba(168, 85, 247, 0.1) !important;
+  color: var(--text-primary) !important;
+}
+
+td {
+  color: var(--text-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Ensure gradients work */
+.gradient-text,
+div[class*="gradient"],
+span[class*="gradient"] {
+  background: var(--gradient-primary) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}

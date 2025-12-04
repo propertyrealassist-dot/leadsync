@@ -75,8 +75,8 @@ class AnalyticsService {
       LEFT JOIN leads l ON t.id = l.template_id AND l.created_at >= ?
       WHERE t.user_id = ?
       GROUP BY t.id, t.name
-      HAVING lead_count > 0
-      ORDER BY lead_count DESC
+      HAVING COUNT(l.id) > 0
+      ORDER BY COUNT(l.id) DESC
       LIMIT 5
     `).all(startDateStr, userId);
 
@@ -93,7 +93,7 @@ class AnalyticsService {
       SELECT
         'appointment' as type,
         id,
-        attendee_name as title,
+        contact_name as title,
         created_at as timestamp
       FROM appointments
       WHERE user_id = ?

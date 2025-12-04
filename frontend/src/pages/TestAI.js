@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import './TestAI.css'
+import '../styles/LeadSync-DesignSystem.css'
+import '../styles/pages-modern.css'
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.realassistagents.com'
 
@@ -369,11 +371,14 @@ function TestAI() {
   }
 
   return (
-    <div className="test-ai-modern-page">
-      <div className="test-ai-header">
-        <div className="test-ai-header-left">
-          <h1>🧪 Test AI</h1>
-          <p>Test your AI agents with real-time conversations</p>
+    <div className="page-wrapper">
+      <div className="modern-page-header">
+        <div className="modern-page-title">
+          <div className="modern-page-icon">🧪</div>
+          <div className="modern-page-title-text">
+            <h1>Test AI</h1>
+            <p>Test your AI agents with real-time conversations</p>
+          </div>
         </div>
         <div className="test-ai-header-right">
           <div className="strategy-selector">
