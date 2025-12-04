@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import './Dashboard-Modern.css'
 import '../styles/LeadSync-DesignSystem.css'
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001'
 
 function DashboardModern() {
   const navigate = useNavigate()
@@ -12,46 +15,52 @@ function DashboardModern() {
     appointmentsBooked: 0
   })
   const [recentActivity, setRecentActivity] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     loadDashboardData()
   }, [])
 
-  const loadDashboardData = async () => {
-    // Mock data - replace with actual API calls
-    setStats({
-      totalConversations: 1247,
-      activeStrategies: 8,
-      leadsManaged: 532,
-      appointmentsBooked: 89
-    })
+  const getToken = () => localStorage.getItem('token')
 
-    setRecentActivity([
-      {
-        id: 1,
-        type: 'conversation',
-        title: 'New lead conversation started',
-        description: 'John Doe - Professional Coaching',
-        time: '2 minutes ago',
-        icon: '💬'
-      },
-      {
-        id: 2,
-        type: 'appointment',
-        title: 'Appointment booked',
-        description: 'Sarah Johnson - Discovery Call',
-        time: '15 minutes ago',
-        icon: '📅'
-      },
-      {
-        id: 3,
-        type: 'strategy',
-        title: 'Strategy activated',
-        description: 'Real Estate Lead Gen v2',
-        time: '1 hour ago',
-        icon: '🚀'
-      },
-    ])
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+
+      // Load real stats from API
+      const [conversationsRes, strategiesRes, leadsRes, appointmentsRes] = await Promise.all([
+        axios.get(`${API_URL}/api/conversations`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        }).catch(() => ({ data: [] })),
+        axios.get(`${API_URL}/api/templates`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        }).catch(() => ({ data: [] })),
+        axios.get(`${API_URL}/api/leads`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        }).catch(() => ({ data: [] })),
+        axios.get(`${API_URL}/api/appointments`, {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        }).catch(() => ({ data: [] }))
+      ])
+
+      setStats({
+        totalConversations: conversationsRes.data?.length || 0,
+        activeStrategies: strategiesRes.data?.filter(s => s.is_active)?.length || 0,
+        leadsManaged: leadsRes.data?.length || 0,
+        appointmentsBooked: appointmentsRes.data?.length || 0
+      })
+
+      // Load recent activity from API
+      const activityRes = await axios.get(`${API_URL}/api/analytics/recent-activity`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      }).catch(() => ({ data: [] }))
+
+      setRecentActivity(activityRes.data || [])
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const quickActions = [
@@ -101,51 +110,57 @@ function DashboardModern() {
       </div>
 
       {/* Stats Grid */}
-      <div className="stats-grid">
-        <div className="stat-card ls-card">
-          <div className="stat-icon conversations">
-            <span>💬</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalConversations.toLocaleString()}</div>
-            <div className="stat-label">Total Conversations</div>
-            <div className="stat-change positive">+12% this month</div>
+      {loading ? (
+        <div className="stats-grid">
+          <div className="stat-card ls-card">
+            <div className="stat-content">
+              <div className="stat-value">Loading...</div>
+            </div>
           </div>
         </div>
+      ) : (
+        <div className="stats-grid">
+          <div className="stat-card ls-card">
+            <div className="stat-icon conversations">
+              <span>💬</span>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.totalConversations.toLocaleString()}</div>
+              <div className="stat-label">Total Conversations</div>
+            </div>
+          </div>
 
-        <div className="stat-card ls-card">
-          <div className="stat-icon strategies">
-            <span>🤖</span>
+          <div className="stat-card ls-card">
+            <div className="stat-icon strategies">
+              <span>🤖</span>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.activeStrategies}</div>
+              <div className="stat-label">Active Strategies</div>
+            </div>
           </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.activeStrategies}</div>
-            <div className="stat-label">Active Strategies</div>
-            <div className="stat-change positive">+2 this week</div>
-          </div>
-        </div>
 
-        <div className="stat-card ls-card">
-          <div className="stat-icon leads">
-            <span>👥</span>
+          <div className="stat-card ls-card">
+            <div className="stat-icon leads">
+              <span>👥</span>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.leadsManaged.toLocaleString()}</div>
+              <div className="stat-label">Leads Managed</div>
+            </div>
           </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.leadsManaged.toLocaleString()}</div>
-            <div className="stat-label">Leads Managed</div>
-            <div className="stat-change positive">+8% this month</div>
-          </div>
-        </div>
 
-        <div className="stat-card ls-card">
-          <div className="stat-icon appointments">
-            <span>📅</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.appointmentsBooked}</div>
-            <div className="stat-label">Appointments Booked</div>
-            <div className="stat-change positive">+15% this month</div>
+          <div className="stat-card ls-card">
+            <div className="stat-icon appointments">
+              <span>📅</span>
+            </div>
+            <div className="stat-content">
+              <div className="stat-value">{stats.appointmentsBooked}</div>
+              <div className="stat-label">Appointments Booked</div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content Grid */}
       <div className="dashboard-main-grid">

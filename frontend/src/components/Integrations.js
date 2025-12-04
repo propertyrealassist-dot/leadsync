@@ -16,7 +16,7 @@ function Integrations() {
   const [showClientId, setShowClientId] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
 
-  const snapshotUrl = 'https://api.realassistagents.com/public/ghl-snapshot-template.json';
+  const snapshotUrl = 'https://affiliates.gohighlevel.com/?fp_ref=leadsync28&share=JX2MEycBcwJJBn9cea5r';
 
   // Get token from localStorage
   const getToken = () => localStorage.getItem('token');
