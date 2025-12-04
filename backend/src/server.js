@@ -12,6 +12,7 @@ const ghlRoutes = require('./routes/ghl');
 const appointmentRoutes = require('./routes/appointments');
 const webhookRoutes = require('./routes/webhooks');
 const webhookGHLRoutes = require('./routes/webhook-ghl');
+const ghlWebhookMessageRoutes = require('./routes/ghl-webhook-message');
 const downloadRoutes = require('./routes/download');
 const calendarRoutes = require('./routes/calendar');
 const teamRoutes = require('./routes/team');
@@ -113,6 +114,7 @@ app.use('/api/ghl', ghlRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/webhook', webhookGHLRoutes); // GHL webhook receiver
+app.use('/api/webhook/ghl', ghlWebhookMessageRoutes); // GHL message webhook (AppointWise style)
 app.use('/api/download', downloadRoutes); // File downloads
 app.use('/api/calendar', calendarRoutes); // Calendar booking system
 app.use('/api/team', teamRoutes); // Team management
