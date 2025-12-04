@@ -77,16 +77,6 @@ function TopNav() {
             <OrganizationSwitcher />
           </div>
 
-          {/* Search */}
-          <div className="top-nav-search">
-            <Icons.Search size={16} />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="search-input-top"
-            />
-          </div>
-
           {/* User Menu */}
           <div className="top-nav-user">
             <button
