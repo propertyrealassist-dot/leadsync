@@ -44,25 +44,21 @@ router.get('/redirect', async (req, res) => {
         const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
         userId = stateData.userId;
       } catch (e) {
-        console.log('Could not parse state parameter, will prompt for user selection');
+        console.log('Could not parse state parameter, will use first user');
       }
     }
 
-    // If no userId from state, we need to either:
-    // 1. Create a new user account
-    // 2. Link to existing user (requires user to be logged in)
-    // 3. Store in a temporary location and prompt user to login/register
-
+    // If no userId from state, use the first user
+    // NOTE: In production, you should implement proper state management with user sessions
     if (!userId) {
-      // For now, we'll try to find a user or use a default admin user
-      // In production, you'd want to handle this more carefully
+      // Try admin user first
       const adminUser = await db.get('SELECT id FROM users WHERE email = ? LIMIT 1', ['admin@leadsync.com']);
 
       if (adminUser) {
         userId = adminUser.id;
         console.log('📌 Using admin user:', userId);
       } else {
-        // Get the first user (fallback for demo purposes)
+        // Get the first user (fallback)
         const firstUser = await db.get('SELECT id FROM users ORDER BY created_at ASC LIMIT 1');
         if (firstUser) {
           userId = firstUser.id;
@@ -70,7 +66,7 @@ router.get('/redirect', async (req, res) => {
         } else {
           console.error('❌ No users found in database');
           const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-          return res.redirect(`${frontendUrl}/settings?ghl_error=true&message=no_user`);
+          return res.redirect(`${frontendUrl}/integrations?ghl_error=true&message=no_user`);
         }
       }
     }
@@ -80,9 +76,9 @@ router.get('/redirect', async (req, res) => {
     await ghlService.storeCredentials(userId, tokenData);
     console.log('✅ Credentials stored successfully');
 
-    // Redirect to frontend with success message
+    // Redirect to frontend integrations page with success message
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const redirectUrl = `${frontendUrl}/settings?ghl_connected=true&location_id=${tokenData.locationId || 'unknown'}`;
+    const redirectUrl = `${frontendUrl}/integrations?ghl_connected=true&location_id=${tokenData.locationId || 'unknown'}`;
 
     console.log('🔄 Redirecting to:', redirectUrl);
     res.redirect(redirectUrl);
@@ -96,7 +92,7 @@ router.get('/redirect', async (req, res) => {
     });
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/settings?ghl_error=true&message=${encodeURIComponent(error.message)}`);
+    res.redirect(`${frontendUrl}/integrations?ghl_error=true&message=${encodeURIComponent(error.message)}`);
   }
 });
 

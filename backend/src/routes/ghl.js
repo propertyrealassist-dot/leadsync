@@ -147,24 +147,76 @@ router.post('/connect', authenticateToken, async (req, res) => {
 
     const { locationId, accessToken } = req.body;
 
-    if (!locationId || !accessToken) {
+    if (!accessToken) {
       return res.status(400).json({
         success: false,
-        error: 'Location ID and Access Token are required'
+        error: 'Access Token is required'
       });
     }
 
-    // Test the access token by making a simple API call
-    try {
-      const testResponse = await ghlService.testAccessToken(accessToken, locationId);
+    // If no locationId provided, try to extract it from the token
+    let finalLocationId = locationId;
+    let locationName = null;
 
-      if (!testResponse.success) {
+    // Test the access token and get location info
+    try {
+      // Try to get locations to verify token and extract locationId
+      const axios = require('axios');
+
+      // First, try to get the location associated with this token
+      // Location tokens are tied to a specific location, so we can get it from the API
+      let testResponse;
+
+      if (finalLocationId) {
+        // If locationId provided, test it directly
+        testResponse = await ghlService.testAccessToken(accessToken, finalLocationId);
+        if (testResponse.success) {
+          locationName = testResponse.location?.location?.name || testResponse.location?.name;
+        }
+      } else {
+        // No locationId provided - try to get it from the token
+        // Location access tokens include the locationId in their scope
+        try {
+          const locationsResponse = await axios.get(
+            'https://services.leadconnectorhq.com/locations/search',
+            {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Version': '2021-07-28'
+              }
+            }
+          );
+
+          if (locationsResponse.data?.locations && locationsResponse.data.locations.length > 0) {
+            finalLocationId = locationsResponse.data.locations[0].id;
+            locationName = locationsResponse.data.locations[0].name;
+          }
+        } catch (searchError) {
+          console.log('Could not search locations, trying alternative method...');
+        }
+      }
+
+      if (!finalLocationId) {
         return res.status(400).json({
           success: false,
-          error: 'Invalid access token or location ID'
+          error: 'Could not determine Location ID from token. Please provide both Location ID and Access Token.'
         });
       }
+
+      // Verify the token works with the locationId
+      if (!testResponse || !testResponse.success) {
+        testResponse = await ghlService.testAccessToken(accessToken, finalLocationId);
+        if (!testResponse.success) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid access token or location ID'
+          });
+        }
+        locationName = testResponse.location?.location?.name || testResponse.location?.name;
+      }
+
     } catch (error) {
+      console.error('Token verification error:', error.response?.data || error.message);
       return res.status(400).json({
         success: false,
         error: 'Failed to verify access token. Please check your credentials.'
@@ -185,13 +237,15 @@ router.post('/connect', authenticateToken, async (req, res) => {
       userId,
       accessToken,
       '', // No refresh token for static access tokens
-      locationId,
+      finalLocationId,
       new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year expiry
     ]);
 
     res.json({
       success: true,
-      message: 'GHL account connected successfully'
+      message: 'GHL account connected successfully',
+      locationId: finalLocationId,
+      locationName: locationName
     });
   } catch (error) {
     console.error('Error connecting GHL:', error);

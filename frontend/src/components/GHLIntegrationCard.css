@@ -1,0 +1,291 @@
+/* GHL Integration Card - Clean Professional Design */
+
+.ghl-integration-card {
+  background: var(--bg-glass, rgba(26, 31, 58, 0.6));
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-xl, 16px);
+  padding: var(--spacing-xl, 24px);
+  transition: all 0.2s ease;
+}
+
+.ghl-integration-card:hover {
+  border-color: var(--border-color-hover, rgba(168, 85, 247, 0.3));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Header Section */
+.ghl-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ghl-icon {
+  flex-shrink: 0;
+}
+
+.ghl-info h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  margin: 0 0 8px 0;
+}
+
+.ghl-info p {
+  font-size: 0.875rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Loading State */
+.ghl-loading {
+  text-align: center;
+  padding: 32px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+/* Connect Button */
+.ghl-connect-btn {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  border: none;
+  border-radius: var(--radius-md, 12px);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+}
+
+.ghl-connect-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4), 0 0 24px rgba(139, 92, 246, 0.2);
+}
+
+.ghl-connect-btn:active {
+  transform: translateY(0);
+}
+
+/* Token Input Section */
+.ghl-token-section {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ghl-instructions {
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: var(--radius-md, 12px);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.ghl-instructions h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #06b6d4;
+  margin: 0 0 12px 0;
+}
+
+.ghl-instructions ol {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+.ghl-instructions li {
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.ghl-instructions strong {
+  color: var(--text-primary, #ffffff);
+}
+
+.ghl-input-group {
+  margin-bottom: 20px;
+}
+
+.ghl-input-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  margin-bottom: 8px;
+}
+
+.ghl-token-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(26, 31, 58, 0.6);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 12px);
+  color: var(--text-primary, #ffffff);
+  font-size: 0.875rem;
+  font-family: 'Courier New', monospace;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.ghl-token-input:focus {
+  outline: none;
+  border-color: var(--leadsync-purple, #8b5cf6);
+  background: rgba(26, 31, 58, 0.8);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.ghl-token-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ghl-token-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Token Actions */
+.ghl-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.ghl-cancel-btn,
+.ghl-submit-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: var(--radius-md, 12px);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ghl-cancel-btn {
+  background: transparent;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+.ghl-cancel-btn:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.1);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: var(--text-primary, #ffffff);
+}
+
+.ghl-submit-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.ghl-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4), 0 0 16px rgba(139, 92, 246, 0.2);
+}
+
+.ghl-submit-btn:disabled,
+.ghl-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ghl-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Connected State */
+.ghl-connected {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-md, 12px);
+}
+
+.ghl-connection-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.ghl-status-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.ghl-disconnect-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm, 8px);
+  color: #ef4444;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ghl-disconnect-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ghl-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .ghl-icon {
+    margin: 0 auto;
+  }
+
+  .ghl-actions {
+    flex-direction: column;
+  }
+
+  .ghl-connected {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .ghl-disconnect-btn {
+    width: 100%;
+  }
+}

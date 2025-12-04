@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Icons from './Icons';
+import GHLIntegrationCard from './GHLIntegrationCard';
 import './Integrations.css';
+import '../styles/LeadSync-DesignSystem.css';
+import '../styles/pages-modern.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -184,56 +187,21 @@ function Integrations() {
   }
 
   return (
-    <div className="integrations-container">
+    <div className="page-wrapper">
       {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1>
-            <Icons.Integrations size={32} style={{ marginRight: '12px', verticalAlign: 'middle' }} color="#8B5CF6" />
-            Integrations
-          </h1>
-          <p className="page-subtitle">Connect your tools and manage API credentials</p>
+      <div className="modern-page-header">
+        <div className="modern-page-title">
+          <div className="modern-page-icon">🔗</div>
+          <div className="modern-page-title-text">
+            <h1>Integrations</h1>
+            <p>Connect your tools and manage API credentials</p>
+          </div>
         </div>
       </div>
 
-      {/* Connect to GHL - Prominent CTA */}
-      <div className="ghl-connect-banner">
-        <div className="ghl-banner-content">
-          <div className="ghl-banner-icon">
-            <Icons.Integrations size={48} color="#10b981" />
-          </div>
-          <div className="ghl-banner-text">
-            <h2>Connect GoHighLevel</h2>
-            <p>Link your GoHighLevel account to sync contacts, calendars, and conversations</p>
-            {ghlConnected && (
-              <div className="ghl-connected-badge">
-                <Icons.Check size={16} color="#10b981" />
-                <span>Connected</span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="ghl-banner-actions">
-          {!ghlConnected ? (
-            <button
-              className="btn-ghl-connect"
-              onClick={() => {
-                const marketplaceUrl = 'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&client_id=69218dacd101d3222ff1708c-mic4vq7j&scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+opportunities.write+locations.readonly&version_id=69218dacd101d3ab25f1708d';
-                window.location.href = marketplaceUrl;
-              }}
-            >
-              <Icons.Integrations size={20} style={{ marginRight: '8px' }} color="#ffffff" />
-              Connect to GoHighLevel
-            </button>
-          ) : (
-            <button
-              className="btn-ghl-disconnect"
-              onClick={handleDisconnectGHL}
-            >
-              Disconnect
-            </button>
-          )}
-        </div>
+      {/* GoHighLevel Integration Card - NEW CLEAN VERSION */}
+      <div style={{ marginBottom: '32px' }}>
+        <GHLIntegrationCard />
       </div>
 
       {/* Integration Cards Grid */}
