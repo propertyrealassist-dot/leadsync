@@ -94,30 +94,52 @@ router.post('/incoming/:source/:userId', async (req, res) => {
 
   try {
     const { source, userId } = req.params;
+    const payload = req.body;
+
     console.log(`📥 Incoming webhook received: ${source} for user ${userId}`);
-    console.log('Webhook data:', JSON.stringify(req.body, null, 2));
+    console.log('📋 FULL PAYLOAD:\n', JSON.stringify(payload, null, 2));
+
+    // Extract key data
+    const contactId = payload.contact_id || payload.contact?.id || payload.customData?.clientID;
+    const contactName = payload.first_name && payload.last_name
+      ? `${payload.first_name} ${payload.last_name}`
+      : payload.contact?.name || 'Unknown';
+    const message = payload.message?.body || payload.text || '';
+    const locationId = payload.location?.id || payload.location_id;
+    const conversationId = payload.conversation_id || payload.customData?.conversationID || undefined;
+    const clientId = payload.customData?.clientID || undefined;
+    const tags = payload.tags ? payload.tags.split(',').map(tag => tag.trim()) : [];
+    const timestamp = payload.date_created || payload.customData?.Time || new Date().toISOString();
+
+    console.log('📊 EXTRACTED DATA:');
+    console.log(`  Message: ${message}`);
+    console.log(`  Contact: ${contactName}`);
+    console.log(`  Contact ID: ${contactId}`);
+    console.log(`  Location ID: ${locationId}`);
+    console.log(`  Conversation ID: ${conversationId}`);
+    console.log(`  Client ID: ${clientId}`);
+    console.log(`  Tags: ${tags}`);
+    console.log(`  Timestamp: ${timestamp}`);
+
+    if (!contactId) {
+      console.log('❌ No contact ID found in payload');
+    }
 
     // Verify user exists
     const user = await db.get('SELECT id FROM users WHERE id = ?', [userId]);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    // Extract contact ID from payload
-    let contactId = req.body.contact_id || req.body.clientID;
-    if (!contactId) {
-      console.warn('❌ No contact ID or clientID found in payload');
-      return res.status(400).json({ success: false, error: 'No contact ID or clientID provided' });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    // Attach contactId to payload for downstream processing
-    req.body.contact_id = contactId;
-
-    const result = await webhookService.processIncomingWebhook(req.body, source, db, userId);
+    // Process webhook
+    const result = await webhookService.processIncomingWebhook(payload, source, db, userId);
 
     res.json({
       success: true,
       message: 'Webhook processed',
       leadId: result.leadId
     });
+
   } catch (error) {
     console.error('Incoming webhook error:', error);
     res.status(500).json({
