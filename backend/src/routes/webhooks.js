@@ -94,18 +94,36 @@ router.post('/incoming/:source/:userId', async (req, res) => {
 
   try {
     const { source, userId } = req.params;
-    console.log(`📥 Incoming webhook: ${source} for user ${userId}`);
-    console.log('Data:', JSON.stringify(req.body, null, 2));
+    console.log(`📥 Incoming webhook received: ${source} for user ${userId}`);
+    console.log('Webhook data:', JSON.stringify(req.body, null, 2));
 
+    // Verify user exists
     const user = await db.get('SELECT id FROM users WHERE id = ?', [userId]);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    // Extract contact ID from payload
+    let contactId = req.body.contact_id || req.body.clientID;
+    if (!contactId) {
+      console.warn('❌ No contact ID or clientID found in payload');
+      return res.status(400).json({ success: false, error: 'No contact ID or clientID provided' });
+    }
+
+    // Attach contactId to payload for downstream processing
+    req.body.contact_id = contactId;
+
     const result = await webhookService.processIncomingWebhook(req.body, source, db, userId);
 
-    res.json({ success: true, message: 'Webhook processed', leadId: result.leadId });
+    res.json({
+      success: true,
+      message: 'Webhook processed',
+      leadId: result.leadId
+    });
   } catch (error) {
-    console.error('Error processing incoming webhook:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Incoming webhook error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 });
 
