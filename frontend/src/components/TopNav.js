@@ -155,8 +155,11 @@ function TopNav() {
                   <button
                     className="dropdown-menu-item logout-item"
                     onClick={() => {
+                      setShowUserMenu(false);
                       logout();
-                      navigate('/login');
+                      setTimeout(() => {
+                        navigate('/login');
+                      }, 100);
                     }}
                   >
                     <Logout size={18} />
