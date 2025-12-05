@@ -57,9 +57,14 @@ class GHLService {
       console.error('❌ Error exchanging code for token:', error.response?.data || error.message);
       if (error.response) {
         console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+        console.error('Response headers:', error.response.headers);
+        console.error('Response data:', JSON.stringify(error.response.data, null, 2));
       }
-      throw new Error('Failed to exchange authorization code');
+      console.error('Full error:', error);
+
+      // Include more details in the error message
+      const errorDetails = error.response?.data?.error_description || error.response?.data?.error || error.message;
+      throw new Error(`Token exchange failed: ${errorDetails}`);
     }
   }
 
