@@ -237,12 +237,23 @@ async function processMessage(data, headers) {
       }
     });
 
-    const aiResponse = await claudeAI.processMessage(aiPrompt, {
-      temperature: strategy.bot_temperature || 0.7,
-      conversationId: conversationId
-    });
+    console.log('📤 Calling Claude AI...');
+    console.log('   Prompt length:', aiPrompt.length);
+    console.log('   Temperature:', strategy.bot_temperature || 0.7);
 
-    console.log('✅ AI response generated:', aiResponse.substring(0, 100) + '...');
+    let aiResponse;
+    try {
+      aiResponse = await claudeAI.processMessage(aiPrompt, {
+        temperature: strategy.bot_temperature || 0.7,
+        conversationId: conversationId
+      });
+      console.log('✅ AI response generated:', aiResponse.substring(0, 100) + '...');
+    } catch (error) {
+      console.error('❌ CRITICAL ERROR generating AI response:', error);
+      console.error('   Error message:', error.message);
+      console.error('   Error stack:', error.stack);
+      throw error; // Re-throw to see the full error
+    }
 
     // =========================================
     // CHECK FOR BOOKING INTENT
@@ -257,16 +268,26 @@ async function processMessage(data, headers) {
     // SEND RESPONSE TO GHL
     // =========================================
     console.log('📤 Sending response to GHL...');
+    console.log('   Location ID:', locationId);
+    console.log('   Contact ID:', contactId);
+    console.log('   Conversation ID:', conversationId);
+    console.log('   Message length:', aiResponse.length);
 
-    await sendMessageToGHL({
-      locationId,
-      contactId,
-      conversationId,
-      message: aiResponse,
-      client
-    });
-
-    console.log('✅ Response sent to GHL');
+    try {
+      await sendMessageToGHL({
+        locationId,
+        contactId,
+        conversationId,
+        message: aiResponse,
+        client
+      });
+      console.log('✅ Response sent to GHL');
+    } catch (error) {
+      console.error('❌ CRITICAL ERROR sending message to GHL:', error);
+      console.error('   Error message:', error.message);
+      console.error('   Error stack:', error.stack);
+      throw error; // Re-throw to see the full error
+    }
 
     // =========================================
     // STORE OUTBOUND MESSAGE
@@ -344,16 +365,16 @@ function detectBookingIntent(userMessage, aiResponse) {
 // Update contact's booking status in GHL
 async function updateContactBookingStatus(contactId, locationId, client) {
   try {
-    // Get GHL integration for this location
-    const integration = await db.get(
-      `SELECT * FROM ghl_integrations
-       WHERE user_id = ? AND location_id = ? AND is_active = 1
+    // Get GHL credentials for this user
+    const credentials = await db.get(
+      `SELECT * FROM ghl_credentials
+       WHERE user_id = ?
        LIMIT 1`,
-      [client.id, locationId]
+      [client.id]
     );
 
-    if (!integration || !integration.access_token) {
-      console.log('⚠️  No GHL integration found for booking status update');
+    if (!credentials || !credentials.access_token) {
+      console.log('⚠️  No GHL credentials found for booking status update');
       return;
     }
 
@@ -367,7 +388,7 @@ async function updateContactBookingStatus(contactId, locationId, client) {
       },
       {
         headers: {
-          'Authorization': `Bearer ${integration.access_token}`,
+          'Authorization': `Bearer ${credentials.access_token}`,
           'Version': '2021-07-28',
           'Content-Type': 'application/json'
         }
@@ -383,22 +404,47 @@ async function updateContactBookingStatus(contactId, locationId, client) {
 // Send message back to GHL
 async function sendMessageToGHL({ locationId, contactId, conversationId, message, client }) {
   try {
-    // Get GHL integration
-    const integration = await db.get(
-      `SELECT * FROM ghl_integrations
-       WHERE user_id = ? AND location_id = ? AND is_active = 1
+    console.log('🔍 Looking for GHL credentials...');
+    console.log('   User ID:', client.id);
+    console.log('   Location ID:', locationId);
+
+    // Get GHL credentials from the correct table
+    const credentials = await db.get(
+      `SELECT * FROM ghl_credentials
+       WHERE user_id = ?
        LIMIT 1`,
-      [client.id, locationId]
+      [client.id]
     );
 
-    if (!integration || !integration.access_token) {
-      console.error('❌ No GHL integration found');
+    console.log('📊 Credentials query result:', credentials ? 'Found' : 'NOT FOUND');
+
+    if (!credentials) {
+      console.error('❌ No GHL credentials found for user_id:', client.id);
+      console.error('   User needs to connect their GHL account first!');
+
+      // Check what tables exist for debugging
+      try {
+        const tables = await db.all(
+          `SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%ghl%'`
+        );
+        console.error('   GHL-related tables:', tables.map(t => t.name).join(', ') || 'NONE');
+      } catch (e) {
+        console.error('   Could not query tables:', e.message);
+      }
+
       return;
     }
 
-    const accessToken = integration.access_token;
+    if (!credentials.access_token) {
+      console.error('❌ Credentials found but no access_token present');
+      return;
+    }
+
+    const accessToken = credentials.access_token;
+    console.log('✅ Access token found, length:', accessToken.length);
 
     // Send the message
+    console.log('📡 Sending to GHL API...');
     const response = await axios.post(
       `https://services.leadconnectorhq.com/conversations/messages`,
       {
@@ -415,11 +461,18 @@ async function sendMessageToGHL({ locationId, contactId, conversationId, message
       }
     );
 
-    console.log('📨 Message sent to GHL:', response.data);
+    console.log('📨 Message sent to GHL successfully!');
+    console.log('   Response status:', response.status);
+    console.log('   Response data:', JSON.stringify(response.data, null, 2));
     return response.data;
 
   } catch (error) {
-    console.error('❌ Error sending message to GHL:', error.response?.data || error.message);
+    console.error('❌ Error sending message to GHL:');
+    console.error('   Status:', error.response?.status);
+    console.error('   Status text:', error.response?.statusText);
+    console.error('   Response data:', JSON.stringify(error.response?.data, null, 2));
+    console.error('   Error message:', error.message);
+    console.error('   Error stack:', error.stack);
     throw error;
   }
 }
