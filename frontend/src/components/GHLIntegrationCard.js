@@ -93,8 +93,17 @@ function GHLIntegrationCard() {
       return;
     }
 
-    console.log('🔐 Redirecting to GHL OAuth with state parameter');
+    console.log('🔐 ========================================');
+    console.log('🔐 Starting GHL OAuth Flow');
+    console.log('🔐 ========================================');
     console.log('User ID:', user.id);
+    console.log('OAuth URL:', oauthURL);
+    console.log('');
+    console.log('If you see "Invalid Authorization!" error:');
+    console.log('1. Check GHL Marketplace App redirect URI matches exactly');
+    console.log('2. Verify all scopes are enabled in GHL app settings');
+    console.log('3. Ensure app is Published or in Test Mode with your account added');
+    console.log('========================================');
 
     // Redirect to GHL OAuth permission screen
     window.location.href = oauthURL;
