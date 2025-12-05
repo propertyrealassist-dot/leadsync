@@ -50,23 +50,26 @@ async function processMessage(data, headers) {
     // =========================================
 
     // Message data (sent by GHL automatically)
-    const messageBody = data.body || data.messageBody || data.message?.body;
+    const messageBody = data.text || data.body || data.messageBody || data.message?.body;
     const messageType = data.type || data.messageType || data.message?.type || 'SMS';
     const messageDirection = data.direction || data.messageDirection || data.message?.direction || 'inbound';
 
     // Contact data (sent by GHL automatically)
-    const contactId = data.contactId || data.contact?.id;
-    const contactName = data.contactName ||
-                       data.contact?.name ||
-                       `${data.contact?.firstName || ''} ${data.contact?.lastName || ''}`.trim() ||
-                       'Unknown';
-    const contactPhone = data.contactPhone || data.contact?.phone;
-    const contactEmail = data.contactEmail || data.contact?.email;
-    const contactTags = data.contact?.tags || [];
+    // ⚠️ CRITICAL: Check underscore versions FIRST (contact_id, not contactId)
+    const contactId = data.contact_id || data.contactId || data.contact?.id;
+    const contactName = (data.first_name && data.last_name)
+                       ? `${data.first_name} ${data.last_name}`
+                       : data.full_name || data.contactName || data.contact?.name ||
+                         `${data.contact?.firstName || ''} ${data.contact?.lastName || ''}`.trim() ||
+                         'Unknown';
+    const contactPhone = data.phone || data.contactPhone || data.contact?.phone;
+    const contactEmail = data.email || data.contactEmail || data.contact?.email;
+    const contactTags = data.tags || data.contact?.tags || [];
 
     // Conversation data (sent by GHL automatically)
-    const conversationId = data.conversationId || data.conversation?.id;
-    const locationId = data.locationId || data.location?.id;
+    // ⚠️ CRITICAL: Check underscore versions FIRST
+    const conversationId = data.conversation_id || data.conversationId || data.conversation?.id;
+    const locationId = data.location_id || data.locationId || data.location?.id;
 
     // =========================================
     // ✅ READ FROM CUSTOM DATA (Only 2 fields!)
