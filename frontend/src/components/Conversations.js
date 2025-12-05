@@ -297,7 +297,7 @@ function Conversations() {
                   <th>Error</th>
                   <th>Status</th>
                   <th>Strategy</th>
-                  <th>GHL ID</th>
+                  <th>Contact ID</th>
                   <th>Created</th>
                   <th>Actions</th>
                 </tr>

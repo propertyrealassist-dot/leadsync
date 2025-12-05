@@ -25,7 +25,7 @@ function Appointments() {
     appointmentType: '',
     location: '',
     notes: '',
-    syncToGHL: false,
+    syncToLeadConnector: false,
     calendarId: ''
   });
 
@@ -81,7 +81,7 @@ function Appointments() {
         appointmentType: '',
         location: '',
         notes: '',
-        syncToGHL: false,
+        syncToLeadConnector: false,
         calendarId: ''
       });
       loadAppointments();
@@ -105,7 +105,7 @@ function Appointments() {
     }
   };
 
-  const handleSyncFromGHL = async () => {
+  const handleSyncFromLeadConnector = async () => {
     if (!formData.calendarId) {
       alert('Please select a calendar first');
       return;
@@ -224,7 +224,7 @@ function Appointments() {
         </div>
         <div className="modern-page-actions">
           {ghlConnected && calendars.length > 0 && (
-            <button className="modern-btn modern-btn-secondary" onClick={handleSyncFromGHL}>
+            <button className="modern-btn modern-btn-secondary" onClick={handleSyncFromLeadConnector}>
               Sync from LeadConnector
             </button>
           )}
@@ -470,20 +470,20 @@ function Appointments() {
                     <label className="checkbox-label">
                       <input
                         type="checkbox"
-                        checked={formData.syncToGHL}
-                        onChange={(e) => setFormData({ ...formData, syncToGHL: e.target.checked })}
+                        checked={formData.syncToLeadConnector}
+                        onChange={(e) => setFormData({ ...formData, syncToLeadConnector: e.target.checked })}
                       />
-                      <span>Sync to GoHighLevel</span>
+                      <span>Sync to LeadConnector</span>
                     </label>
                   </div>
 
-                  {formData.syncToGHL && (
+                  {formData.syncToLeadConnector && (
                     <div className="form-group">
                       <label>LeadConnector Calendar</label>
                       <select
                         value={formData.calendarId}
                         onChange={(e) => setFormData({ ...formData, calendarId: e.target.value })}
-                        required={formData.syncToGHL}
+                        required={formData.syncToLeadConnector}
                       >
                         <option value="">Select a calendar</option>
                         {calendars.map(cal => (

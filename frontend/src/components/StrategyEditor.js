@@ -345,7 +345,7 @@ function StrategyEditor() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const fetchGHLCalendars = async () => {
+  const fetchLeadConnectorCalendars = async () => {
     setLoadingCalendars(true);
     try {
       const token = localStorage.getItem('token');
@@ -432,7 +432,7 @@ function StrategyEditor() {
       setHasUnsavedChanges(false);
 
       // Fetch LeadConnector calendars
-      fetchGHLCalendars();
+      fetchLeadConnectorCalendars();
     } catch (error) {
       console.error('❌ Error loading agent:', error);
       console.error('Error details:', error.response?.data);
@@ -978,7 +978,7 @@ function StrategyEditor() {
                 <div className="info-icon">✨</div>
                 <div className="info-content">
                   <h3>Automated AI Booking</h3>
-                  <p>Connect your GHL calendar, and the AI will book directly into it through conversational AI.</p>
+                  <p>Connect your LeadConnector calendar, and the AI will book directly into it through conversational AI.</p>
                 </div>
               </div>
 
@@ -1016,7 +1016,7 @@ function StrategyEditor() {
                       The <strong>snapshot method</strong> (webhooks only) lets AI respond to messages but can't access LeadConnector calendars.
                     </p>
                     <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 12px 0', lineHeight: '1.5' }}>
-                      <strong>To enable calendar booking:</strong> You need LeadConnector API access tokens (requires GHL location access token or OAuth setup).
+                      <strong>To enable calendar booking:</strong> You need LeadConnector API access tokens (requires location access token or OAuth setup).
                     </p>
                     <p style={{ color: '#8B5CF6', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
                       💡 For now: AI can still ask for availability and manually coordinate bookings through conversation. Full automated booking coming soon with advanced integration!
@@ -1056,7 +1056,7 @@ function StrategyEditor() {
                   value={formData.ghlContactId}
                   onChange={handleChange}
                   className="dark-input"
-                  placeholder="Enter GHL contact ID for testing..."
+                  placeholder="Enter contact ID for testing..."
                 />
               </div>
             </div>

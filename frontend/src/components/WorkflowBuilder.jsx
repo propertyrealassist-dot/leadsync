@@ -38,7 +38,7 @@ const ActionNode = ({ data }) => (
       <div className="node-description">{data.description}</div>
     )}
     {data.ghlIntegration && (
-      <div className="ghl-badge">GHL</div>
+      <div className="ghl-badge">LC</div>
     )}
     <Handle type="source" position={Position.Bottom} />
   </div>
@@ -398,24 +398,24 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
     },
   ]
 
-  // GHL Tasks
+  // LeadConnector Tasks
   const ghlTasks = [
     {
       id: 'add-tags',
       label: 'Add Tags',
       icon: '🏷️',
-      type: 'GHL',
-      category: 'GHL TASKS',
+      type: 'LeadConnector',
+      category: 'LEADCONNECTOR TASKS',
       nodeType: 'action',
-      description: 'Add tags to the contact in GHL',
+      description: 'Add tags to the contact in LeadConnector',
       ghlIntegration: true
     },
     {
       id: 'update-custom-field',
       label: 'Update Custom Contact Field',
       icon: '🔧',
-      type: 'GHL',
-      category: 'GHL TASKS',
+      type: 'LeadConnector',
+      category: 'LEADCONNECTOR TASKS',
       nodeType: 'action',
       description: 'Update custom field on contact record',
       ghlIntegration: true
@@ -424,8 +424,8 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
       id: 'update-standard-field',
       label: 'Update Standard Contact Field',
       icon: '📋',
-      type: 'GHL',
-      category: 'GHL TASKS',
+      type: 'LeadConnector',
+      category: 'LEADCONNECTOR TASKS',
       nodeType: 'action',
       description: 'Update standard contact field',
       ghlIntegration: true
@@ -1079,17 +1079,17 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
                     <div className="sidebar-item-type">{task.description}</div>
                   </div>
                   {task.ghlIntegration && (
-                    <div className="ghl-mini-badge">GHL</div>
+                    <div className="ghl-mini-badge">LC</div>
                   )}
                 </div>
               ))}
             </div>
           )}
 
-          {/* GHL Tasks Section */}
+          {/* LeadConnector Tasks Section */}
           {filteredGhlTasks.length > 0 && (
             <div className="sidebar-section">
-              <h4 className="section-title">GHL TASKS</h4>
+              <h4 className="section-title">LEADCONNECTOR TASKS</h4>
               {filteredGhlTasks.map((task) => (
                 <div
                   key={task.id}
