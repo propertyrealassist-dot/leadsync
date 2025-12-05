@@ -10,10 +10,6 @@ function GHLIntegrationCard() {
   const [isConnected, setIsConnected] = useState(false);
   const [locationName, setLocationName] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showTokenInput, setShowTokenInput] = useState(false);
-  const [accessToken, setAccessToken] = useState('');
-  const [locationId, setLocationId] = useState('');
-  const [connecting, setConnecting] = useState(false);
 
   // Get token from localStorage
   const getToken = () => localStorage.getItem('token');
@@ -96,44 +92,6 @@ function GHLIntegrationCard() {
     window.location.href = oauthURL;
   };
 
-  const handleConnectWithToken = async () => {
-    if (!accessToken.trim()) {
-      alert('Please enter your GHL Location Access Token');
-      return;
-    }
-
-    setConnecting(true);
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/ghl/connect`,
-        {
-          accessToken: accessToken.trim(),
-          locationId: locationId.trim() || undefined
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${getToken()}`
-          }
-        }
-      );
-
-      if (response.data.success) {
-        setIsConnected(true);
-        setLocationName(response.data.locationName || response.data.locationId || 'LeadConnector');
-        setShowTokenInput(false);
-        setAccessToken('');
-        setLocationId('');
-        alert('✅ Successfully connected to LeadConnector!');
-        checkConnection();
-      }
-    } catch (error) {
-      console.error('Token connection error:', error);
-      alert('Failed to connect: ' + (error.response?.data?.error || error.message));
-    } finally {
-      setConnecting(false);
-    }
-  };
-
   const handleDisconnect = async () => {
     if (!window.confirm('Are you sure you want to disconnect LeadConnector?')) {
       return;
@@ -190,92 +148,13 @@ function GHLIntegrationCard() {
         </div>
       </div>
 
-      {!isConnected && !showTokenInput && (
-        <div>
-          <button
-            className="ghl-connect-btn"
-            onClick={handleConnect}
-            style={{ marginBottom: '12px' }}
-          >
-            Connect to LeadConnector
-          </button>
-          <button
-            className="ghl-connect-btn"
-            onClick={() => setShowTokenInput(true)}
-            style={{ background: '#6b7280', marginBottom: '8px' }}
-          >
-            Connect with Access Token
-          </button>
-          <p style={{ fontSize: '12px', color: '#6b7280', margin: '8px 0 0 0' }}>
-            Use Access Token if OAuth isn't working
-          </p>
-        </div>
-      )}
-
-      {!isConnected && showTokenInput && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500' }}>
-              Location Access Token *
-            </label>
-            <input
-              type="text"
-              placeholder="Paste your LeadConnector Location Access Token"
-              value={accessToken}
-              onChange={(e) => setAccessToken(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontFamily: 'monospace'
-              }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500' }}>
-              Location ID (optional)
-            </label>
-            <input
-              type="text"
-              placeholder="Location ID (auto-detected if left blank)"
-              value={locationId}
-              onChange={(e) => setLocationId(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #e5e7eb',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              className="ghl-connect-btn"
-              onClick={handleConnectWithToken}
-              disabled={connecting}
-              style={{ flex: 1 }}
-            >
-              {connecting ? 'Connecting...' : 'Connect'}
-            </button>
-            <button
-              className="ghl-disconnect-btn"
-              onClick={() => {
-                setShowTokenInput(false);
-                setAccessToken('');
-                setLocationId('');
-              }}
-              style={{ flex: 1 }}
-            >
-              Cancel
-            </button>
-          </div>
-          <p style={{ fontSize: '12px', color: '#6b7280', margin: '0' }}>
-            Get your token from Location Settings → Integrations → API
-          </p>
-        </div>
+      {!isConnected && (
+        <button
+          className="ghl-connect-btn"
+          onClick={handleConnect}
+        >
+          Connect to LeadConnector
+        </button>
       )}
 
       {isConnected && (
