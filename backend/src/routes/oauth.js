@@ -11,6 +11,10 @@ const { db } = require('../config/database');
  * https://api.realassistagents.com/api/oauth/redirect
  */
 router.get('/redirect', async (req, res) => {
+  // CRITICAL: This endpoint MUST be public (no auth) because GHL calls it
+  console.log('\n🔵🔵🔵 OAUTH REDIRECT HIT - NO AUTH REQUIRED! 🔵🔵🔵');
+  console.log('🔵🔵🔵 This proves the endpoint is PUBLIC and accessible');
+
   try {
     console.log('\n🔐 ========================================');
     console.log('🔐 GHL OAuth Redirect received');
@@ -149,15 +153,34 @@ router.get('/redirect', async (req, res) => {
 });
 
 /**
- * Test endpoint to verify OAuth route is working
+ * Test endpoint to verify OAuth route is working and PUBLIC (no auth required)
  * GET /api/oauth/test
  */
 router.get('/test', (req, res) => {
+  console.log('🧪 OAuth test endpoint hit - this is PUBLIC');
   res.json({
     success: true,
-    message: 'OAuth redirect endpoint is working',
+    message: 'OAuth routes are PUBLIC and working!',
+    note: 'If you can see this, the OAuth endpoint is accessible without authentication',
     redirectUri: process.env.GHL_REDIRECT_URI || 'Not configured',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    queryParams: req.query
+  });
+});
+
+/**
+ * Public endpoint specifically for testing redirect without OAuth code
+ * GET /api/oauth/redirect?test=true
+ */
+router.get('/redirect-test', (req, res) => {
+  console.log('🧪 OAuth redirect test endpoint hit - this is PUBLIC');
+  res.json({
+    success: true,
+    message: 'OAuth redirect endpoint is PUBLIC and accessible!',
+    note: 'GHL can successfully call this endpoint',
+    endpoint: '/api/oauth/redirect',
+    timestamp: new Date().toISOString(),
+    queryParams: req.query
   });
 });
 
