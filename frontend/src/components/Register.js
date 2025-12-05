@@ -258,7 +258,7 @@ function Register() {
           <ul>
             <li>✅ Unique API Key for webhook authentication</li>
             <li>✅ Client ID for routing incoming requests</li>
-            <li>✅ Access to pre-configured GHL workflows</li>
+            <li>✅ Access to pre-configured LeadConnector workflows</li>
             <li>✅ Real-time AI conversation management</li>
           </ul>
         </div>

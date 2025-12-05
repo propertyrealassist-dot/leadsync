@@ -7,7 +7,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function Settings() {
   const { user } = useAuth();
-  const [ghlStatus, setGhlStatus] = useState({ connected: false, locationId: null });
+  const [leadConnectorStatus, setLeadConnectorStatus] = useState({ connected: false, locationId: null });
   const [calendars, setCalendars] = useState([]);
   const [settings, setSettings] = useState({
     defaultCalendarId: '',
@@ -25,40 +25,40 @@ function Settings() {
 
   useEffect(() => {
     loadSettings();
-    checkGHLStatus();
+    checkLeadConnectorStatus();
 
     // Check for OAuth callback success
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('ghl_connected') === 'true') {
+    if (urlParams.get('leadconnector_connected') === 'true') {
       alert('LeadConnector connected successfully!');
-      checkGHLStatus();
+      checkLeadConnectorStatus();
       window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (urlParams.get('ghl_error') === 'true') {
+    } else if (urlParams.get('leadconnector_error') === 'true') {
       alert('Failed to connect LeadConnector. Please try again.');
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
-  const checkGHLStatus = async () => {
+  const checkLeadConnectorStatus = async () => {
     try {
       const token = localStorage.getItem('leadsync_token');
-      const response = await axios.get(`${API_URL}/api/ghl/status`, {
+      const response = await axios.get(`${API_URL}/api/leadconnector/status`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setGhlStatus(response.data);
+      setLeadConnectorStatus(response.data);
 
       if (response.data.connected) {
         loadCalendars();
       }
     } catch (error) {
-      console.error('Error checking GHL status:', error);
+      console.error('Error checking LeadConnector status:', error);
     }
   };
 
   const loadCalendars = async () => {
     try {
       const token = localStorage.getItem('leadsync_token');
-      const response = await axios.get(`${API_URL}/api/ghl/calendars`, {
+      const response = await axios.get(`${API_URL}/api/leadconnector/calendars`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCalendars(response.data.calendars || []);
@@ -79,35 +79,35 @@ function Settings() {
     }
   };
 
-  const handleConnectGHL = () => {
+  const handleConnectLeadConnector = () => {
     // Use the marketplace install link directly with CORRECT version_id
-    // This redirects to GHL marketplace for OAuth authorization
+    // This redirects to LeadConnector marketplace for OAuth authorization
     const marketplaceUrl = 'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&client_id=69218dacd101d3222ff1708c-mic4vq7j&scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+opportunities.write+locations.readonly&version_id=69218dacd101d3222ff1708c';
 
     // Store current user in session for callback (optional)
     if (user?.id) {
-      sessionStorage.setItem('ghl_connecting_user', user.id);
+      sessionStorage.setItem('leadconnector_connecting_user', user.id);
     }
 
-    // Redirect to GHL marketplace
+    // Redirect to LeadConnector marketplace
     window.location.href = marketplaceUrl;
   };
 
-  const handleDisconnectGHL = async () => {
+  const handleDisconnectLeadConnector = async () => {
     if (!window.confirm('Are you sure you want to disconnect LeadConnector?')) {
       return;
     }
 
     try {
       const token = localStorage.getItem('leadsync_token');
-      await axios.post(`${API_URL}/api/ghl/disconnect`, {}, {
+      await axios.post(`${API_URL}/api/leadconnector/disconnect`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setGhlStatus({ connected: false, locationId: null });
+      setLeadConnectorStatus({ connected: false, locationId: null });
       setCalendars([]);
       alert('LeadConnector disconnected successfully');
     } catch (error) {
-      console.error('Error disconnecting GHL:', error);
+      console.error('Error disconnecting LeadConnector:', error);
       alert('Failed to disconnect LeadConnector');
     }
   };
@@ -152,16 +152,16 @@ function Settings() {
         </div>
 
         <div className="settings-card">
-          {ghlStatus.connected ? (
+          {leadConnectorStatus.connected ? (
             <div className="integration-connected">
               <div className="connection-status">
                 <div className="status-indicator status-connected"></div>
                 <div>
                   <h3>Connected to LeadConnector</h3>
-                  <p>Location ID: {ghlStatus.locationId}</p>
+                  <p>Location ID: {leadConnectorStatus.locationId}</p>
                 </div>
               </div>
-              <button className="btn-danger" onClick={handleDisconnectGHL}>
+              <button className="btn-danger" onClick={handleDisconnectLeadConnector}>
                 Disconnect
               </button>
             </div>
@@ -174,13 +174,13 @@ function Settings() {
                   <p>Connect your CRM account to enable two-way sync with LeadSync</p>
                 </div>
               </div>
-              <button className="btn-primary" onClick={handleConnectGHL}>
+              <button className="btn-primary" onClick={handleConnectLeadConnector}>
                 Connect to LeadConnector
               </button>
             </div>
           )}
 
-          {ghlStatus.connected && calendars.length > 0 && (
+          {leadConnectorStatus.connected && calendars.length > 0 && (
             <div className="calendars-list">
               <h4>Available Calendars</h4>
               <div className="calendar-items">
@@ -204,7 +204,7 @@ function Settings() {
         </div>
 
         <div className="settings-card">
-          {ghlStatus.connected && calendars.length > 0 && (
+          {leadConnectorStatus.connected && calendars.length > 0 && (
             <div className="form-group">
               <label>Default Calendar</label>
               <select
@@ -261,7 +261,7 @@ function Settings() {
       </div>
 
       {/* Sync Settings */}
-      {ghlStatus.connected && (
+      {leadConnectorStatus.connected && (
         <div className="settings-section">
           <div className="section-header">
             <h2>Sync Settings</h2>

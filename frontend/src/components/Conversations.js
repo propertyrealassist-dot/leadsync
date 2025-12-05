@@ -318,7 +318,7 @@ function Conversations() {
                       </span>
                     </td>
                     <td className="strategy">{conversation.template_name || '-'}</td>
-                    <td className="ghl-id">{conversation.ghl_contact_id || '-'}</td>
+                    <td className="ghl-id">{conversation.leadconnector_contact_id || '-'}</td>
                     <td className="created-at">{formatDate(conversation.started_at)}</td>
                     <td className="actions" onClick={(e) => e.stopPropagation()}>
                       <button

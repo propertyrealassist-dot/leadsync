@@ -28,7 +28,8 @@
       "Bash(node:*)",
       "Bash(npm run build:*)",
       "Bash(npx vercel --prod --yes --token=$VERCEL_TOKEN)",
-      "Bash(npx vercel deploy --prod)"
+      "Bash(npx vercel deploy --prod)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

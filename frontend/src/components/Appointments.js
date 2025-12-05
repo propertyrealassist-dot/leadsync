@@ -31,20 +31,20 @@ function Appointments() {
 
   useEffect(() => {
     loadAppointments();
-    checkGHLStatus();
+    checkLeadConnectorStatus();
   }, []);
 
-  const checkGHLStatus = async () => {
+  const checkLeadConnectorStatus = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/ghl/status?userId=default_user`);
+      const response = await axios.get(`${API_URL}/api/leadconnector/status?userId=default_user`);
       setGhlConnected(response.data.connected);
 
       if (response.data.connected) {
-        const calendarsResponse = await axios.get(`${API_URL}/api/ghl/calendars?userId=default_user`);
+        const calendarsResponse = await axios.get(`${API_URL}/api/leadconnector/calendars?userId=default_user`);
         setCalendars(calendarsResponse.data.calendars || []);
       }
     } catch (error) {
-      console.error('Error checking GHL status:', error);
+      console.error('Error checking LeadConnector status:', error);
     }
   };
 
@@ -120,7 +120,7 @@ function Appointments() {
       alert(`Synced ${response.data.synced} new appointments and updated ${response.data.updated} existing appointments`);
       loadAppointments();
     } catch (error) {
-      console.error('Error syncing from GHL:', error);
+      console.error('Error syncing from LeadConnector:', error);
       alert('Failed to sync appointments');
     }
   };
@@ -225,7 +225,7 @@ function Appointments() {
         <div className="modern-page-actions">
           {ghlConnected && calendars.length > 0 && (
             <button className="modern-btn modern-btn-secondary" onClick={handleSyncFromGHL}>
-              Sync from GHL
+              Sync from LeadConnector
             </button>
           )}
           <button className="modern-btn modern-btn-primary" onClick={() => setShowCreateModal(true)}>
@@ -294,7 +294,7 @@ function Appointments() {
                 <div className="appointment-actions">
                   {getStatusBadge(appointment.status)}
                   {appointment.synced_to_ghl && (
-                    <span className="sync-badge" title="Synced to GHL">🔄</span>
+                    <span className="sync-badge" title="Synced to LeadConnector">🔄</span>
                   )}
                   <button
                     className="btn-icon btn-delete"
@@ -343,7 +343,7 @@ function Appointments() {
                 <div className="appointment-actions">
                   {getStatusBadge(appointment.status)}
                   {appointment.synced_to_ghl && (
-                    <span className="sync-badge" title="Synced to GHL">🔄</span>
+                    <span className="sync-badge" title="Synced to LeadConnector">🔄</span>
                   )}
                   <button
                     className="btn-icon btn-delete"
@@ -479,7 +479,7 @@ function Appointments() {
 
                   {formData.syncToGHL && (
                     <div className="form-group">
-                      <label>GHL Calendar</label>
+                      <label>LeadConnector Calendar</label>
                       <select
                         value={formData.calendarId}
                         onChange={(e) => setFormData({ ...formData, calendarId: e.target.value })}

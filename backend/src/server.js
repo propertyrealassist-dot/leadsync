@@ -8,7 +8,7 @@ const passwordResetRoutes = require('./routes/passwordReset');
 const templateRoutes = require('./routes/templates');
 const conversationRoutes = require('./routes/conversations');
 const actionRoutes = require('./routes/actions');
-const ghlRoutes = require('./routes/ghl');
+const leadConnectorRoutes = require('./routes/ghl'); // Keep filename as ghl.js for now, will rename later
 const appointmentRoutes = require('./routes/appointments');
 const webhookRoutes = require('./routes/webhooks');
 const webhookGHLRoutes = require('./routes/webhook-ghl');
@@ -110,7 +110,9 @@ app.use('/api/auth', passwordResetRoutes); // Password reset routes
 app.use('/api/templates', templateRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/actions', actionRoutes);
-app.use('/api/ghl', ghlRoutes);
+app.use('/api/leadconnector', leadConnectorRoutes);
+// Backward compatibility - redirect old /api/ghl requests
+app.use('/api/ghl', leadConnectorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/webhook', webhookGHLRoutes); // GHL webhook receiver

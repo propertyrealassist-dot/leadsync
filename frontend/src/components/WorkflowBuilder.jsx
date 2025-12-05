@@ -684,7 +684,7 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
               <div className="ghl-integration-notice">
                 <div className="ghl-integration-notice-icon">🔗</div>
                 <div className="ghl-integration-notice-content">
-                  <div className="ghl-integration-notice-title">GHL Integration</div>
+                  <div className="ghl-integration-notice-title">LeadConnector Integration</div>
                   <div className="ghl-integration-notice-text">
                     This task integrates with GoHighLevel CRM and requires proper API configuration.
                   </div>

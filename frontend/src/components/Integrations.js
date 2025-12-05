@@ -216,14 +216,14 @@ function Integrations() {
           </button>
         </div>
 
-        {/* Card 3: GHL Snapshot */}
+        {/* Card 3: LeadConnector Snapshot */}
         <div className="integration-card">
           <div className="card-icon-wrapper snapshot">
             <span className="card-icon">
               <Icons.Download size={32} color="#8B5CF6" />
             </span>
           </div>
-          <h3 className="card-title">🚀 GHL Snapshot - 5 Minute Setup!</h3>
+          <h3 className="card-title">🚀 LeadConnector Snapshot - 5 Minute Setup!</h3>
           <p className="card-description">
             <strong>NO Developer Account Needed!</strong> Just import the snapshot and paste your Client ID.
           </p>
@@ -238,10 +238,10 @@ function Integrations() {
                   <strong>Copy your Client ID</strong> from the card above ⬆️
                 </li>
                 <li style={{ marginBottom: '8px' }}>
-                  <strong>Import snapshot</strong> into GHL (click button below)
+                  <strong>import snapshot into LeadConnector (click button below)
                 </li>
                 <li style={{ marginBottom: '8px' }}>
-                  <strong>Paste Client ID</strong> in GHL Custom Values
+                  <strong>Paste Client ID</strong> in LeadConnector Custom Values
                 </li>
                 <li>
                   <strong>Done!</strong> 🎉 AI will handle all messages
@@ -334,7 +334,7 @@ function Integrations() {
           <ul>
             <li><a href="https://github.com/propertyrealassist-dot/leadsync/blob/main/GHL_SNAPSHOT_SETUP.md" target="_blank" rel="noopener noreferrer">Snapshot Import Guide</a></li>
             <li><a href="https://api.realassistagents.com/docs" target="_blank" rel="noopener noreferrer">API Documentation</a></li>
-            <li><a href="https://github.com/propertyrealassist-dot/leadsync" target="_blank" rel="noopener noreferrer">GHL Integration Setup</a></li>
+            <li><a href="https://github.com/propertyrealassist-dot/leadsync" target="_blank" rel="noopener noreferrer">LeadConnector Integration Setup</a></li>
           </ul>
         </div>
       </div>

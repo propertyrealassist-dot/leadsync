@@ -349,21 +349,21 @@ function StrategyEditor() {
     setLoadingCalendars(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/api/ghl/calendars`, {
+      const res = await axios.get(`${API_URL}/api/leadconnector/calendars`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (res.data.success && res.data.calendars) {
         setGhlCalendars(res.data.calendars);
-        console.log('✅ GHL Calendars loaded:', res.data.calendars.length);
+        console.log('✅ LeadConnector Calendars loaded:', res.data.calendars.length);
       } else {
-        console.log('⚠️ No GHL calendars found or GHL not connected');
+        console.log('⚠️ No LeadConnector calendars found or LeadConnector not connected');
         setGhlCalendars([]);
       }
     } catch (error) {
-      console.error('❌ Error loading GHL calendars:', error);
+      console.error('❌ Error loading LeadConnector calendars:', error);
       if (error.response?.status === 404 || error.response?.status === 401) {
-        console.log('ℹ️ GHL not connected - user needs to import snapshot and configure Client ID');
+        console.log('ℹ️ LeadConnector not connected - user needs to import snapshot and configure Client ID');
       }
       setGhlCalendars([]);
     } finally {
@@ -431,7 +431,7 @@ function StrategyEditor() {
       // Reset unsaved changes flag
       setHasUnsavedChanges(false);
 
-      // Fetch GHL calendars
+      // Fetch LeadConnector calendars
       fetchGHLCalendars();
     } catch (error) {
       console.error('❌ Error loading agent:', error);
@@ -636,7 +636,7 @@ function StrategyEditor() {
                 </div>
 
                 <div className="config-field">
-                  <label>🏷️ GHL Tag * (lowercase only)</label>
+                  <label>🏷️ LeadConnector Tag * (lowercase only)</label>
                   <input
                     type="text"
                     name="tag"
@@ -982,9 +982,9 @@ function StrategyEditor() {
                 </div>
               </div>
 
-              {/* GHL Calendar Selection */}
+              {/* LeadConnector Calendar Selection */}
               <div className="section">
-                <label>📅 Select GHL Calendar</label>
+                <label>📅 Select LeadConnector Calendar</label>
                 {loadingCalendars ? (
                   <p style={{ color: '#94a3b8', fontSize: '14px' }}>Loading calendars...</p>
                 ) : ghlCalendars.length > 0 ? (
@@ -1013,10 +1013,10 @@ function StrategyEditor() {
                       📅 Calendar Booking Setup Required
                     </p>
                     <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 12px 0', lineHeight: '1.5' }}>
-                      The <strong>snapshot method</strong> (webhooks only) lets AI respond to messages but can't access GHL calendars.
+                      The <strong>snapshot method</strong> (webhooks only) lets AI respond to messages but can't access LeadConnector calendars.
                     </p>
                     <p style={{ color: '#94a3b8', fontSize: '14px', margin: '0 0 12px 0', lineHeight: '1.5' }}>
-                      <strong>To enable calendar booking:</strong> You need GHL API access tokens (requires GHL location access token or OAuth setup).
+                      <strong>To enable calendar booking:</strong> You need LeadConnector API access tokens (requires GHL location access token or OAuth setup).
                     </p>
                     <p style={{ color: '#8B5CF6', fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
                       💡 For now: AI can still ask for availability and manually coordinate bookings through conversation. Full automated booking coming soon with advanced integration!
@@ -1047,9 +1047,9 @@ function StrategyEditor() {
                 />
               </div>
 
-              {/* GHL Contact ID */}
+              {/* LeadConnector Contact ID */}
               <div className="section">
-                <label>🔗 GHL Contact ID (for testing)</label>
+                <label>🔗 LeadConnector Contact ID (for testing)</label>
                 <input
                   type="text"
                   name="ghlContactId"

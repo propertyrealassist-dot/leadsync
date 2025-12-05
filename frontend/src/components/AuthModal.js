@@ -212,7 +212,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
               </div>
               <div className="feature-item">
                 <Icons.CheckCircle size={16} color="#10b981" />
-                <span>GHL Integration</span>
+                <span>LeadConnector Integration</span>
               </div>
             </div>
           )}

@@ -43,7 +43,7 @@ function GHLIntegrationCard() {
 
     // Check if user just came back from OAuth
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('ghl_connected') === 'true' || urlParams.get('connected') === 'true') {
+    if (urlParams.get('leadconnector_connected') === 'true' || urlParams.get('connected') === 'true') {
       console.log('✅ OAuth callback detected - refreshing connection status');
       // Refresh connection status
       setTimeout(() => {
@@ -57,7 +57,7 @@ function GHLIntegrationCard() {
 
   const checkConnection = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/ghl/status`, {
+      const response = await axios.get(`${API_URL}/api/leadconnector/status`, {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
       setIsConnected(response.data.connected || false);
@@ -65,7 +65,7 @@ function GHLIntegrationCard() {
         setLocationName(response.data.locationId || 'LeadConnector');
       }
     } catch (error) {
-      console.error('Error checking GHL connection:', error);
+      console.error('Error checking LeadConnector connection:', error);
       setIsConnected(false);
     } finally {
       setLoading(false);
@@ -88,7 +88,7 @@ function GHLIntegrationCard() {
     console.log('OAuth URL:', oauthURL);
     console.log('========================================');
 
-    // Redirect to GHL OAuth permission screen
+    // Redirect to LeadConnector OAuth permission screen
     window.location.href = oauthURL;
   };
 
@@ -99,7 +99,7 @@ function GHLIntegrationCard() {
 
     try {
       const response = await axios.post(
-        `${API_URL}/api/ghl/disconnect`,
+        `${API_URL}/api/leadconnector/disconnect`,
         {},
         {
           headers: {

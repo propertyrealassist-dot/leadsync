@@ -893,7 +893,7 @@ function AIAgents() {
                   />
                 </th>
                 <th>Strategy Name</th>
-                <th>GHL Tag</th>
+                <th>LeadConnector Tag</th>
                 <th>Total Leads</th>
                 <th>Active Leads</th>
                 <th>Leads Won</th>
@@ -924,7 +924,7 @@ function AIAgents() {
                         <span className="name-text">{agent.name}</span>
                       </div>
                     </td>
-                    <td data-label="GHL Tag">
+                    <td data-label="LeadConnector Tag">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span className="tag-badge">{agent.tag}</span>
                         <button
