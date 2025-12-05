@@ -30,11 +30,11 @@ function Settings() {
     // Check for OAuth callback success
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('ghl_connected') === 'true') {
-      alert('GoHighLevel connected successfully!');
+      alert('LeadConnector connected successfully!');
       checkGHLStatus();
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (urlParams.get('ghl_error') === 'true') {
-      alert('Failed to connect GoHighLevel. Please try again.');
+      alert('Failed to connect LeadConnector. Please try again.');
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -94,7 +94,7 @@ function Settings() {
   };
 
   const handleDisconnectGHL = async () => {
-    if (!window.confirm('Are you sure you want to disconnect GoHighLevel?')) {
+    if (!window.confirm('Are you sure you want to disconnect LeadConnector?')) {
       return;
     }
 
@@ -105,10 +105,10 @@ function Settings() {
       });
       setGhlStatus({ connected: false, locationId: null });
       setCalendars([]);
-      alert('GoHighLevel disconnected successfully');
+      alert('LeadConnector disconnected successfully');
     } catch (error) {
       console.error('Error disconnecting GHL:', error);
-      alert('Failed to disconnect GoHighLevel');
+      alert('Failed to disconnect LeadConnector');
     }
   };
 
@@ -144,11 +144,11 @@ function Settings() {
         </div>
       </div>
 
-      {/* GoHighLevel Integration */}
+      {/* LeadConnector Integration */}
       <div className="settings-section">
         <div className="section-header">
-          <h2>GoHighLevel Integration</h2>
-          <p>Connect your GoHighLevel account to sync contacts and appointments</p>
+          <h2>LeadConnector Integration</h2>
+          <p>Connect your CRM account to sync contacts and appointments</p>
         </div>
 
         <div className="settings-card">
@@ -157,7 +157,7 @@ function Settings() {
               <div className="connection-status">
                 <div className="status-indicator status-connected"></div>
                 <div>
-                  <h3>Connected to GoHighLevel</h3>
+                  <h3>Connected to LeadConnector</h3>
                   <p>Location ID: {ghlStatus.locationId}</p>
                 </div>
               </div>
@@ -171,11 +171,11 @@ function Settings() {
                 <div className="status-indicator status-disconnected"></div>
                 <div>
                   <h3>Not Connected</h3>
-                  <p>Connect your GoHighLevel account to enable two-way sync with LeadSync</p>
+                  <p>Connect your CRM account to enable two-way sync with LeadSync</p>
                 </div>
               </div>
               <button className="btn-primary" onClick={handleConnectGHL}>
-                Connect to GoHighLevel
+                Connect to LeadConnector
               </button>
             </div>
           )}
@@ -265,7 +265,7 @@ function Settings() {
         <div className="settings-section">
           <div className="section-header">
             <h2>Sync Settings</h2>
-            <p>Configure how appointments sync with GoHighLevel</p>
+            <p>Configure how appointments sync with LeadConnector</p>
           </div>
 
           <div className="settings-card">
@@ -279,7 +279,7 @@ function Settings() {
                 <span>Enable automatic sync</span>
               </label>
               <span className="help-text">
-                Automatically sync appointments between LeadSync and GoHighLevel
+                Automatically sync appointments between LeadSync and LeadConnector
               </span>
             </div>
 

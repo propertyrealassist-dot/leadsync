@@ -66,7 +66,7 @@ function GHLIntegrationCard() {
       });
       setIsConnected(response.data.connected || false);
       if (response.data.connected) {
-        setLocationName(response.data.locationId || 'GoHighLevel');
+        setLocationName(response.data.locationId || 'LeadConnector');
       }
     } catch (error) {
       console.error('Error checking GHL connection:', error);
@@ -86,15 +86,10 @@ function GHLIntegrationCard() {
     }
 
     console.log('🔐 ========================================');
-    console.log('🔐 Starting GHL OAuth Flow');
+    console.log('🔐 Starting LeadConnector OAuth Flow');
     console.log('🔐 ========================================');
     console.log('User ID:', user.id);
     console.log('OAuth URL:', oauthURL);
-    console.log('');
-    console.log('If you see "Invalid Authorization!" error:');
-    console.log('1. Check GHL Marketplace App redirect URI matches exactly');
-    console.log('2. Verify all scopes are enabled in GHL app settings');
-    console.log('3. Ensure app is Published or in Test Mode with your account added');
     console.log('========================================');
 
     // Redirect to GHL OAuth permission screen
@@ -124,11 +119,11 @@ function GHLIntegrationCard() {
 
       if (response.data.success) {
         setIsConnected(true);
-        setLocationName(response.data.locationName || response.data.locationId || 'GoHighLevel');
+        setLocationName(response.data.locationName || response.data.locationId || 'LeadConnector');
         setShowTokenInput(false);
         setAccessToken('');
         setLocationId('');
-        alert('✅ Successfully connected to GoHighLevel!');
+        alert('✅ Successfully connected to LeadConnector!');
         checkConnection();
       }
     } catch (error) {
@@ -140,7 +135,7 @@ function GHLIntegrationCard() {
   };
 
   const handleDisconnect = async () => {
-    if (!window.confirm('Are you sure you want to disconnect GoHighLevel?')) {
+    if (!window.confirm('Are you sure you want to disconnect LeadConnector?')) {
       return;
     }
 
@@ -158,7 +153,7 @@ function GHLIntegrationCard() {
       if (response.data.success || response.status === 200) {
         setIsConnected(false);
         setLocationName('');
-        alert('✅ Disconnected from GoHighLevel');
+        alert('✅ Disconnected from LeadConnector');
       }
     } catch (error) {
       console.error('Disconnect error:', error);
@@ -190,7 +185,7 @@ function GHLIntegrationCard() {
           </svg>
         </div>
         <div className="ghl-info">
-          <h3>GoHighLevel</h3>
+          <h3>LeadConnector</h3>
           <p>Complete CRM integration with contacts, calendars, and conversations</p>
         </div>
       </div>
@@ -202,7 +197,7 @@ function GHLIntegrationCard() {
             onClick={handleConnect}
             style={{ marginBottom: '12px' }}
           >
-            Connect via OAuth
+            Connect to LeadConnector
           </button>
           <button
             className="ghl-connect-btn"
@@ -225,7 +220,7 @@ function GHLIntegrationCard() {
             </label>
             <input
               type="text"
-              placeholder="Paste your GHL Location Access Token"
+              placeholder="Paste your LeadConnector Location Access Token"
               value={accessToken}
               onChange={(e) => setAccessToken(e.target.value)}
               style={{
@@ -244,7 +239,7 @@ function GHLIntegrationCard() {
             </label>
             <input
               type="text"
-              placeholder="GHL Location ID (auto-detected if left blank)"
+              placeholder="Location ID (auto-detected if left blank)"
               value={locationId}
               onChange={(e) => setLocationId(e.target.value)}
               style={{
@@ -278,7 +273,7 @@ function GHLIntegrationCard() {
             </button>
           </div>
           <p style={{ fontSize: '12px', color: '#6b7280', margin: '0' }}>
-            Get your token: GHL Settings → Integrations → API → Generate Location Access Token
+            Get your token from Location Settings → Integrations → API
           </p>
         </div>
       )}
