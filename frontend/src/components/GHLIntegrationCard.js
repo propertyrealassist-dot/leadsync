@@ -76,6 +76,10 @@ function GHLIntegrationCard() {
     // Generate OAuth URL with user ID in state parameter
     const oauthURL = getOAuthURL();
 
+    // CRITICAL: Mark this as OAuth flow to prevent auto-logout on return
+    sessionStorage.setItem('activeSession', 'true');
+    sessionStorage.setItem('oauthInProgress', 'true');
+
     if (!oauthURL) {
       alert('Unable to connect: User not authenticated. Please refresh the page.');
       return;
