@@ -34,12 +34,19 @@ class GHLService {
       console.log('Code:', code);
       console.log('Redirect URI:', process.env.GHL_REDIRECT_URI);
 
-      const response = await axios.post(`${this.baseURL}/oauth/token`, {
+      // CRITICAL: LeadConnector requires application/x-www-form-urlencoded, NOT JSON
+      const params = new URLSearchParams({
         client_id: process.env.GHL_CLIENT_ID,
         client_secret: process.env.GHL_CLIENT_SECRET,
         grant_type: 'authorization_code',
         code: code,
         redirect_uri: process.env.GHL_REDIRECT_URI
+      });
+
+      const response = await axios.post(`${this.baseURL}/oauth/token`, params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       });
 
       console.log('✅ Token exchange successful!');
@@ -73,11 +80,18 @@ class GHLService {
    */
   async refreshAccessToken(refreshToken) {
     try {
-      const response = await axios.post(`${this.baseURL}/oauth/token`, {
+      // CRITICAL: LeadConnector requires application/x-www-form-urlencoded, NOT JSON
+      const params = new URLSearchParams({
         client_id: process.env.GHL_CLIENT_ID,
         client_secret: process.env.GHL_CLIENT_SECRET,
         grant_type: 'refresh_token',
         refresh_token: refreshToken
+      });
+
+      const response = await axios.post(`${this.baseURL}/oauth/token`, params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       });
 
       return response.data;
