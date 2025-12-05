@@ -58,39 +58,57 @@ router.get('/redirect', async (req, res) => {
       scope: tokenData.scope
     });
 
-    // Extract user ID from state parameter (if provided)
-    // In the marketplace flow, we might not have state, so we'll need to handle this
+    // Extract user ID from state parameter
     let userId = null;
 
     console.log('\n👤 Determining user ID...');
+    console.log('State parameter:', state);
+
     if (state) {
       try {
-        // State might be a JWT or encoded user info
-        const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+        // Decode base64 state parameter
+        const decodedState = Buffer.from(state, 'base64').toString('utf-8');
+        console.log('Decoded state:', decodedState);
+
+        const stateData = JSON.parse(decodedState);
         userId = stateData.userId;
-        console.log('✅ User ID from state:', userId);
+
+        if (userId) {
+          console.log('✅ User ID extracted from state:', userId);
+
+          // Verify user exists in database
+          const userExists = await db.get('SELECT id FROM users WHERE id = ?', [userId]);
+          if (!userExists) {
+            console.error('❌ User ID from state does not exist in database:', userId);
+            userId = null;
+          } else {
+            console.log('✅ User verified in database');
+          }
+        }
       } catch (e) {
-        console.log('⚠️  Could not parse state parameter:', e.message);
+        console.error('⚠️  Failed to parse state parameter:', e.message);
+        console.error('Stack:', e.stack);
       }
+    } else {
+      console.log('⚠️  No state parameter provided in OAuth callback');
     }
 
-    // If no userId from state, use the first user
-    // NOTE: In production, you should implement proper state management with user sessions
+    // If no userId from state, use fallback methods
     if (!userId) {
-      console.log('🔍 No user ID in state, looking up from database...');
+      console.log('🔍 No valid user ID from state, using fallback methods...');
 
       // Try admin user first
       const adminUser = await db.get('SELECT id FROM users WHERE email = ? LIMIT 1', ['admin@leadsync.com']);
 
       if (adminUser) {
         userId = adminUser.id;
-        console.log('✅ Using admin user:', userId);
+        console.log('✅ Using admin user as fallback:', userId);
       } else {
-        // Get the first user (fallback)
+        // Get the first user (last resort fallback)
         const firstUser = await db.get('SELECT id FROM users ORDER BY created_at ASC LIMIT 1');
         if (firstUser) {
           userId = firstUser.id;
-          console.log('✅ Using first user:', userId);
+          console.log('✅ Using first user as fallback:', userId);
         } else {
           console.error('❌ No users found in database');
           const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';

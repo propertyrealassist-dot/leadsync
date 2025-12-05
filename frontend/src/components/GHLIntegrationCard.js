@@ -1,27 +1,42 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import './GHLIntegrationCard.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function GHLIntegrationCard() {
+  const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [locationName, setLocationName] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Working GHL OAuth Install URL
-  const GHL_OAUTH_URL =
-    'https://marketplace.gohighlevel.com/oauth/chooselocation?' +
-    'response_type=code&' +
-    'redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&' +
-    'client_id=69218dacd101d3222ff1708c-mic4vq7j&' +
-    'scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+' +
-    'calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+' +
-    'opportunities.write+locations.readonly&' +
-    'version_id=69218dacd101d3222ff1708c';
-
   // Get token from localStorage
   const getToken = () => localStorage.getItem('token');
+
+  // Generate OAuth URL with state parameter containing userId
+  const getOAuthURL = () => {
+    if (!user?.id) {
+      console.error('No user ID available for OAuth');
+      return null;
+    }
+
+    // Encode user ID in state parameter (base64 encoded JSON)
+    const stateData = JSON.stringify({ userId: user.id, timestamp: Date.now() });
+    const state = btoa(stateData);
+
+    return (
+      'https://marketplace.gohighlevel.com/oauth/chooselocation?' +
+      'response_type=code&' +
+      'redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&' +
+      'client_id=69218dacd101d3222ff1708c-mic4vq7j&' +
+      'scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+' +
+      'calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+' +
+      'opportunities.write+locations.readonly&' +
+      'version_id=69218dacd101d3222ff1708c&' +
+      `state=${encodeURIComponent(state)}`
+    );
+  };
 
   useEffect(() => {
     checkConnection();
@@ -58,8 +73,19 @@ function GHLIntegrationCard() {
   };
 
   const handleConnect = () => {
+    // Generate OAuth URL with user ID in state parameter
+    const oauthURL = getOAuthURL();
+
+    if (!oauthURL) {
+      alert('Unable to connect: User not authenticated. Please refresh the page.');
+      return;
+    }
+
+    console.log('🔐 Redirecting to GHL OAuth with state parameter');
+    console.log('User ID:', user.id);
+
     // Redirect to GHL OAuth permission screen
-    window.location.href = GHL_OAUTH_URL;
+    window.location.href = oauthURL;
   };
 
   const handleDisconnect = async () => {
