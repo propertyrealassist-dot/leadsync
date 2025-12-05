@@ -30,6 +30,10 @@ class GHLService {
    */
   async exchangeCodeForToken(code) {
     try {
+      console.log('🔄 Exchanging OAuth code for access token...');
+      console.log('Code:', code);
+      console.log('Redirect URI:', process.env.GHL_REDIRECT_URI);
+
       const response = await axios.post(`${this.baseURL}/oauth/token`, {
         client_id: process.env.GHL_CLIENT_ID,
         client_secret: process.env.GHL_CLIENT_SECRET,
@@ -38,9 +42,23 @@ class GHLService {
         redirect_uri: process.env.GHL_REDIRECT_URI
       });
 
+      console.log('✅ Token exchange successful!');
+      console.log('Response data:', {
+        hasAccessToken: !!response.data.access_token,
+        hasRefreshToken: !!response.data.refresh_token,
+        expiresIn: response.data.expires_in,
+        locationId: response.data.locationId,
+        companyId: response.data.companyId,
+        scope: response.data.scope
+      });
+
       return response.data;
     } catch (error) {
-      console.error('Error exchanging code for token:', error.response?.data || error.message);
+      console.error('❌ Error exchanging code for token:', error.response?.data || error.message);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
       throw new Error('Failed to exchange authorization code');
     }
   }
@@ -68,28 +86,90 @@ class GHLService {
    * Store GHL credentials in database
    */
   async storeCredentials(userId, tokenData) {
-    const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString();
+    console.log('💾 Storing credentials to database...');
+    console.log('User ID:', userId);
+    console.log('Location ID:', tokenData.locationId);
 
-    await db.run(`
-      INSERT INTO ghl_credentials
-      (user_id, access_token, refresh_token, location_id, expires_at)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT (user_id) DO UPDATE SET
-        access_token = EXCLUDED.access_token,
-        refresh_token = EXCLUDED.refresh_token,
-        location_id = EXCLUDED.location_id,
-        expires_at = EXCLUDED.expires_at,
-        updated_at = CURRENT_TIMESTAMP
-    `, [userId, tokenData.access_token, tokenData.refresh_token, tokenData.locationId, expiresAt]);
+    const expiresAt = new Date(Date.now() + (tokenData.expires_in * 1000));
 
-    return { success: true };
+    try {
+      // Store in ghl_integrations table (new approach)
+      await db.run(`
+        INSERT INTO ghl_integrations
+        (user_id, location_id, access_token, refresh_token, expires_at, scope, token_type, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT (user_id, location_id) DO UPDATE SET
+          access_token = EXCLUDED.access_token,
+          refresh_token = EXCLUDED.refresh_token,
+          expires_at = EXCLUDED.expires_at,
+          scope = EXCLUDED.scope,
+          is_active = true,
+          updated_at = NOW()
+      `, [
+        userId,
+        tokenData.locationId || tokenData.companyId,
+        tokenData.access_token,
+        tokenData.refresh_token,
+        expiresAt.toISOString(),
+        tokenData.scope || '',
+        tokenData.token_type || 'Bearer',
+        true
+      ]);
+
+      console.log('✅ Credentials stored successfully in ghl_integrations');
+
+      // Also store in ghl_credentials for backward compatibility
+      try {
+        await db.run(`
+          INSERT INTO ghl_credentials
+          (user_id, access_token, refresh_token, location_id, expires_at)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT (user_id) DO UPDATE SET
+            access_token = EXCLUDED.access_token,
+            refresh_token = EXCLUDED.refresh_token,
+            location_id = EXCLUDED.location_id,
+            expires_at = EXCLUDED.expires_at,
+            updated_at = CURRENT_TIMESTAMP
+        `, [
+          userId,
+          tokenData.access_token,
+          tokenData.refresh_token,
+          tokenData.locationId || tokenData.companyId,
+          expiresAt.toISOString()
+        ]);
+        console.log('✅ Also saved to ghl_credentials for backward compatibility');
+      } catch (backCompatError) {
+        console.log('⚠️  Could not save to ghl_credentials (table may not exist):', backCompatError.message);
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Error storing credentials:', error);
+      throw error;
+    }
   }
 
   /**
    * Get valid access token (refresh if needed)
    */
   async getValidAccessToken(userId) {
-    const credentials = await db.get('SELECT * FROM ghl_credentials WHERE user_id = ?', [userId]);
+    let credentials = null;
+
+    // Try ghl_integrations table first (new approach)
+    try {
+      credentials = await db.get('SELECT * FROM ghl_integrations WHERE user_id = ? AND is_active = ? LIMIT 1', [userId, true]);
+    } catch (error) {
+      console.log('Could not get credentials from ghl_integrations:', error.message);
+    }
+
+    // Fallback to ghl_credentials for backward compatibility
+    if (!credentials) {
+      try {
+        credentials = await db.get('SELECT * FROM ghl_credentials WHERE user_id = ?', [userId]);
+      } catch (error) {
+        console.log('Could not get credentials from ghl_credentials:', error.message);
+      }
+    }
 
     if (!credentials) {
       throw new Error('No GHL credentials found for user');
@@ -100,11 +180,16 @@ class GHLService {
     const now = new Date();
     const buffer = 5 * 60 * 1000; // 5 minutes
 
-    if (expiresAt.getTime() - now.getTime() < buffer) {
+    if (expiresAt.getTime() - now.getTime() < buffer && credentials.refresh_token) {
       // Refresh token
-      const tokenData = await this.refreshAccessToken(credentials.refresh_token);
-      await this.storeCredentials(userId, tokenData);
-      return tokenData.access_token;
+      try {
+        const tokenData = await this.refreshAccessToken(credentials.refresh_token);
+        await this.storeCredentials(userId, tokenData);
+        return tokenData.access_token;
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+        // Return expired token and let the API call fail
+      }
     }
 
     return credentials.access_token;
@@ -114,8 +199,24 @@ class GHLService {
    * Get location ID for user
    */
   async getLocationId(userId) {
-    const result = await db.get('SELECT location_id FROM ghl_credentials WHERE user_id = ?', [userId]);
-    return result?.location_id;
+    // Check ghl_integrations table first (new approach)
+    try {
+      const integration = await db.get('SELECT location_id, location_name FROM ghl_integrations WHERE user_id = ? AND is_active = ? LIMIT 1', [userId, true]);
+      if (integration && integration.location_id) {
+        return integration.location_id;
+      }
+    } catch (error) {
+      console.log('Could not get location from ghl_integrations:', error.message);
+    }
+
+    // Fallback to ghl_credentials for backward compatibility
+    try {
+      const result = await db.get('SELECT location_id FROM ghl_credentials WHERE user_id = ?', [userId]);
+      return result?.location_id;
+    } catch (error) {
+      console.log('Could not get location from ghl_credentials:', error.message);
+      return null;
+    }
   }
 
   /**
@@ -304,8 +405,24 @@ class GHLService {
    * Check if user has GHL connected
    */
   async isConnected(userId) {
-    const result = await db.get('SELECT COUNT(*) as count FROM ghl_credentials WHERE user_id = ?', [userId]);
-    return result.count > 0;
+    // Check ghl_integrations table first (new approach)
+    try {
+      const integration = await db.get('SELECT COUNT(*) as count FROM ghl_integrations WHERE user_id = ? AND is_active = ?', [userId, true]);
+      if (integration && integration.count > 0) {
+        return true;
+      }
+    } catch (error) {
+      console.log('Could not check ghl_integrations:', error.message);
+    }
+
+    // Fallback to ghl_credentials for backward compatibility
+    try {
+      const result = await db.get('SELECT COUNT(*) as count FROM ghl_credentials WHERE user_id = ?', [userId]);
+      return result && result.count > 0;
+    } catch (error) {
+      console.log('Could not check ghl_credentials:', error.message);
+      return false;
+    }
   }
 
   /**

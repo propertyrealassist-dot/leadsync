@@ -28,9 +28,12 @@ function GHLIntegrationCard() {
 
     // Check if user just came back from OAuth
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('ghl_connected') === 'true') {
+    if (urlParams.get('ghl_connected') === 'true' || urlParams.get('connected') === 'true') {
+      console.log('✅ OAuth callback detected - refreshing connection status');
       // Refresh connection status
-      checkConnection();
+      setTimeout(() => {
+        checkConnection();
+      }, 500); // Small delay to ensure backend has saved the data
       // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }

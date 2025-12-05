@@ -12,57 +12,85 @@ const { db } = require('../config/database');
  */
 router.get('/redirect', async (req, res) => {
   try {
+    console.log('\n🔐 ========================================');
     console.log('🔐 GHL OAuth Redirect received');
-    console.log('Query params:', req.query);
+    console.log('🔐 ========================================');
+    console.log('Query params:', JSON.stringify(req.query, null, 2));
+    console.log('Headers:', JSON.stringify({
+      host: req.headers.host,
+      origin: req.headers.origin,
+      referer: req.headers.referer
+    }, null, 2));
 
-    const { code, state } = req.query;
+    const { code, state, locationId, companyId } = req.query;
 
     if (!code) {
       console.error('❌ No authorization code provided');
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      return res.redirect(`${frontendUrl}/settings?ghl_error=true&message=no_code`);
+      return res.redirect(`${frontendUrl}/integrations?ghl_error=true&message=no_code`);
     }
 
+    console.log('✅ Authorization code received:', code.substring(0, 10) + '...');
+    console.log('📍 Location ID from query:', locationId);
+    console.log('🏢 Company ID from query:', companyId);
+
     // Exchange authorization code for access token
-    console.log('📤 Exchanging code for access token...');
+    console.log('\n📤 Starting token exchange...');
     const tokenData = await ghlService.exchangeCodeForToken(code);
-    console.log('✅ Token exchange successful');
-    console.log('Token data:', {
+    console.log('✅ Token exchange completed successfully');
+
+    // Merge locationId/companyId from query params if not in tokenData
+    if (!tokenData.locationId && locationId) {
+      tokenData.locationId = locationId;
+      console.log('📍 Added locationId from query params:', locationId);
+    }
+    if (!tokenData.companyId && companyId) {
+      tokenData.companyId = companyId;
+      console.log('🏢 Added companyId from query params:', companyId);
+    }
+
+    console.log('\n📋 Final token data:', {
       hasAccessToken: !!tokenData.access_token,
       hasRefreshToken: !!tokenData.refresh_token,
       locationId: tokenData.locationId,
-      expiresIn: tokenData.expires_in
+      companyId: tokenData.companyId,
+      expiresIn: tokenData.expires_in,
+      scope: tokenData.scope
     });
 
     // Extract user ID from state parameter (if provided)
     // In the marketplace flow, we might not have state, so we'll need to handle this
     let userId = null;
 
+    console.log('\n👤 Determining user ID...');
     if (state) {
       try {
         // State might be a JWT or encoded user info
         const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
         userId = stateData.userId;
+        console.log('✅ User ID from state:', userId);
       } catch (e) {
-        console.log('Could not parse state parameter, will use first user');
+        console.log('⚠️  Could not parse state parameter:', e.message);
       }
     }
 
     // If no userId from state, use the first user
     // NOTE: In production, you should implement proper state management with user sessions
     if (!userId) {
+      console.log('🔍 No user ID in state, looking up from database...');
+
       // Try admin user first
       const adminUser = await db.get('SELECT id FROM users WHERE email = ? LIMIT 1', ['admin@leadsync.com']);
 
       if (adminUser) {
         userId = adminUser.id;
-        console.log('📌 Using admin user:', userId);
+        console.log('✅ Using admin user:', userId);
       } else {
         // Get the first user (fallback)
         const firstUser = await db.get('SELECT id FROM users ORDER BY created_at ASC LIMIT 1');
         if (firstUser) {
           userId = firstUser.id;
-          console.log('📌 Using first user:', userId);
+          console.log('✅ Using first user:', userId);
         } else {
           console.error('❌ No users found in database');
           const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -72,15 +100,21 @@ router.get('/redirect', async (req, res) => {
     }
 
     // Store GHL credentials in database
-    console.log('💾 Storing credentials for user:', userId);
+    console.log('\n💾 Storing credentials for user:', userId);
     await ghlService.storeCredentials(userId, tokenData);
     console.log('✅ Credentials stored successfully');
 
     // Redirect to frontend integrations page with success message
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const redirectUrl = `${frontendUrl}/integrations?ghl_connected=true&location_id=${tokenData.locationId || 'unknown'}`;
+    const finalLocationId = tokenData.locationId || tokenData.companyId || 'unknown';
+    const redirectUrl = `${frontendUrl}/integrations?connected=true&location_id=${finalLocationId}`;
 
-    console.log('🔄 Redirecting to:', redirectUrl);
+    console.log('\n🔄 ========================================');
+    console.log('🔄 Redirecting to frontend...');
+    console.log('🔄 ========================================');
+    console.log('URL:', redirectUrl);
+    console.log('✅ OAuth flow completed successfully!\n');
+
     res.redirect(redirectUrl);
 
   } catch (error) {
