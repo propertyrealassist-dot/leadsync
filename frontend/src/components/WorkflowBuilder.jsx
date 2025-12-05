@@ -686,7 +686,7 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
                 <div className="ghl-integration-notice-content">
                   <div className="ghl-integration-notice-title">LeadConnector Integration</div>
                   <div className="ghl-integration-notice-text">
-                    This task integrates with GoHighLevel CRM and requires proper API configuration.
+                    This task integrates with LeadConnector CRM and requires proper API configuration.
                   </div>
                 </div>
               </div>
@@ -702,7 +702,7 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
                     onChange={(e) => updateNodeData('calendarProvider', e.target.value)}
                     className="property-input"
                   >
-                    <option value="ghl">GoHighLevel</option>
+                    <option value="ghl">LeadConnector</option>
                     <option value="google">Google Calendar</option>
                     <option value="outlook">Outlook</option>
                   </select>
@@ -846,7 +846,7 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
                     onChange={(e) => updateNodeData('calendarProvider', e.target.value)}
                     className="property-input"
                   >
-                    <option value="ghl">GoHighLevel</option>
+                    <option value="ghl">LeadConnector</option>
                     <option value="google">Google Calendar</option>
                     <option value="outlook">Outlook</option>
                   </select>
@@ -1102,7 +1102,7 @@ function WorkflowBuilder({ savedWorkflows = [], onSave, onDelete }) {
                     <div className="sidebar-item-label">{task.label}</div>
                     <div className="sidebar-item-type">{task.description}</div>
                   </div>
-                  <div className="ghl-mini-badge">GHL</div>
+                  <div className="ghl-mini-badge">LC</div>
                 </div>
               ))}
             </div>

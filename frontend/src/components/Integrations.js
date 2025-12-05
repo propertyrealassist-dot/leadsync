@@ -123,7 +123,7 @@ function Integrations() {
         </div>
       </div>
 
-      {/* GoHighLevel Integration Card - NEW CLEAN VERSION */}
+      {/* LeadConnector Integration Card */}
       <div style={{ marginBottom: '32px' }}>
         <GHLIntegrationCard />
       </div>
@@ -238,7 +238,7 @@ function Integrations() {
                   <strong>Copy your Client ID</strong> from the card above ⬆️
                 </li>
                 <li style={{ marginBottom: '8px' }}>
-                  <strong>import snapshot into LeadConnector (click button below)
+                  <strong>Import snapshot into LeadConnector</strong> (click button below)
                 </li>
                 <li style={{ marginBottom: '8px' }}>
                   <strong>Paste Client ID</strong> in LeadConnector Custom Values
@@ -292,7 +292,7 @@ function Integrations() {
               </button>
               <button
                 className="btn-secondary"
-                onClick={() => window.open('https://github.com/propertyrealassist-dot/leadsync/blob/main/GHL_SNAPSHOT_SETUP.md', '_blank')}
+                onClick={() => window.open('https://github.com/propertyrealassist-dot/leadsync/blob/main/LEADCONNECTOR_SETUP.md', '_blank')}
                 style={{ flex: 1 }}
               >
                 <Icons.Info size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#8B5CF6" />
@@ -332,7 +332,7 @@ function Integrations() {
             Documentation
           </h3>
           <ul>
-            <li><a href="https://github.com/propertyrealassist-dot/leadsync/blob/main/GHL_SNAPSHOT_SETUP.md" target="_blank" rel="noopener noreferrer">Snapshot Import Guide</a></li>
+            <li><a href="https://github.com/propertyrealassist-dot/leadsync/blob/main/LEADCONNECTOR_SETUP.md" target="_blank" rel="noopener noreferrer">Snapshot Import Guide</a></li>
             <li><a href="https://api.realassistagents.com/docs" target="_blank" rel="noopener noreferrer">API Documentation</a></li>
             <li><a href="https://github.com/propertyrealassist-dot/leadsync" target="_blank" rel="noopener noreferrer">LeadConnector Integration Setup</a></li>
           </ul>
