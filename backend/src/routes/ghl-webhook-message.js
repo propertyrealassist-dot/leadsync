@@ -137,7 +137,6 @@ async function processMessage(data, headers) {
           `SELECT * FROM templates
            WHERE user_id = ?
            AND LOWER(tag) = LOWER(?)
-           AND is_active = 1
            LIMIT 1`,
           [client.id, tag]
         );
@@ -145,12 +144,11 @@ async function processMessage(data, headers) {
       }
     }
 
-    // If still no strategy, use first active strategy
+    // If still no strategy, use first strategy
     if (!strategy) {
       strategy = await db.get(
         `SELECT * FROM templates
          WHERE user_id = ?
-         AND is_active = 1
          ORDER BY created_at DESC
          LIMIT 1`,
         [client.id]
