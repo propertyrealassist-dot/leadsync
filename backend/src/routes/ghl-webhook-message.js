@@ -129,18 +129,8 @@ async function processMessage(data, headers) {
     // =========================================
     console.log('🎯 Finding AI strategy...');
 
-    // Try to find strategy by location ID first
-    let strategy = await db.get(
-      `SELECT * FROM templates
-       WHERE user_id = ?
-       AND (ghl_location_id = ? OR ghl_location_id IS NULL)
-       AND is_active = 1
-       ORDER BY ghl_location_id DESC NULLS LAST
-       LIMIT 1`,
-      [client.id, locationId]
-    );
-
-    // If no strategy found by location, try by tag
+    // Try to find strategy by tag first (most specific)
+    let strategy = null;
     if (!strategy && contactTags.length > 0) {
       for (const tag of contactTags) {
         strategy = await db.get(
