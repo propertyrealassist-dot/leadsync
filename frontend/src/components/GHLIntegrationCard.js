@@ -25,15 +25,16 @@ function GHLIntegrationCard() {
     const stateData = JSON.stringify({ userId: user.id, timestamp: Date.now() });
     const state = btoa(stateData);
 
-    // Use only valid GHL scopes (removed conversations/message scopes)
+    // CRITICAL: Include conversations/message scopes for AI to read/send messages
     return (
       'https://marketplace.gohighlevel.com/oauth/chooselocation?' +
       'response_type=code&' +
       'redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&' +
       'client_id=69218dacd101d3222ff1708c-mic4vq7j&' +
       'scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+' +
-      'calendars/events.readonly+calendars/events.write+opportunities.readonly+' +
-      'opportunities.write+locations.readonly&' +
+      'calendars%2Fevents.readonly+opportunities.readonly+opportunities.write+locations.readonly+' +
+      'calendars%2Fevents.write+conversations%2Fmessage.readonly+conversations%2Fmessage.write&' +
+      'version_id=693166f9ecd40ef5b6c116ae&' +
       `state=${encodeURIComponent(state)}`
     );
   };
