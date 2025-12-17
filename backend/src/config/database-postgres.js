@@ -334,6 +334,24 @@ async function initializeDatabase(retries = 3) {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS conversation_messages (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        ghl_conversation_id VARCHAR(255) NOT NULL,
+        ghl_contact_id VARCHAR(255) NOT NULL,
+        ghl_location_id VARCHAR(255) NOT NULL,
+        message_body TEXT NOT NULL,
+        message_type VARCHAR(50),
+        direction VARCHAR(20) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_conversation_messages_conversation ON conversation_messages(ghl_conversation_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_conversation_messages_contact ON conversation_messages(ghl_contact_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_conversation_messages_location ON conversation_messages(ghl_location_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_conversation_messages_created ON conversation_messages(created_at)`);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS appointments (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
