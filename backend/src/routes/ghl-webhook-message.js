@@ -204,7 +204,7 @@ async function processMessage(data, headers) {
         message_type,
         direction,
         created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [conversationId, contactId, locationId, messageBody, messageType, 'inbound']
     );
 
@@ -289,7 +289,7 @@ async function processMessage(data, headers) {
         message_type,
         direction,
         created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [conversationId, contactId, locationId, aiResponse, 'SMS', 'outbound']
     );
 
