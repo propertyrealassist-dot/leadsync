@@ -473,7 +473,6 @@ async function initializeDatabase(retries = 3) {
       CREATE TABLE IF NOT EXISTS leads (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
         ghl_contact_id VARCHAR(255),
         name VARCHAR(255),
         email VARCHAR(255),
@@ -489,6 +488,13 @@ async function initializeDatabase(retries = 3) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Add organization_id to leads table if it doesn't exist (migration for existing tables)
+    try {
+      await client.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE`);
+    } catch (err) {
+      console.log('ℹ️ Leads organization_id column migration:', err.message);
+    }
 
     await client.query(`CREATE INDEX IF NOT EXISTS idx_leads_user_id ON leads(user_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_leads_organization_id ON leads(organization_id)`);
