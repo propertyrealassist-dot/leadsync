@@ -138,7 +138,7 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0',
-    commit: 'acdaa76',
+    commit: '483ceb7',
     dbType: process.env.DB_TYPE || 'sqlite',
     fixes: 'schema-migration-fixed',
     message: 'LeadSync API Server Running'
