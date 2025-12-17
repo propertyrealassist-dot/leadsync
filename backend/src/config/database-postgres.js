@@ -395,6 +395,32 @@ async function initializeDatabase(retries = 3) {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_clients_ghl_contact_id ON clients(ghl_contact_id)`);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS leads (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+        ghl_contact_id VARCHAR(255),
+        name VARCHAR(255),
+        email VARCHAR(255),
+        phone VARCHAR(50),
+        status VARCHAR(50) DEFAULT 'new',
+        source VARCHAR(100),
+        tags TEXT,
+        notes TEXT,
+        lead_score INTEGER DEFAULT 0,
+        assigned_to UUID REFERENCES users(id),
+        last_contacted_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_leads_user_id ON leads(user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_leads_organization_id ON leads(organization_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_leads_ghl_contact_id ON leads(ghl_contact_id)`);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS appointment_reminders (
         id SERIAL PRIMARY KEY,
         appointment_id UUID NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
@@ -502,8 +528,10 @@ async function initializeDatabase(retries = 3) {
     try {
       await client.query(`ALTER TABLE templates ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id)`);
       await client.query(`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id)`);
+      await client.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id)`);
       await client.query(`CREATE INDEX IF NOT EXISTS idx_templates_org ON templates(organization_id)`);
       await client.query(`CREATE INDEX IF NOT EXISTS idx_conversations_org ON conversations(organization_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_leads_org ON leads(organization_id)`);
       console.log('✅ Added organization_id columns to existing tables');
     } catch (err) {
       console.log('ℹ️ Organization columns migration:', err.message);
