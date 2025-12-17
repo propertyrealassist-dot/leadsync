@@ -160,6 +160,63 @@ async function initializeDatabase(retries = 3) {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at)`);
 
+    // ==========================================
+    // MULTI-TENANT / ORGANIZATIONS TABLES
+    // ==========================================
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS organizations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        plan_type VARCHAR(50) DEFAULT 'free',
+        subscription_status VARCHAR(50) DEFAULT 'active',
+        logo_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_organizations_owner ON organizations(owner_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS organization_members (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        role VARCHAR(50) NOT NULL DEFAULT 'member',
+        invited_by UUID REFERENCES users(id),
+        invited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        joined_at TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(organization_id, user_id)
+      )
+    `);
+
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_members_org ON organization_members(organization_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_members_user ON organization_members(user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_members_status ON organization_members(status)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS organization_invitations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+        email VARCHAR(255) NOT NULL,
+        role VARCHAR(50) NOT NULL DEFAULT 'member',
+        invited_by UUID NOT NULL REFERENCES users(id),
+        token VARCHAR(255) UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_invitations_token ON organization_invitations(token)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_invitations_org ON organization_invitations(organization_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_invitations_email ON organization_invitations(email)`);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS webhook_logs (
         id SERIAL PRIMARY KEY,
@@ -484,63 +541,6 @@ async function initializeDatabase(retries = 3) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-
-    // ==========================================
-    // MULTI-TENANT / ORGANIZATIONS TABLES
-    // ==========================================
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS organizations (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(255) NOT NULL,
-        slug VARCHAR(255) UNIQUE NOT NULL,
-        owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        plan_type VARCHAR(50) DEFAULT 'free',
-        subscription_status VARCHAR(50) DEFAULT 'active',
-        logo_url TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_organizations_owner ON organizations(owner_id)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug)`);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS organization_members (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        role VARCHAR(50) NOT NULL DEFAULT 'member',
-        invited_by UUID REFERENCES users(id),
-        invited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        joined_at TIMESTAMP,
-        status VARCHAR(50) DEFAULT 'active',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(organization_id, user_id)
-      )
-    `);
-
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_members_org ON organization_members(organization_id)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_members_user ON organization_members(user_id)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_members_status ON organization_members(status)`);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS organization_invitations (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-        email VARCHAR(255) NOT NULL,
-        role VARCHAR(50) NOT NULL DEFAULT 'member',
-        invited_by UUID NOT NULL REFERENCES users(id),
-        token VARCHAR(255) UNIQUE NOT NULL,
-        expires_at TIMESTAMP NOT NULL,
-        status VARCHAR(50) DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_invitations_token ON organization_invitations(token)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_invitations_org ON organization_invitations(organization_id)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_invitations_email ON organization_invitations(email)`);
 
     // Add organization_id to existing tables if not exists
     try {
