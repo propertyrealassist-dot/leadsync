@@ -164,6 +164,7 @@ async function processMessage(data, headers) {
         contactId,
         conversationId,
         message: "Thank you for your message! We've received it and will get back to you soon.",
+        messageType: messageType || 'SMS',
         client
       });
 
@@ -267,6 +268,7 @@ async function processMessage(data, headers) {
         contactId,
         conversationId,
         message: aiResponse,
+        messageType,
         client
       });
       console.log('✅ Response sent to GHL');
@@ -393,7 +395,7 @@ async function updateContactBookingStatus(contactId, locationId, client) {
 }
 
 // Send message back to GHL
-async function sendMessageToGHL({ locationId, contactId, conversationId, message, client }) {
+async function sendMessageToGHL({ locationId, contactId, conversationId, message, messageType, client }) {
   try {
     console.log('🔍 Looking for GHL credentials...');
     console.log('   User ID:', client.id);
@@ -434,12 +436,27 @@ async function sendMessageToGHL({ locationId, contactId, conversationId, message
     const accessToken = credentials.access_token;
     console.log('✅ Access token found, length:', accessToken.length);
 
+    // Detect message type - default to SMS if not specified
+    let sendType = 'SMS';
+    if (messageType) {
+      // Normalize message type
+      if (messageType === 'FB' || messageType === 11 || messageType === '11') {
+        sendType = 'FB';
+      } else if (messageType === 'SMS' || messageType === 1 || messageType === '1') {
+        sendType = 'SMS';
+      } else {
+        sendType = messageType;
+      }
+    }
+
+    console.log('📱 Message type:', sendType);
+
     // Send the message
     console.log('📡 Sending to GHL API...');
     const response = await axios.post(
       `https://services.leadconnectorhq.com/conversations/messages`,
       {
-        type: 'SMS',
+        type: sendType,
         contactId: contactId,
         message: message
       },
