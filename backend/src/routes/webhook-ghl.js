@@ -109,13 +109,19 @@ router.post('/ghl', async (req, res) => {
           startTime
         });
       } catch (error) {
-        console.error('❌ Async processing error:', error);
+        console.error('❌ Async processing error:', error.message);
+        console.error('   Stack:', error.stack);
 
-        await db.run(`
-          UPDATE webhook_logs
-          SET error_message = ?, processing_time_ms = ?
-          WHERE id = ?
-        `, [error.message, Date.now() - startTime, webhookLogId]);
+        // Log error but don't crash the server
+        try {
+          await db.run(`
+            UPDATE webhook_logs
+            SET error_message = ?, processing_time_ms = ?
+            WHERE id = ?
+          `, [error.message, Date.now() - startTime, webhookLogId]);
+        } catch (logError) {
+          console.error('❌ Error logging webhook failure:', logError.message);
+        }
       }
     });
 

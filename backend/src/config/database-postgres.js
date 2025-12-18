@@ -12,13 +12,30 @@ const pool = new Pool({
   connectionTimeoutMillis: 15000 // Increased to 15s for cluster wake-up
 });
 
+// Detect database type from URL
+const dbUrl = process.env.DATABASE_URL || '';
+const dbHost = dbUrl.includes('neon.tech') ? 'Neon PostgreSQL' :
+               dbUrl.includes('cockroachlabs') ? 'CockroachDB' :
+               'PostgreSQL';
+
+let hostName = 'unknown';
+try {
+  if (dbUrl) {
+    const url = new URL(dbUrl);
+    hostName = url.host;
+  }
+} catch (e) {
+  // Invalid URL, use default
+}
+
 // Test connection
 pool.on('connect', () => {
-  console.log('✅ Connected to CockroachDB');
+  console.log(`✅ Connected to ${dbHost}`);
+  console.log(`📍 Host: ${hostName}`);
 });
 
 pool.on('error', (err) => {
-  console.error('❌ CockroachDB connection error:', err);
+  console.error(`❌ ${dbHost} connection error:`, err);
 });
 
 // Helper functions
@@ -45,10 +62,10 @@ async function initializeDatabase(retries = 3) {
   let client;
 
   try {
-    console.log('🔧 Connecting to CockroachDB...');
+    console.log(`🔧 Connecting to ${dbHost}...`);
     client = await pool.connect();
     console.log('✅ Connection established');
-    console.log('🔧 Initializing CockroachDB schema...');
+    console.log(`🔧 Initializing ${dbHost} schema...`);
 
     // ==========================================
     // USERS & AUTH TABLES
@@ -584,7 +601,7 @@ async function initializeDatabase(retries = 3) {
       console.log('ℹ️ Organization columns migration:', err.message);
     }
 
-    console.log('✅ CockroachDB schema initialized successfully');
+    console.log(`✅ ${dbHost} schema initialized successfully`);
 
   } catch (error) {
     console.error('❌ Error initializing database:', error.message);
@@ -647,6 +664,30 @@ async function getClient() {
   return await pool.connect();
 }
 
+// Get database info for health checks
+async function getDatabaseInfo() {
+  try {
+    const result = await pool.query('SELECT version(), current_database(), current_user');
+    return {
+      connected: true,
+      host: hostName,
+      type: dbHost,
+      version: result.rows[0].version,
+      database: result.rows[0].current_database,
+      user: result.rows[0].current_user,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    return {
+      connected: false,
+      host: hostName,
+      type: dbHost,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
 module.exports = {
   pool,
   query,
@@ -654,5 +695,8 @@ module.exports = {
   initializeDatabase,
   generateApiKey,
   generateUUID,
-  hashApiKey
+  hashApiKey,
+  getDatabaseInfo,
+  dbHost,
+  hostName
 };

@@ -138,11 +138,26 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0',
-    commit: '483ceb7',
+    commit: 'aa3580c',
     dbType: process.env.DB_TYPE || 'sqlite',
-    fixes: 'schema-migration-fixed',
+    fixes: 'message-type-detection-fixed',
     message: 'LeadSync API Server Running'
   });
+});
+
+// Database health check
+app.get('/api/health/database', async (req, res) => {
+  try {
+    const { getDatabaseInfo } = require('./config/database-postgres');
+    const dbInfo = await getDatabaseInfo();
+    res.json(dbInfo);
+  } catch (error) {
+    res.status(500).json({
+      connected: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // 404 handler

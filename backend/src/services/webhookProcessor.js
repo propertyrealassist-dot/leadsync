@@ -313,13 +313,16 @@ async function storeMessage({ conversationId, sender, content, messageType = 'SM
  */
 async function getConversationHistory(conversationId, limit = 10) {
   try {
-    return await db.all(`
+    const rows = await db.all(`
       SELECT sender, content, timestamp
       FROM messages
       WHERE conversation_id = ?
       ORDER BY timestamp DESC
       LIMIT ?
-    `, [conversationId, limit]).reverse(); // Reverse to get chronological order
+    `, [conversationId, limit]);
+
+    // Reverse to get chronological order
+    return rows ? rows.reverse() : [];
   } catch (error) {
     console.error('Error getting conversation history:', error);
     return [];
