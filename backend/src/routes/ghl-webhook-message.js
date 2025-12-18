@@ -317,8 +317,11 @@ function buildAIPrompt({ strategy, message, conversationHistory, contactName, co
   prompt += `\nName: ${contactName}`;
   if (contactInfo.phone) prompt += `\nPhone: ${contactInfo.phone}`;
   if (contactInfo.email) prompt += `\nEmail: ${contactInfo.email}`;
-  if (contactInfo.tags && contactInfo.tags.length > 0) {
-    prompt += `\nTags: ${contactInfo.tags.join(', ')}`;
+  if (contactInfo.tags) {
+    const tagsStr = typeof contactInfo.tags === 'string'
+      ? contactInfo.tags
+      : (Array.isArray(contactInfo.tags) ? contactInfo.tags.join(', ') : '');
+    if (tagsStr) prompt += `\nTags: ${tagsStr}`;
   }
 
   // Add conversation history

@@ -22,7 +22,11 @@ router.post('/ghl', async (req, res) => {
     const clientId = req.headers['x-client-id'] ||
                      req.query.client_id ||
                      req.body.client_id ||
-                     req.body.customData?.client_id;
+                     req.body.customData?.client_id ||
+                     req.body.customData?.clientID;
+
+    // Get Location ID for marketplace webhooks
+    const locationId = req.body.locationId || req.body.location?.id;
 
     // Log incoming webhook
     const logResult = await db.run(`
@@ -30,7 +34,7 @@ router.post('/ghl', async (req, res) => {
         client_id, endpoint, method, payload, headers,
         status_code, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `, [clientId || 'unknown',
+    `, [clientId || locationId || 'unknown',
       '/api/webhook/ghl',
       'POST',
       JSON.stringify(req.body),
@@ -40,41 +44,50 @@ router.post('/ghl', async (req, res) => {
 
     webhookLogId = logResult.lastInsertRowid;
 
-    // Authenticate using Client ID
-    if (!clientId) {
-      console.log('❌ No Client ID provided');
+    let user = null;
 
-      await db.run(`
-        UPDATE webhook_logs
-        SET status_code = ?, error_message = ?, processing_time_ms = ?
-        WHERE id = ?
-      `, [401, 'Client ID required', Date.now() - startTime, webhookLogId]);
-
-      return res.status(401).json({
-        success: false,
-        error: 'Client ID required. Include it in x-client-id header or request body.'
-      });
+    // Try to authenticate by Client ID first
+    if (clientId) {
+      console.log('🔐 Authenticating by Client ID:', clientId);
+      user = await db.get(`
+        SELECT id, email, client_id, api_key, account_status
+        FROM users
+        WHERE client_id = ? AND account_status = 'active'
+      `, [clientId]);
     }
 
-    // Find user by Client ID
-    const user = await db.get(`
-      SELECT id, email, client_id, api_key, account_status
-      FROM users
-      WHERE client_id = ? AND account_status = 'active'
-    `, [clientId]);
+    // If no user found by clientId, try locationId (marketplace webhooks)
+    if (!user && locationId) {
+      console.log('🔐 Authenticating by Location ID:', locationId);
+
+      // Find user who has GHL integration with this location
+      const integration = await db.get(`
+        SELECT user_id FROM ghl_integrations
+        WHERE location_id = ? AND is_active = ?
+        LIMIT 1
+      `, [locationId, true]);
+
+      if (integration) {
+        user = await db.get(`
+          SELECT id, email, client_id, api_key, account_status
+          FROM users
+          WHERE id = ? AND account_status = 'active'
+        `, [integration.user_id]);
+      }
+    }
 
     if (!user) {
-      console.log('❌ Invalid Client ID:', clientId);
+      console.log('❌ Authentication failed. ClientID:', clientId, 'LocationID:', locationId);
 
       await db.run(`
         UPDATE webhook_logs
         SET status_code = ?, error_message = ?, processing_time_ms = ?
         WHERE id = ?
-      `, [401, 'Invalid Client ID', Date.now() - startTime, webhookLogId]);
+      `, [401, 'Invalid Client ID or Location ID', Date.now() - startTime, webhookLogId]);
 
       return res.status(401).json({
         success: false,
-        error: 'Invalid Client ID'
+        error: 'Authentication failed. User not found for this Client ID or Location ID.'
       });
     }
 
