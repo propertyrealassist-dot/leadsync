@@ -391,11 +391,33 @@ async function initializeDatabase(retries = 3) {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS ghl_integrations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        location_id VARCHAR(255) NOT NULL,
+        location_name VARCHAR(255),
+        access_token TEXT NOT NULL,
+        refresh_token TEXT,
+        token_type VARCHAR(50) DEFAULT 'Bearer',
+        expires_at TIMESTAMP,
+        scope TEXT,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, location_id)
+      )
+    `);
+
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_ghl_integrations_user_id ON ghl_integrations(user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_ghl_integrations_location_id ON ghl_integrations(location_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_ghl_integrations_is_active ON ghl_integrations(is_active)`);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS conversation_messages (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        ghl_conversation_id VARCHAR(255) NOT NULL,
+        ghl_conversation_id VARCHAR(255),
         ghl_contact_id VARCHAR(255) NOT NULL,
-        ghl_location_id VARCHAR(255) NOT NULL,
+        ghl_location_id VARCHAR(255),
         message_body TEXT NOT NULL,
         message_type VARCHAR(50),
         direction VARCHAR(20) NOT NULL,
