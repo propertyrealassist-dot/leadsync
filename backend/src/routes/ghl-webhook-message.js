@@ -12,24 +12,27 @@ const axios = require('axios');
 router.post('/message', async (req, res) => {
   try {
     console.log('\n==============================================');
-    console.log('📥 INBOUND GHL MESSAGE WEBHOOK');
+    console.log('📥 WORKFLOW WEBHOOK (DISABLED - Using Marketplace Webhook)');
     console.log('==============================================');
-    console.log('📋 FULL PAYLOAD:');
-    console.log(JSON.stringify(req.body, null, 2));
-    console.log('📋 HEADERS:');
-    console.log(JSON.stringify(req.headers, null, 2));
-    console.log('==============================================\n');
+
+    // DISABLED: This workflow webhook is now disabled to prevent duplicate responses
+    // All message processing is handled by the marketplace webhook at /api/webhook/ghl
+    // which has the correct prompt building with initial_message and qualification questions
+
+    console.log('⏭️  Ignoring workflow webhook (marketplace webhook handles all messages)');
 
     // Immediately respond 200 to GHL (best practice)
     res.status(200).json({
       success: true,
-      message: 'Webhook received, processing...'
+      message: 'Webhook disabled - using marketplace webhook instead'
     });
 
-    // Process async (don't block the response)
-    processMessage(req.body, req.headers).catch(err => {
-      console.error('❌ Error processing message:', err);
-    });
+    return;
+
+    // OLD CODE BELOW (DISABLED)
+    // processMessage(req.body, req.headers).catch(err => {
+    //   console.error('❌ Error processing message:', err);
+    // });
 
   } catch (error) {
     console.error('❌ Webhook error:', error);
