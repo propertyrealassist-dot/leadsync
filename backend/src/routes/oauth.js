@@ -184,4 +184,113 @@ router.get('/redirect-test', (req, res) => {
   });
 });
 
+/**
+ * MIGRATION ENDPOINT: Migrate credentials from ghl_credentials to ghl_integrations
+ * GET /api/oauth/migrate-credentials
+ *
+ * This is a one-time migration to ensure marketplace webhooks can find credentials
+ */
+router.get('/migrate-credentials', async (req, res) => {
+  try {
+    console.log('\n🔄 ========================================');
+    console.log('🔄 MIGRATING GHL CREDENTIALS');
+    console.log('🔄 ========================================\n');
+
+    // Get all credentials from ghl_credentials
+    const oldCreds = await db.all(`
+      SELECT user_id, location_id, access_token, refresh_token, expires_at
+      FROM ghl_credentials
+    `);
+
+    if (!oldCreds || oldCreds.length === 0) {
+      console.log('❌ No credentials found in ghl_credentials table');
+      return res.json({
+        success: false,
+        message: 'No credentials found to migrate',
+        migratedCount: 0
+      });
+    }
+
+    console.log(`✅ Found ${oldCreds.length} credential(s) to migrate\n`);
+
+    let migratedCount = 0;
+    let updatedCount = 0;
+
+    // Migrate each credential
+    for (const cred of oldCreds) {
+      console.log('📤 Processing credentials for user:', cred.user_id);
+      console.log('   Location ID:', cred.location_id);
+
+      // Check if already exists in ghl_integrations
+      const existing = await db.get(`
+        SELECT id FROM ghl_integrations
+        WHERE user_id = ? AND location_id = ?
+      `, [cred.user_id, cred.location_id]);
+
+      if (existing) {
+        console.log('   ⏭️  Already exists, updating...');
+
+        await db.run(`
+          UPDATE ghl_integrations
+          SET access_token = ?,
+              refresh_token = ?,
+              expires_at = ?,
+              is_active = ?,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE user_id = ? AND location_id = ?
+        `, [cred.access_token, cred.refresh_token, cred.expires_at, true, cred.user_id, cred.location_id]);
+
+        updatedCount++;
+        console.log('   ✅ Updated\n');
+      } else {
+        console.log('   ➕ Creating new integration...');
+
+        await db.run(`
+          INSERT INTO ghl_integrations (
+            user_id, location_id, access_token, refresh_token, expires_at, is_active
+          ) VALUES (?, ?, ?, ?, ?, ?)
+        `, [cred.user_id, cred.location_id, cred.access_token, cred.refresh_token, cred.expires_at, true]);
+
+        migratedCount++;
+        console.log('   ✅ Created\n');
+      }
+    }
+
+    console.log('✅ Migration complete!');
+    console.log(`   New integrations created: ${migratedCount}`);
+    console.log(`   Existing integrations updated: ${updatedCount}\n`);
+
+    // Verify
+    const integrations = await db.all(`
+      SELECT user_id, location_id, is_active FROM ghl_integrations
+    `);
+
+    console.log('📊 Current integrations:');
+    integrations.forEach(int => {
+      console.log(`   - User: ${int.user_id}, Location: ${int.location_id}, Active: ${int.is_active}`);
+    });
+
+    res.json({
+      success: true,
+      message: 'Migration completed successfully',
+      migratedCount,
+      updatedCount,
+      totalIntegrations: integrations.length,
+      integrations: integrations.map(i => ({
+        userId: i.user_id,
+        locationId: i.location_id,
+        isActive: i.is_active
+      }))
+    });
+
+  } catch (error) {
+    console.error('❌ Migration error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
 module.exports = router;
