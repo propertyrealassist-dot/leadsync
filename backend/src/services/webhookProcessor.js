@@ -369,16 +369,16 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
   // Load and add QUALIFICATION QUESTIONS from database
   try {
     const questions = await db.all(`
-      SELECT question, order_index
+      SELECT text, id
       FROM qualification_questions
       WHERE template_id = ?
-      ORDER BY order_index ASC
+      ORDER BY id ASC
     `, [strategy.id]);
 
     if (questions && questions.length > 0) {
       prompt += `QUALIFICATION QUESTIONS (Ask these naturally during the conversation):\n`;
       questions.forEach((q, idx) => {
-        prompt += `${idx + 1}. ${q.question}\n`;
+        prompt += `${idx + 1}. ${q.text}\n`;
       });
       prompt += `\n`;
       prompt += `IMPORTANT: Ask these questions naturally, one at a time. Don't ask all at once.\n`;
