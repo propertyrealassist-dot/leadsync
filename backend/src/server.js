@@ -138,9 +138,9 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0',
-    commit: '09c8149',
+    commit: '1cbfe3a',
     dbType: process.env.DB_TYPE || 'sqlite',
-    fixes: 'workflow-webhook-disabled-duplicates-fixed',
+    fixes: 'qualification-questions-column-name-fixed',
     message: 'LeadSync API Server Running'
   });
 });
