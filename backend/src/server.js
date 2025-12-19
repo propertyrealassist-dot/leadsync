@@ -138,9 +138,9 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0',
-    commit: 'de9fa34',
+    commit: 'b593248',
     dbType: process.env.DB_TYPE || 'sqlite',
-    fixes: 'null-conversation-id-crash-fix',
+    fixes: 'uuid-generation-and-missing-awaits-fixed',
     message: 'LeadSync API Server Running'
   });
 });
