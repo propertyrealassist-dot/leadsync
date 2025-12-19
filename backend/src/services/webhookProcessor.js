@@ -94,10 +94,11 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     const conversationHistory = await getConversationHistory(conversation.id);
 
     // Build AI prompt
-    const aiPrompt = buildAIPrompt(strategy, messageData, conversationHistory);
+    const aiPrompt = await buildAIPrompt(strategy, messageData, conversationHistory);
 
-    console.log('📝 Using prompt (first 200 chars):', strategy.brief?.substring(0, 200));
-    console.log('🤖 Sending to Claude AI...');
+    console.log('📝 Full prompt length:', aiPrompt.length);
+    console.log('📝 Prompt preview (first 300 chars):', aiPrompt.substring(0, 300));
+    console.log('🤖 Sending to Groq AI...');
 
     // Process with Claude AI
     const aiResponse = await claudeAI.processMessage(aiPrompt, {
@@ -347,7 +348,7 @@ async function getConversationHistory(conversationId, limit = 10) {
 /**
  * Build AI prompt from strategy and message
  */
-function buildAIPrompt(strategy, messageData, conversationHistory) {
+async function buildAIPrompt(strategy, messageData, conversationHistory) {
   let prompt = `You are an AI assistant for ${strategy.company_information || 'a business'}.\n\n`;
 
   // Add objective
@@ -358,6 +359,33 @@ function buildAIPrompt(strategy, messageData, conversationHistory) {
   // Add tone
   if (strategy.tone) {
     prompt += `TONE: ${strategy.tone}\n\n`;
+  }
+
+  // Add INITIAL MESSAGE (critical for first contact!)
+  if (strategy.initial_message && conversationHistory.length === 0) {
+    prompt += `INITIAL MESSAGE (Use this to start the conversation):\n"${strategy.initial_message}"\n\n`;
+  }
+
+  // Load and add QUALIFICATION QUESTIONS from database
+  try {
+    const questions = await db.all(`
+      SELECT question, order_index
+      FROM qualification_questions
+      WHERE template_id = ?
+      ORDER BY order_index ASC
+    `, [strategy.id]);
+
+    if (questions && questions.length > 0) {
+      prompt += `QUALIFICATION QUESTIONS (Ask these naturally during the conversation):\n`;
+      questions.forEach((q, idx) => {
+        prompt += `${idx + 1}. ${q.question}\n`;
+      });
+      prompt += `\n`;
+      prompt += `IMPORTANT: Ask these questions naturally, one at a time. Don't ask all at once.\n`;
+      prompt += `If this is the first message, use the INITIAL MESSAGE above.\n\n`;
+    }
+  } catch (error) {
+    console.error('Error loading qualification questions:', error);
   }
 
   // Add brief

@@ -18,6 +18,16 @@ router.post('/ghl', async (req, res) => {
     console.log('Headers:', req.headers);
     console.log('Body:', JSON.stringify(req.body, null, 2));
 
+    // IGNORE InboundMessage webhooks - these are handled by workflow webhook (/api/webhook/ghl/message)
+    // to avoid duplicate responses
+    if (req.body.type === 'InboundMessage') {
+      console.log('⏭️  Ignoring InboundMessage (handled by workflow webhook)');
+      return res.status(200).json({
+        success: true,
+        message: 'InboundMessage ignored (handled by workflow webhook)'
+      });
+    }
+
     // Get Client ID from multiple possible sources
     const clientId = req.headers['x-client-id'] ||
                      req.query.client_id ||
