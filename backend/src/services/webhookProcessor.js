@@ -96,6 +96,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     // Build AI prompt
     const aiPrompt = buildAIPrompt(strategy, messageData, conversationHistory);
 
+    console.log('📝 Using prompt (first 200 chars):', strategy.brief?.substring(0, 200));
     console.log('🤖 Sending to Claude AI...');
 
     // Process with Claude AI
