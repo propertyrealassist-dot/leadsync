@@ -380,8 +380,14 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
   }
 
   // Add INITIAL MESSAGE (critical for first contact!)
-  if (strategy.initial_message && conversationHistory.length === 0) {
-    prompt += `INITIAL MESSAGE (Use this to start the conversation):\n"${strategy.initial_message}"\n\n`;
+  // Count how many messages are from the customer (not bot)
+  const customerMessageCount = conversationHistory.filter(msg => msg.sender === 'contact').length;
+
+  // Show initial message only if this is the customer's first message (0 previous customer messages)
+  // This means even if there are bot messages, we still show initial greeting for first customer contact
+  if (strategy.initial_message && customerMessageCount === 0) {
+    prompt += `INITIAL MESSAGE (This is the customer's first message - use this greeting):\n"${strategy.initial_message}"\n\n`;
+    prompt += `CRITICAL: The customer has just sent their first message. Respond with the INITIAL MESSAGE above.\n\n`;
   }
 
   // Load and add QUALIFICATION QUESTIONS from database
@@ -394,13 +400,18 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
     `, [strategy.id]);
 
     if (questions && questions.length > 0) {
-      prompt += `QUALIFICATION QUESTIONS (Ask these naturally during the conversation):\n`;
+      prompt += `QUALIFICATION QUESTIONS:\n`;
+      prompt += `Your primary goal is to ask these questions to qualify the lead:\n\n`;
       questions.forEach((q, idx) => {
         prompt += `${idx + 1}. ${q.text}\n`;
       });
       prompt += `\n`;
-      prompt += `IMPORTANT: Ask these questions naturally, one at a time. Don't ask all at once.\n`;
-      prompt += `If this is the first message, use the INITIAL MESSAGE above.\n\n`;
+      prompt += `QUALIFICATION STRATEGY:\n`;
+      prompt += `- Ask ONE question at a time, naturally woven into the conversation\n`;
+      prompt += `- Listen to their responses and ask follow-up questions to go deeper\n`;
+      prompt += `- Only move to the next qualification question after getting a meaningful answer\n`;
+      prompt += `- Keep your responses SHORT and conversational (1-2 sentences max)\n`;
+      prompt += `- Don't mention that you're "qualifying" them - keep it natural\n\n`;
     }
   } catch (error) {
     console.error('Error loading qualification questions:', error);
@@ -424,12 +435,18 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
   prompt += `CURRENT MESSAGE FROM ${messageData.contactName}:\n${messageData.message}\n\n`;
 
   // Add instructions
-  prompt += `Please respond appropriately based on the context and conversation history. `;
-  prompt += `Keep your response concise and natural. `;
+  prompt += `RESPONSE GUIDELINES:\n`;
+  prompt += `1. ${customerMessageCount === 0 ? 'Use the INITIAL MESSAGE above' : 'Continue the natural conversation flow'}\n`;
+  prompt += `2. Keep responses SHORT (1-2 sentences max) and conversational\n`;
+  prompt += `3. Match the TONE specified above\n`;
+  prompt += `4. Focus on asking the QUALIFICATION QUESTIONS one at a time\n`;
+  prompt += `5. Build rapport and trust naturally\n`;
 
   if (strategy.cta) {
-    prompt += `When appropriate, guide the conversation towards: ${strategy.cta}\n`;
+    prompt += `6. When qualified, guide towards: ${strategy.cta}\n`;
   }
+
+  prompt += `\nYOUR RESPONSE (respond naturally and conversationally):`;
 
   return prompt;
 }
