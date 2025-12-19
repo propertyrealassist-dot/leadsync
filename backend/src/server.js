@@ -138,9 +138,9 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0',
-    commit: 'ae28ff7',
+    commit: '7ec9d99',
     dbType: process.env.DB_TYPE || 'sqlite',
-    fixes: 'groq-ai-support-added',
+    fixes: 'initial-message-and-questions-working',
     message: 'LeadSync API Server Running'
   });
 });
