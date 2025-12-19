@@ -30,17 +30,18 @@ async function sendMessage({ contactId, message, conversationId, userId }) {
       credentials = await getGHLCredentials(userId);
     }
 
-    // Send message via GHL API
+    // Send message via GHL API V2 (correct endpoint)
     const response = await axios.post(
-      `https://rest.gohighlevel.com/v1/conversations/${conversationId}/messages`,
+      `https://services.leadconnectorhq.com/conversations/messages`,
       {
         type: 'SMS',
-        message: message,
-        contactId: contactId
+        contactId: contactId,
+        message: message
       },
       {
         headers: {
           'Authorization': `Bearer ${credentials.access_token}`,
+          'Version': '2021-07-28',
           'Content-Type': 'application/json'
         }
       }
@@ -239,21 +240,12 @@ async function logOutgoingMessage({ userId, contactId, conversationId, message, 
  */
 async function sendTypingIndicator({ conversationId, userId }) {
   try {
-    const credentials = getGHLCredentials(userId);
+    const credentials = await getGHLCredentials(userId);
     if (!credentials) return;
 
-    await axios.post(
-      `https://rest.gohighlevel.com/v1/conversations/${conversationId}/typing`,
-      { typing: true },
-      {
-        headers: {
-          'Authorization': `Bearer ${credentials.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    console.log('⌨️  Typing indicator sent');
+    // Note: Typing indicator may not be available in V2 API
+    // Silently skip if not needed
+    console.log('⌨️  Typing indicator skipped (V2 API)');
   } catch (error) {
     console.error('Error sending typing indicator:', error.message);
   }
