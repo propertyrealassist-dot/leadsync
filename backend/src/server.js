@@ -138,9 +138,9 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0',
-    commit: 'b42d648',
+    commit: '041c754',
     dbType: process.env.DB_TYPE || 'sqlite',
-    fixes: 'userId-parameter-and-await-fixes-for-ghl-sending',
+    fixes: 'ghl-credentials-migration-endpoint-added',
     message: 'LeadSync API Server Running'
   });
 });
