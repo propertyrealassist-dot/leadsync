@@ -290,17 +290,22 @@ async function createConversation({ userId, templateId, contactName, contactPhon
  */
 async function storeMessage({ conversationId, sender, content, messageType = 'SMS' }) {
   try {
+    // Generate temp conversation_id if missing to prevent crashes
+    const finalConversationId = conversationId || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
     await db.run(`
       INSERT INTO messages (conversation_id, sender, content, timestamp)
       VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-    `, [conversationId, sender, content]);
+    `, [finalConversationId, sender, content]);
 
-    // Update conversation's last_message_at
-    await db.run(`
-      UPDATE conversations
-      SET last_message_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `, [conversationId]);
+    // Update conversation's last_message_at (only if conversation exists)
+    if (conversationId) {
+      await db.run(`
+        UPDATE conversations
+        SET last_message_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [conversationId]);
+    }
 
   } catch (error) {
     console.error('Error storing message:', error);
