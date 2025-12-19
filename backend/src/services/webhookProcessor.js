@@ -20,7 +20,16 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     console.log('📋 Message data:', messageData);
 
     // Find matching strategy by tag
-    const strategy = findStrategyByTag(user.id, messageData.tags);
+    const strategy = await findStrategyByTag(user.id, messageData.tags);
+
+    console.log('📋 Strategy loaded:', {
+      found: !!strategy,
+      name: strategy?.name,
+      hasObjective: !!strategy?.objective,
+      hasBrief: !!strategy?.brief,
+      hasCTA: !!strategy?.cta,
+      temperature: strategy?.bot_temperature
+    });
 
     if (!strategy) {
       console.log('⚠️  No matching strategy found, using default response');
@@ -61,10 +70,10 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     console.log('✅ Found strategy:', strategy.name);
 
     // Get or create conversation
-    let conversation = getConversation(messageData.conversationId);
+    let conversation = await getConversation(messageData.conversationId);
 
     if (!conversation) {
-      conversation = createConversation({
+      conversation = await createConversation({
         userId: user.id,
         templateId: strategy.id,
         contactName: messageData.contactName,
@@ -74,7 +83,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     }
 
     // Store incoming message
-    storeMessage({
+    await storeMessage({
       conversationId: conversation.id,
       sender: 'contact',
       content: messageData.message,
@@ -82,7 +91,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     });
 
     // Get conversation history
-    const conversationHistory = getConversationHistory(conversation.id);
+    const conversationHistory = await getConversationHistory(conversation.id);
 
     // Build AI prompt
     const aiPrompt = buildAIPrompt(strategy, messageData, conversationHistory);
@@ -98,7 +107,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     console.log('✅ AI Response:', aiResponse.substring(0, 100) + '...');
 
     // Store AI response
-    storeMessage({
+    await storeMessage({
       conversationId: conversation.id,
       sender: 'bot',
       content: aiResponse,
@@ -290,8 +299,8 @@ async function createConversation({ userId, templateId, contactName, contactPhon
  */
 async function storeMessage({ conversationId, sender, content, messageType = 'SMS' }) {
   try {
-    // Generate temp conversation_id if missing to prevent crashes
-    const finalConversationId = conversationId || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Generate valid UUID if missing to prevent crashes
+    const finalConversationId = conversationId || crypto.randomUUID();
 
     await db.run(`
       INSERT INTO messages (conversation_id, sender, content, timestamp)
