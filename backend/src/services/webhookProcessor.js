@@ -204,9 +204,9 @@ function extractMessageData(payload) {
     const contactPhone = payload.contact?.phone || payload.phone || '';
     const tags = payload.contact?.tags || payload.tags || [];
 
-    // IMPORTANT: Don't use payload.type (that's the webhook type like "InboundMessage")
-    // Use payload.message.type instead (that's the actual message type like "SMS" or "FB")
-    const messageType = payload.message?.type || 'SMS';
+    // IMPORTANT: GHL puts messageType directly on payload (not nested in payload.message)
+    // messageType can be "SMS", "FB" (Facebook), "WhatsApp", etc.
+    const messageType = payload.messageType || payload.message?.type || 'SMS';
 
     console.log('   Message:', message?.substring(0, 50) + '...');
     console.log('   Contact ID:', contactId);
