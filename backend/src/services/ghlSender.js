@@ -31,6 +31,12 @@ async function sendMessage({ contactId, message, conversationId, userId }) {
     }
 
     // Send message via GHL API V2 (correct endpoint)
+    // Documentation: https://highlevel.stoplight.io/docs/integrations/7cfb4c81e8c4b-send-a-new-message
+    console.log('📡 Sending to GHL V2 API...');
+    console.log('   Contact ID:', contactId);
+    console.log('   Conversation ID:', conversationId);
+    console.log('   Message length:', message.length);
+
     const response = await axios.post(
       `https://services.leadconnectorhq.com/conversations/messages`,
       {
@@ -46,6 +52,8 @@ async function sendMessage({ contactId, message, conversationId, userId }) {
         }
       }
     );
+
+    console.log('📨 GHL API Response:', response.status, response.statusText);
 
     console.log('✅ Message sent to GHL');
 

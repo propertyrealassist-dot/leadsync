@@ -93,11 +93,28 @@ router.post('/ghl', async (req, res) => {
 
     console.log('✅ User authenticated:', user.email);
 
+    // Check webhook type - only process InboundMessage events
+    const webhookType = req.body.type;
+    console.log('📋 Webhook type:', webhookType);
+
     // Return 200 OK immediately to GHL
     res.status(200).json({
       success: true,
       message: 'Webhook received and processing'
     });
+
+    // Skip non-message webhooks
+    if (webhookType !== 'InboundMessage') {
+      console.log('⏭️  Skipping non-message webhook:', webhookType);
+
+      await db.run(`
+        UPDATE webhook_logs
+        SET status_code = ?, processing_time_ms = ?, error_message = ?
+        WHERE id = ?
+      `, [200, Date.now() - startTime, `Skipped: ${webhookType}`, webhookLogId]);
+
+      return;
+    }
 
     // Process webhook asynchronously
     setImmediate(async () => {
