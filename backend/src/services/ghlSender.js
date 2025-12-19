@@ -76,8 +76,22 @@ async function sendMessage({ contactId, message, conversationId, userId }) {
     console.error('❌ Error sending message to GHL:', error.message);
 
     if (error.response) {
-      console.error('GHL API Error:', error.response.status, error.response.data);
+      console.error('GHL API Error Details:');
+      console.error('   Status:', error.response.status);
+      console.error('   Status Text:', error.response.statusText);
+      console.error('   Data:', JSON.stringify(error.response.data, null, 2));
+      console.error('   Headers:', JSON.stringify(error.response.headers, null, 2));
     }
+
+    console.error('Request Details:');
+    console.error('   URL:', error.config?.url);
+    console.error('   Method:', error.config?.method);
+    console.error('   Data:', error.config?.data);
+    console.error('   Headers (partial):', {
+      'Content-Type': error.config?.headers?.['Content-Type'],
+      'Version': error.config?.headers?.['Version'],
+      'Authorization': error.config?.headers?.['Authorization'] ? 'Bearer [REDACTED]' : 'Missing'
+    });
 
     // Log the failed attempt
     logOutgoingMessage({

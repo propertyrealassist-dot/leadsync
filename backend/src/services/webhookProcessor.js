@@ -193,6 +193,9 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
  */
 function extractMessageData(payload) {
   try {
+    console.log('🔍 Extracting message data from payload...');
+    console.log('   Payload keys:', Object.keys(payload));
+
     // Different GHL webhook formats
     const message = payload.message?.body || payload.body || payload.text || '';
     const contactId = payload.contact?.id || payload.contactId || '';
@@ -200,9 +203,18 @@ function extractMessageData(payload) {
     const contactName = payload.contact?.name || payload.contactName || 'Unknown';
     const contactPhone = payload.contact?.phone || payload.phone || '';
     const tags = payload.contact?.tags || payload.tags || [];
-    const messageType = payload.message?.type || payload.type || 'SMS';
+
+    // IMPORTANT: Don't use payload.type (that's the webhook type like "InboundMessage")
+    // Use payload.message.type instead (that's the actual message type like "SMS" or "FB")
+    const messageType = payload.message?.type || 'SMS';
+
+    console.log('   Message:', message?.substring(0, 50) + '...');
+    console.log('   Contact ID:', contactId);
+    console.log('   Conversation ID:', conversationId);
+    console.log('   Message Type:', messageType);
 
     if (!message) {
+      console.log('   ❌ No message body found, returning null');
       return null;
     }
 
