@@ -20,6 +20,8 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     console.log('📋 Message data:', messageData);
 
     // Find matching strategy by tag
+    console.log('🏷️  Contact tags:', messageData.tags);
+    console.log('🔍 Looking for strategy matching tags...');
     const strategy = await findStrategyByTag(user.id, messageData.tags);
 
     console.log('📋 Strategy loaded:', {
@@ -242,35 +244,54 @@ function extractMessageData(payload) {
 async function findStrategyByTag(userId, tags) {
   try {
     if (!tags || tags.length === 0) {
-      console.log('No tags provided, looking for default strategy');
+      console.log('⚠️  No tags provided, using default strategy (first created)');
       // Return first strategy for user as default
-      return await db.get(`
+      const defaultStrategy = await db.get(`
         SELECT * FROM templates
         WHERE user_id = ?
         ORDER BY created_at DESC
         LIMIT 1
       `, [userId]);
+
+      if (defaultStrategy) {
+        console.log(`✅ Default strategy: "${defaultStrategy.name}" (tag: ${defaultStrategy.tag || 'none'})`);
+      }
+
+      return defaultStrategy;
     }
+
+    console.log(`🏷️  Contact has ${tags.length} tag(s): ${tags.join(', ')}`);
 
     // Try to find strategy matching any of the tags
     for (const tag of tags) {
+      console.log(`   Searching for strategy with tag: "${tag}"`);
       const strategy = await db.get(`
         SELECT * FROM templates
         WHERE user_id = ? AND LOWER(tag) = LOWER(?)
       `, [userId, tag]);
 
       if (strategy) {
+        console.log(`   ✅ MATCH FOUND! Strategy: "${strategy.name}" matches tag: "${tag}"`);
         return strategy;
+      } else {
+        console.log(`   ❌ No strategy found for tag: "${tag}"`);
       }
     }
 
     // If no match, return first strategy as default
-    return await db.get(`
+    console.log('⚠️  No tag match found, using default strategy');
+    const defaultStrategy = await db.get(`
       SELECT * FROM templates
       WHERE user_id = ?
       ORDER BY created_at DESC
       LIMIT 1
     `, [userId]);
+
+    if (defaultStrategy) {
+      console.log(`✅ Default strategy: "${defaultStrategy.name}" (tag: ${defaultStrategy.tag || 'none'})`);
+    }
+
+    return defaultStrategy;
 
   } catch (error) {
     console.error('Error finding strategy:', error);
@@ -386,8 +407,15 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
   // Show initial message only if this is the customer's first message (0 previous customer messages)
   // This means even if there are bot messages, we still show initial greeting for first customer contact
   if (strategy.initial_message && customerMessageCount === 0) {
-    prompt += `INITIAL MESSAGE (This is the customer's first message - use this greeting):\n"${strategy.initial_message}"\n\n`;
-    prompt += `CRITICAL: The customer has just sent their first message. Respond with the INITIAL MESSAGE above.\n\n`;
+    prompt += `\n${'='.repeat(80)}\n`;
+    prompt += `CRITICAL - FIRST MESSAGE PROTOCOL:\n`;
+    prompt += `${'='.repeat(80)}\n\n`;
+    prompt += `This is the contact's FIRST message to you.\n`;
+    prompt += `You MUST respond EXACTLY with this initial greeting:\n\n`;
+    prompt += `"${strategy.initial_message}"\n\n`;
+    prompt += `DO NOT deviate from this message. Copy it EXACTLY.\n`;
+    prompt += `After they respond, THEN you can engage naturally.\n`;
+    prompt += `${'='.repeat(80)}\n\n`;
   }
 
   // Load and add QUALIFICATION QUESTIONS from database
