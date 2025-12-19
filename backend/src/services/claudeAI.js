@@ -152,23 +152,21 @@ class ClaudeAIService {
 
 /**
  * Simple function for webhook processor
- * Processes a message with Claude AI using a simple prompt
+ * Processes a message with Groq AI using a simple prompt
  */
 async function processMessage(prompt, context = {}) {
   try {
-    console.log('🤖 Processing message with Claude AI...');
+    console.log('🤖 Processing message with Groq AI...');
     console.log('Prompt length:', prompt.length);
 
-    // Check for API key
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('❌ ANTHROPIC_API_KEY not set in environment');
+    // Check for API key - Try Groq first, fallback to Anthropic
+    const useGroq = !!process.env.GROQ_API_KEY;
+    const useAnthropic = !!process.env.ANTHROPIC_API_KEY;
+
+    if (!useGroq && !useAnthropic) {
+      console.error('❌ Neither GROQ_API_KEY nor ANTHROPIC_API_KEY set in environment');
       return getFallbackResponse(context);
     }
-
-    // Initialize Claude client
-    const client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
 
     // Determine temperature
     const temperature = context.temperature || 0.7;
@@ -192,23 +190,61 @@ async function processMessage(prompt, context = {}) {
       content: prompt
     });
 
-    console.log('📤 Calling Claude API...');
-    console.log('   Model: claude-3-5-sonnet-20241022');
-    console.log('   Temperature:', temperature);
-    console.log('   Message count:', messages.length);
+    let aiResponse;
 
-    // Call Claude API
-    const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1024,
-      temperature: temperature,
-      messages: messages
-    });
+    if (useGroq) {
+      console.log('📤 Calling Groq API...');
+      console.log('   Model: llama-3.3-70b-versatile');
+      console.log('   Temperature:', temperature);
+      console.log('   Message count:', messages.length);
 
-    console.log('✅ Claude API response received');
-    console.log('   Tokens used:', response.usage.input_tokens + response.usage.output_tokens);
+      // Use Groq API (OpenAI-compatible)
+      const axios = require('axios');
+      const response = await axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          model: 'llama-3.3-70b-versatile',
+          messages: messages,
+          temperature: temperature,
+          max_tokens: 1024
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-    const aiResponse = response.content[0].text;
+      console.log('✅ Groq API response received');
+      console.log('   Tokens used:', response.data.usage.total_tokens);
+
+      aiResponse = response.data.choices[0].message.content;
+
+    } else {
+      console.log('📤 Calling Anthropic Claude API...');
+      console.log('   Model: claude-3-5-sonnet-20241022');
+      console.log('   Temperature:', temperature);
+      console.log('   Message count:', messages.length);
+
+      // Initialize Claude client
+      const client = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
+
+      // Call Claude API
+      const response = await client.messages.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1024,
+        temperature: temperature,
+        messages: messages
+      });
+
+      console.log('✅ Claude API response received');
+      console.log('   Tokens used:', response.usage.input_tokens + response.usage.output_tokens);
+
+      aiResponse = response.content[0].text;
+    }
 
     // Ensure response is not too long for SMS (160 chars preferred)
     if (aiResponse.length > 320) {
