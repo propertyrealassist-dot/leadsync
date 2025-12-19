@@ -97,20 +97,32 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     // Get conversation history
     const conversationHistory = await getConversationHistory(conversation.id);
 
-    // Build AI prompt
-    const aiPrompt = await buildAIPrompt(strategy, messageData, conversationHistory);
+    // Check if this is the first customer message
+    const customerMessageCount = conversationHistory.filter(msg => msg.sender === 'contact').length;
+    let aiResponse;
 
-    console.log('📝 Full prompt length:', aiPrompt.length);
-    console.log('📝 Prompt preview (first 300 chars):', aiPrompt.substring(0, 300));
-    console.log('🤖 Sending to Groq AI...');
+    if (strategy.initial_message && customerMessageCount === 0) {
+      // NUCLEAR OPTION: For first message, use initial_message directly (don't trust AI to copy it)
+      console.log('🚨 FIRST CUSTOMER MESSAGE DETECTED!');
+      console.log('✅ Using configured initial_message directly (bypassing AI)');
+      aiResponse = strategy.initial_message;
+      console.log('📤 Initial message:', aiResponse);
+    } else {
+      // Build AI prompt for subsequent messages
+      const aiPrompt = await buildAIPrompt(strategy, messageData, conversationHistory);
 
-    // Process with Claude AI
-    const aiResponse = await claudeAI.processMessage(aiPrompt, {
-      temperature: strategy.bot_temperature || 0.7,
-      conversationId: conversation.id
-    });
+      console.log('📝 Full prompt length:', aiPrompt.length);
+      console.log('📝 Prompt preview (first 300 chars):', aiPrompt.substring(0, 300));
+      console.log('🤖 Sending to Groq AI...');
 
-    console.log('✅ AI Response:', aiResponse.substring(0, 100) + '...');
+      // Process with Claude AI
+      aiResponse = await claudeAI.processMessage(aiPrompt, {
+        temperature: strategy.bot_temperature || 0.7,
+        conversationId: conversation.id
+      });
+
+      console.log('✅ AI Response:', aiResponse.substring(0, 100) + '...');
+    }
 
     // Store AI response
     await storeMessage({
