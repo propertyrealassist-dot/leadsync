@@ -4,10 +4,11 @@ const { db } = require('../config/database');
 /**
  * Send message to GHL contact
  */
-async function sendMessage({ contactId, message, conversationId, userId }) {
+async function sendMessage({ contactId, message, conversationId, messageType = 'SMS', userId }) {
   try {
     console.log('📤 Sending message to GHL...');
     console.log('Contact ID:', contactId);
+    console.log('Message Type:', messageType);
     console.log('Message:', message.substring(0, 100) + '...');
 
     // Get GHL credentials for user
@@ -35,12 +36,13 @@ async function sendMessage({ contactId, message, conversationId, userId }) {
     console.log('📡 Sending to GHL V2 API...');
     console.log('   Contact ID:', contactId);
     console.log('   Conversation ID:', conversationId);
+    console.log('   Message Type:', messageType);
     console.log('   Message length:', message.length);
 
     const response = await axios.post(
       `https://services.leadconnectorhq.com/conversations/messages`,
       {
-        type: 'SMS',
+        type: messageType,
         contactId: contactId,
         message: message
       },

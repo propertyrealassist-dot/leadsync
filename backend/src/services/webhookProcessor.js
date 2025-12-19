@@ -42,6 +42,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
           contactId: messageData.contactId,
           message: defaultMessage,
           conversationId: messageData.conversationId,
+          messageType: messageData.messageType,
           userId: user.id
         });
       }
@@ -123,6 +124,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
         contactId: messageData.contactId,
         message: aiResponse,
         conversationId: messageData.conversationId,
+        messageType: messageData.messageType,
         userId: user.id
       });
     }
@@ -163,6 +165,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
           contactId: payload.contact.id,
           message: fallbackMessage,
           conversationId: payload.message?.conversationId,
+          messageType: payload.messageType || 'SMS',
           userId: user.id
         });
       } catch (sendError) {
