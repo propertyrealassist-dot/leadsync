@@ -11,7 +11,7 @@ async function sendMessage({ contactId, message, conversationId, userId }) {
     console.log('Message:', message.substring(0, 100) + '...');
 
     // Get GHL credentials for user
-    const credentials = userId ? getGHLCredentials(userId) : null;
+    const credentials = userId ? await getGHLCredentials(userId) : null;
 
     if (!credentials) {
       console.log('⚠️  No GHL credentials found, skipping GHL send');
@@ -27,7 +27,7 @@ async function sendMessage({ contactId, message, conversationId, userId }) {
     if (isTokenExpired(credentials.expires_at)) {
       console.log('🔄 Token expired, refreshing...');
       await refreshToken(userId, credentials.refresh_token);
-      credentials = getGHLCredentials(userId);
+      credentials = await getGHLCredentials(userId);
     }
 
     // Send message via GHL API
@@ -124,11 +124,26 @@ async function sendViaWebhook({ webhookUrl, payload }) {
  */
 async function getGHLCredentials(userId) {
   try {
-    return await db.get(`
+    // Try ghl_integrations first (marketplace integration)
+    let creds = await db.get(`
+      SELECT access_token, refresh_token, location_id, expires_at
+      FROM ghl_integrations
+      WHERE user_id = ? AND is_active = ?
+      LIMIT 1
+    `, [userId, true]);
+
+    if (creds) {
+      return creds;
+    }
+
+    // Fallback to ghl_credentials (legacy)
+    creds = await db.get(`
       SELECT access_token, refresh_token, location_id, expires_at
       FROM ghl_credentials
       WHERE user_id = ?
     `, [userId]);
+
+    return creds;
   } catch (error) {
     console.error('Error getting GHL credentials:', error);
     return null;

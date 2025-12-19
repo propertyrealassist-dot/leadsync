@@ -41,7 +41,8 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
         await ghlService.sendMessage({
           contactId: messageData.contactId,
           message: defaultMessage,
-          conversationId: messageData.conversationId
+          conversationId: messageData.conversationId,
+          userId: user.id
         });
       }
 
@@ -121,7 +122,8 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
       await ghlService.sendMessage({
         contactId: messageData.contactId,
         message: aiResponse,
-        conversationId: messageData.conversationId
+        conversationId: messageData.conversationId,
+        userId: user.id
       });
     }
 
@@ -160,7 +162,8 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
         await ghlService.sendMessage({
           contactId: payload.contact.id,
           message: fallbackMessage,
-          conversationId: payload.message?.conversationId
+          conversationId: payload.message?.conversationId,
+          userId: user.id
         });
       } catch (sendError) {
         console.error('❌ Failed to send fallback message:', sendError);
