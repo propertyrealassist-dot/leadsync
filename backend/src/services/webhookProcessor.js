@@ -86,7 +86,17 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
       });
     }
 
-    // Store incoming message
+    // CRITICAL: Get conversation history BEFORE storing the current message
+    // This way we can detect if this is truly the first customer message
+    const conversationHistory = await getConversationHistory(conversation.id);
+    const customerMessageCount = conversationHistory.filter(msg => msg.sender === 'contact').length;
+
+    console.log('🔍 Message count check:');
+    console.log('   Total messages in history:', conversationHistory.length);
+    console.log('   Customer messages:', customerMessageCount);
+    console.log('   Is first message?', customerMessageCount === 0);
+
+    // Now store the incoming message (after we've checked if it's the first one)
     await storeMessage({
       conversationId: conversation.id,
       sender: 'contact',
@@ -94,11 +104,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
       messageType: messageData.messageType
     });
 
-    // Get conversation history
-    const conversationHistory = await getConversationHistory(conversation.id);
-
     // Check if this is the first customer message
-    const customerMessageCount = conversationHistory.filter(msg => msg.sender === 'contact').length;
     let aiResponse;
 
     if (strategy.initial_message && customerMessageCount === 0) {
@@ -109,6 +115,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
       console.log('📤 Initial message:', aiResponse);
     } else {
       // Build AI prompt for subsequent messages
+      // NOTE: conversationHistory doesn't include the current message yet (we checked count before storing)
       const aiPrompt = await buildAIPrompt(strategy, messageData, conversationHistory);
 
       console.log('📝 Full prompt length:', aiPrompt.length);
