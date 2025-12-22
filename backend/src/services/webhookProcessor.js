@@ -462,8 +462,12 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
   }
 
   // Load and add QUALIFICATION QUESTIONS from database
+  let questions = [];
+  let questionsAsked = 0;
+  let allQuestionsAsked = false;
+
   try {
-    const questions = await db.all(`
+    questions = await db.all(`
       SELECT text, id
       FROM qualification_questions
       WHERE template_id = ?
@@ -471,18 +475,63 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
     `, [strategy.id]);
 
     if (questions && questions.length > 0) {
-      prompt += `QUALIFICATION QUESTIONS:\n`;
-      prompt += `Your primary goal is to ask these questions to qualify the lead:\n\n`;
-      questions.forEach((q, idx) => {
-        prompt += `${idx + 1}. ${q.text}\n`;
-      });
-      prompt += `\n`;
-      prompt += `QUALIFICATION STRATEGY:\n`;
-      prompt += `- Ask ONE question at a time, naturally woven into the conversation\n`;
-      prompt += `- Listen to their responses and ask follow-up questions to go deeper\n`;
-      prompt += `- Only move to the next qualification question after getting a meaningful answer\n`;
-      prompt += `- Keep your responses SHORT and conversational (1-2 sentences max)\n`;
-      prompt += `- Don't mention that you're "qualifying" them - keep it natural\n\n`;
+      // CRITICAL: Track which questions have been asked by analyzing conversation history
+      // Count bot messages that contain parts of qualification questions
+      const botMessages = conversationHistory.filter(msg => msg.sender === 'bot').map(m => m.content.toLowerCase());
+
+      questionsAsked = questions.filter(q => {
+        const questionPreview = q.text.toLowerCase().substring(0, 30);
+        return botMessages.some(msg => msg.includes(questionPreview));
+      }).length;
+
+      allQuestionsAsked = questionsAsked >= questions.length;
+
+      console.log('📊 Qualification Progress:');
+      console.log('   Total questions:', questions.length);
+      console.log('   Questions asked:', questionsAsked);
+      console.log('   All questions asked?', allQuestionsAsked);
+      console.log('   Should send CTA?', allQuestionsAsked);
+
+      if (allQuestionsAsked) {
+        // ALL QUESTIONS ASKED - SWITCH TO CTA MODE
+        prompt += `\n${'='.repeat(80)}\n`;
+        prompt += `🎯 ALL QUALIFICATION QUESTIONS COMPLETED!\n`;
+        prompt += `${'='.repeat(80)}\n\n`;
+        prompt += `The prospect has answered all ${questions.length} qualification questions.\n\n`;
+        prompt += `✅ NEXT STEP: CALL-TO-ACTION (CTA)\n\n`;
+
+        if (strategy.cta) {
+          prompt += `YOUR CTA:\n${strategy.cta}\n\n`;
+        } else {
+          prompt += `Ask if they would like to book a discovery call to discuss how you can help them.\n\n`;
+        }
+
+        prompt += `CRITICAL INSTRUCTIONS:\n`;
+        prompt += `- DO NOT ask any more qualification questions\n`;
+        prompt += `- DO NOT repeat questions that have already been asked\n`;
+        prompt += `- MOVE TO CLOSING and guide them towards booking an appointment\n`;
+        prompt += `- Use the CTA naturally in the conversation\n`;
+        prompt += `- Keep it conversational and helpful (1-2 sentences max)\n`;
+        prompt += `${'='.repeat(80)}\n\n`;
+      } else {
+        // STILL IN QUALIFICATION MODE
+        prompt += `\n${'='.repeat(80)}\n`;
+        prompt += `📋 QUALIFICATION QUESTIONS (${questionsAsked}/${questions.length} asked)\n`;
+        prompt += `${'='.repeat(80)}\n\n`;
+        prompt += `Your primary goal is to ask these questions to qualify the lead:\n\n`;
+        questions.forEach((q, idx) => {
+          prompt += `${idx + 1}. ${q.text}\n`;
+        });
+        prompt += `\n`;
+        prompt += `QUALIFICATION STRATEGY:\n`;
+        prompt += `- Ask ONE question at a time, naturally woven into the conversation\n`;
+        prompt += `- Listen to their responses and ask follow-up questions to go deeper\n`;
+        prompt += `- Only move to the next qualification question after getting a meaningful answer\n`;
+        prompt += `- Keep your responses SHORT and conversational (1-2 sentences max)\n`;
+        prompt += `- Don't mention that you're "qualifying" them - keep it natural\n`;
+        prompt += `- DO NOT repeat questions that have already been asked\n`;
+        prompt += `${'='.repeat(80)}\n\n`;
+      }
     }
   } catch (error) {
     console.error('Error loading qualification questions:', error);
@@ -510,12 +559,16 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
   prompt += `1. ${customerMessageCount === 0 ? 'Use the INITIAL MESSAGE above' : 'Continue the natural conversation flow'}\n`;
   prompt += `2. Keep responses SHORT (1-2 sentences max) and conversational\n`;
   prompt += `3. Match the TONE specified above\n`;
-  prompt += `4. Focus on asking the QUALIFICATION QUESTIONS one at a time\n`;
-  prompt += `5. Build rapport and trust naturally\n`;
 
-  if (strategy.cta) {
-    prompt += `6. When qualified, guide towards: ${strategy.cta}\n`;
+  if (allQuestionsAsked) {
+    prompt += `4. ALL QUESTIONS ASKED - Focus on the CTA above and guide to booking\n`;
+    prompt += `5. DO NOT ask any more qualification questions\n`;
+  } else {
+    prompt += `4. Focus on asking the QUALIFICATION QUESTIONS one at a time (${questionsAsked}/${questions.length} asked)\n`;
+    prompt += `5. DO NOT repeat questions already asked\n`;
   }
+
+  prompt += `6. Build rapport and trust naturally\n`;
 
   prompt += `\nYOUR RESPONSE (respond naturally and conversationally):`;
 
