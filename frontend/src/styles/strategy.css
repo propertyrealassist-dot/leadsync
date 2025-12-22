@@ -4,23 +4,23 @@
    ==================================================================== */
 
 :root {
-  /* Color Palette */
-  --strategy-bg-base: #0f0f23;
-  --strategy-bg-card: #1a1a2e;
-  --strategy-bg-hover: #22223a;
-  --strategy-border: rgba(255, 255, 255, 0.05);
-  --strategy-border-hover: rgba(255, 255, 255, 0.1);
+  /* Color Palette - TEAL/GREEN THEME */
+  --strategy-bg-base: #0a0e1a;
+  --strategy-bg-card: #1a1f2e;
+  --strategy-bg-hover: #22273a;
+  --strategy-border: rgba(255, 255, 255, 0.08);
+  --strategy-border-hover: rgba(255, 255, 255, 0.12);
 
   --strategy-text-primary: #e4e4e7;
   --strategy-text-secondary: #a1a1aa;
   --strategy-text-tertiary: #71717a;
 
-  --strategy-accent: #8b5cf6;
-  --strategy-accent-hover: #a78bfa;
-  --strategy-accent-light: rgba(139, 92, 246, 0.1);
+  --strategy-accent: #34d399;
+  --strategy-accent-hover: #10b981;
+  --strategy-accent-light: rgba(52, 211, 153, 0.1);
 
-  --strategy-success: #10b981;
-  --strategy-success-light: rgba(16, 185, 129, 0.1);
+  --strategy-success: #34d399;
+  --strategy-success-light: rgba(52, 211, 153, 0.1);
   --strategy-warning: #f59e0b;
   --strategy-warning-light: rgba(245, 158, 11, 0.1);
   --strategy-error: #ef4444;
