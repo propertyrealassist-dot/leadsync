@@ -1,0 +1,543 @@
+/* ====================================================================
+   STRATEGY EDITOR DESIGN SYSTEM
+   Modern, production-ready UI inspired by Linear, Notion, Vercel
+   ==================================================================== */
+
+:root {
+  /* Color Palette */
+  --strategy-bg-base: #0f0f23;
+  --strategy-bg-card: #1a1a2e;
+  --strategy-bg-hover: #22223a;
+  --strategy-border: rgba(255, 255, 255, 0.05);
+  --strategy-border-hover: rgba(255, 255, 255, 0.1);
+
+  --strategy-text-primary: #e4e4e7;
+  --strategy-text-secondary: #a1a1aa;
+  --strategy-text-tertiary: #71717a;
+
+  --strategy-accent: #8b5cf6;
+  --strategy-accent-hover: #a78bfa;
+  --strategy-accent-light: rgba(139, 92, 246, 0.1);
+
+  --strategy-success: #10b981;
+  --strategy-success-light: rgba(16, 185, 129, 0.1);
+  --strategy-warning: #f59e0b;
+  --strategy-warning-light: rgba(245, 158, 11, 0.1);
+  --strategy-error: #ef4444;
+  --strategy-error-light: rgba(239, 68, 68, 0.1);
+
+  /* Spacing System */
+  --strategy-space-xs: 4px;
+  --strategy-space-sm: 8px;
+  --strategy-space-md: 16px;
+  --strategy-space-lg: 24px;
+  --strategy-space-xl: 32px;
+  --strategy-space-2xl: 48px;
+
+  /* Border Radius */
+  --strategy-radius-sm: 6px;
+  --strategy-radius-md: 8px;
+  --strategy-radius-lg: 12px;
+
+  /* Transitions */
+  --strategy-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ====================================================================
+   BASE COMPONENTS
+   ==================================================================== */
+
+.strategy-card {
+  background: var(--strategy-bg-card);
+  border: 1px solid var(--strategy-border);
+  border-radius: var(--strategy-radius-lg);
+  padding: var(--strategy-space-lg);
+  transition: var(--strategy-transition);
+}
+
+.strategy-card:hover {
+  border-color: var(--strategy-border-hover);
+}
+
+.strategy-card.interactive {
+  cursor: pointer;
+}
+
+.strategy-card.interactive:hover {
+  background: var(--strategy-bg-hover);
+  border-color: var(--strategy-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+}
+
+.strategy-section {
+  margin-bottom: var(--strategy-space-xl);
+}
+
+.strategy-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--strategy-space-md);
+}
+
+.strategy-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--strategy-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--strategy-space-sm);
+}
+
+.strategy-section-title .icon {
+  font-size: 1.2rem;
+}
+
+/* ====================================================================
+   INPUTS & FORMS
+   ==================================================================== */
+
+.strategy-input-group {
+  margin-bottom: var(--strategy-space-md);
+}
+
+.strategy-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--strategy-text-secondary);
+  margin-bottom: var(--strategy-space-sm);
+}
+
+.strategy-input,
+.strategy-textarea {
+  width: 100%;
+  background: var(--strategy-bg-base);
+  border: 1px solid var(--strategy-border);
+  border-radius: var(--strategy-radius-md);
+  padding: 10px 12px;
+  color: var(--strategy-text-primary);
+  font-size: 0.875rem;
+  transition: var(--strategy-transition);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.strategy-input:focus,
+.strategy-textarea:focus {
+  outline: none;
+  border-color: var(--strategy-accent);
+  box-shadow: 0 0 0 3px var(--strategy-accent-light);
+}
+
+.strategy-textarea {
+  min-height: 100px;
+  resize: vertical;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  line-height: 1.6;
+}
+
+.strategy-char-count {
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--strategy-text-tertiary);
+  margin-top: var(--strategy-space-xs);
+}
+
+/* ====================================================================
+   TOGGLE SWITCHES
+   ==================================================================== */
+
+.strategy-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--strategy-space-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+.strategy-toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--strategy-border);
+  border-radius: 12px;
+  transition: var(--strategy-transition);
+}
+
+.strategy-toggle-switch.active {
+  background: var(--strategy-accent);
+}
+
+.strategy-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: var(--strategy-transition);
+}
+
+.strategy-toggle-switch.active .strategy-toggle-knob {
+  transform: translateX(20px);
+}
+
+.strategy-toggle-label {
+  font-size: 0.875rem;
+  color: var(--strategy-text-primary);
+}
+
+/* ====================================================================
+   BUTTONS
+   ==================================================================== */
+
+.strategy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--strategy-space-sm);
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--strategy-radius-md);
+  border: none;
+  cursor: pointer;
+  transition: var(--strategy-transition);
+  white-space: nowrap;
+}
+
+.strategy-btn-primary {
+  background: var(--strategy-accent);
+  color: white;
+}
+
+.strategy-btn-primary:hover {
+  background: var(--strategy-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.strategy-btn-secondary {
+  background: var(--strategy-bg-card);
+  color: var(--strategy-text-primary);
+  border: 1px solid var(--strategy-border);
+}
+
+.strategy-btn-secondary:hover {
+  background: var(--strategy-bg-hover);
+  border-color: var(--strategy-border-hover);
+}
+
+.strategy-btn-ghost {
+  background: transparent;
+  color: var(--strategy-text-secondary);
+}
+
+.strategy-btn-ghost:hover {
+  background: var(--strategy-bg-hover);
+  color: var(--strategy-text-primary);
+}
+
+.strategy-btn-danger {
+  background: var(--strategy-error-light);
+  color: var(--strategy-error);
+}
+
+.strategy-btn-danger:hover {
+  background: var(--strategy-error);
+  color: white;
+}
+
+.strategy-btn-sm {
+  padding: 4px 12px;
+  font-size: 0.8125rem;
+}
+
+/* ====================================================================
+   DRAG & DROP
+   ==================================================================== */
+
+.strategy-draggable {
+  position: relative;
+}
+
+.strategy-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  cursor: grab;
+  color: var(--strategy-text-tertiary);
+  opacity: 0;
+  transition: var(--strategy-transition);
+}
+
+.strategy-draggable:hover .strategy-drag-handle {
+  opacity: 1;
+}
+
+.strategy-drag-handle:active {
+  cursor: grabbing;
+}
+
+.strategy-dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.strategy-drag-overlay {
+  background: var(--strategy-bg-card);
+  border: 2px dashed var(--strategy-accent);
+  border-radius: var(--strategy-radius-lg);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+}
+
+/* ====================================================================
+   QUESTION CARD
+   ==================================================================== */
+
+.question-card {
+  display: flex;
+  gap: var(--strategy-space-md);
+  background: var(--strategy-bg-card);
+  border: 1px solid var(--strategy-border);
+  border-radius: var(--strategy-radius-lg);
+  padding: var(--strategy-space-md);
+  transition: var(--strategy-transition);
+  margin-bottom: var(--strategy-space-md);
+}
+
+.question-card:hover {
+  border-color: var(--strategy-accent);
+  background: var(--strategy-bg-hover);
+}
+
+.question-card-content {
+  flex: 1;
+}
+
+.question-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--strategy-space-sm);
+}
+
+.question-card-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--strategy-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.question-card-actions {
+  display: flex;
+  gap: var(--strategy-space-xs);
+  opacity: 0;
+  transition: var(--strategy-transition);
+}
+
+.question-card:hover .question-card-actions {
+  opacity: 1;
+}
+
+.question-card-text {
+  font-size: 0.9375rem;
+  color: var(--strategy-text-primary);
+  line-height: 1.6;
+}
+
+.question-card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--strategy-space-md);
+  margin-top: var(--strategy-space-sm);
+  font-size: 0.8125rem;
+  color: var(--strategy-text-tertiary);
+}
+
+/* ====================================================================
+   SLIDERS
+   ==================================================================== */
+
+.strategy-slider-container {
+  margin-bottom: var(--strategy-space-lg);
+}
+
+.strategy-slider-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--strategy-space-sm);
+}
+
+.strategy-slider-label-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--strategy-text-secondary);
+}
+
+.strategy-slider-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--strategy-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.strategy-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--strategy-bg-base);
+  border-radius: 3px;
+  outline: none;
+}
+
+.strategy-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--strategy-accent);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--strategy-transition);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
+
+.strategy-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+}
+
+.strategy-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--strategy-accent);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--strategy-transition);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
+
+.strategy-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+}
+
+/* ====================================================================
+   ANIMATIONS
+   ==================================================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.strategy-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.strategy-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ====================================================================
+   RESPONSIVE
+   ==================================================================== */
+
+@media (max-width: 768px) {
+  .strategy-card {
+    padding: var(--strategy-space-md);
+  }
+
+  .strategy-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--strategy-space-sm);
+  }
+
+  .question-card {
+    flex-direction: column;
+  }
+
+  .strategy-drag-handle {
+    opacity: 1;
+  }
+}
+
+/* ====================================================================
+   UTILITY CLASSES
+   ==================================================================== */
+
+.strategy-flex {
+  display: flex;
+}
+
+.strategy-flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.strategy-flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.strategy-gap-sm {
+  gap: var(--strategy-space-sm);
+}
+
+.strategy-gap-md {
+  gap: var(--strategy-space-md);
+}
+
+.strategy-gap-lg {
+  gap: var(--strategy-space-lg);
+}
+
+.strategy-mb-sm {
+  margin-bottom: var(--strategy-space-sm);
+}
+
+.strategy-mb-md {
+  margin-bottom: var(--strategy-space-md);
+}
+
+.strategy-mb-lg {
+  margin-bottom: var(--strategy-space-lg);
+}
+
+.strategy-text-primary {
+  color: var(--strategy-text-primary);
+}
+
+.strategy-text-secondary {
+  color: var(--strategy-text-secondary);
+}
+
+.strategy-text-tertiary {
+  color: var(--strategy-text-tertiary);
+}

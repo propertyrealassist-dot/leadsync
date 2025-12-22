@@ -29,7 +29,22 @@
       "Bash(npm run build:*)",
       "Bash(npx vercel --prod --yes --token=$VERCEL_TOKEN)",
       "Bash(npx vercel deploy --prod)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(dir /s /b *.tsx)",
+      "Bash(echo $VERCEL_TOKEN)",
+      "Bash(git rm:*)",
+      "Bash(for i in {1..3})",
+      "Bash(do echo \"=== Check $i ===\")",
+      "Bash(done)",
+      "Bash(for:*)",
+      "Bash(do echo \"\")",
+      "Bash(git rev-parse:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(dir:*)",
+      "Bash(cmd.exe //c taskkill //F //PID 10500)",
+      "Bash(git push:*)",
+      "Bash(vercel:*)",
+      "WebFetch(domain:api.realassistagents.com)"
     ],
     "deny": [],
     "ask": []

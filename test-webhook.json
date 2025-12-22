@@ -1,0 +1,8 @@
+{
+  "type": "InboundMessage",
+  "locationId": "bRLdonapBAI3vQ1YLWLU",
+  "body": "Test message",
+  "contactId": "test123",
+  "conversationId": "testconv123",
+  "messageType": "SMS"
+}
