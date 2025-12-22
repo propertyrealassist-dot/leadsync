@@ -1,28 +1,20 @@
 import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { motion } from 'framer-motion';
-import '../../styles/strategy.css';
+import '../../styles/design-system.css';
 
 /**
- * FollowUpCard - Follow-up message card with time delay
+ * FollowUpCard - Follow-up message card with delay settings (Pixel-Perfect Design)
  *
  * Props:
- * - id: Unique identifier
- * - index: Follow-up index
+ * - id: Unique ID for drag-and-drop
+ * - index: Display index (F1, F2, etc.)
  * - message: Follow-up message text
  * - delay: Delay in hours
- * - onUpdate: Callback when updated
- * - onDelete: Callback when deleted
+ * - onUpdate: Update callback (id, { message, delay })
+ * - onDelete: Delete callback (id)
  */
-const FollowUpCard = ({
-  id,
-  index,
-  message,
-  delay,
-  onUpdate,
-  onDelete
-}) => {
+const FollowUpCard = ({ id, index, message, delay, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(message);
   const [editedDelay, setEditedDelay] = useState(delay);
@@ -39,7 +31,8 @@ const FollowUpCard = ({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1
+    opacity: isDragging ? 0.5 : 1,
+    marginBottom: 'var(--space-lg)'
   };
 
   const handleSave = () => {
@@ -49,91 +42,82 @@ const FollowUpCard = ({
     setIsEditing(false);
   };
 
-  const handleCancel = () => {
-    setEditedMessage(message);
-    setEditedDelay(delay);
-    setIsEditing(false);
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === 'Escape') {
+      setEditedMessage(message);
+      setEditedDelay(delay);
+      setIsEditing(false);
+    }
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="question-card strategy-fade-in">
-      <div className="strategy-drag-handle" {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} className="ds-followup-card ds-fade-in">
+      {/* Drag Handle */}
+      <div className="ds-drag-handle" {...attributes} {...listeners}>
         ⋮⋮
       </div>
 
-      <div className="question-card-content">
-        <div className="question-card-header">
-          <span className="question-card-label">Follow-up {index}</span>
-          <div className="question-card-actions">
-            {!isEditing ? (
-              <>
-                <button
-                  className="strategy-btn strategy-btn-ghost strategy-btn-sm"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="strategy-btn strategy-btn-danger strategy-btn-sm"
-                  onClick={() => onDelete(id)}
-                >
-                  Delete
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  className="strategy-btn strategy-btn-primary strategy-btn-sm"
-                  onClick={handleSave}
-                >
-                  Save
-                </button>
-                <button
-                  className="strategy-btn strategy-btn-ghost strategy-btn-sm"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+      {/* Follow-up Label (F1, F2, etc.) */}
+      <div className="ds-followup-label">F{index}</div>
 
+      {/* Content */}
+      <div className="ds-followup-content">
         {isEditing ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div style={{ marginBottom: '12px' }}>
-              <label className="strategy-label">Delay (hours)</label>
-              <input
-                type="number"
-                className="strategy-input"
-                value={editedDelay}
-                onChange={(e) => setEditedDelay(Number(e.target.value))}
-                min="0"
-                step="0.5"
-              />
-            </div>
+          <>
             <textarea
-              className="strategy-textarea"
               value={editedMessage}
               onChange={(e) => setEditedMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
               onBlur={handleSave}
+              className="ds-input ds-textarea"
+              style={{ marginBottom: 'var(--space-md)' }}
               autoFocus
-              rows={3}
-              placeholder="Enter follow-up message..."
             />
-          </motion.div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+              <span style={{ fontSize: 'var(--font-sm)', color: 'var(--text-tertiary)' }}>
+                Delay:
+              </span>
+              <input
+                type="number"
+                value={editedDelay}
+                onChange={(e) => setEditedDelay(parseInt(e.target.value) || 0)}
+                className="ds-input"
+                style={{ width: '80px' }}
+                min="0"
+              />
+              <span style={{ fontSize: 'var(--font-sm)', color: 'var(--text-tertiary)' }}>
+                hours
+              </span>
+            </div>
+          </>
         ) : (
           <>
-            <div className="question-card-text" onClick={() => setIsEditing(true)}>
+            <div
+              className="ds-followup-text"
+              onClick={() => setIsEditing(true)}
+              style={{ cursor: 'pointer' }}
+            >
               {message}
             </div>
-            <div className="question-card-meta">
-              <span>⏱ {delay} hours</span>
-              <span>📝 Click to edit</span>
+            <div className="ds-followup-delay">
+              ⏱️ {delay} hour{delay !== 1 ? 's' : ''} after last message
             </div>
           </>
         )}
       </div>
+
+      {/* Delete Button */}
+      <button
+        onClick={() => onDelete(id)}
+        className="ds-btn-ghost"
+        style={{ marginLeft: 'auto', color: 'var(--text-muted)' }}
+        title="Delete"
+      >
+        ×
+      </button>
     </div>
   );
 };

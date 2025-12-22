@@ -26,13 +26,19 @@ import {
   SearchBar,
   MonacoPromptEditor,
   ModernSlider,
+  LabeledSlider,
+  TimePickerGroup,
   QuestionCard,
   FollowUpCard,
   FAQCard,
-  IntegrationCard
+  IntegrationCard,
+  TaskCard,
+  ToggleSection,
+  DraggableItem
 } from './strategy';
 
 import '../styles/strategy.css';
+import '../styles/design-system.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -353,110 +359,231 @@ function StrategyEditorNew() {
 
       {/* Tab Content */}
       <div className="strategy-fade-in">
-        {/* TAB 1: INSTRUCTIONS */}
+        {/* TAB 1: INSTRUCTIONS - PIXEL PERFECT */}
         {activeTab === 1 && (
           <div>
-            <StrategySection
-              title="Prompt Editor"
-              icon="📝"
-              actions={
-                <button className="strategy-btn strategy-btn-secondary strategy-btn-sm">
-                  Build with AI
+            {/* Three-Column Header Row */}
+            <div className="ds-grid-3 ds-spacer-2xl">
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: 'var(--font-sm)',
+                  color: 'var(--text-secondary)',
+                  marginBottom: 'var(--space-sm)',
+                  fontWeight: 'var(--font-weight-medium)'
+                }}>
+                  Strategy Name
+                </label>
+                <input
+                  type="text"
+                  className="ds-input"
+                  value={formData.name}
+                  onChange={(e) => updateFormData({ name: e.target.value })}
+                  placeholder="Enter strategy name..."
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: 'var(--font-sm)',
+                  color: 'var(--text-secondary)',
+                  marginBottom: 'var(--space-sm)',
+                  fontWeight: 'var(--font-weight-medium)'
+                }}>
+                  GHL Tag
+                </label>
+                <input
+                  type="text"
+                  className="ds-input"
+                  value={formData.tag}
+                  onChange={(e) => updateFormData({ tag: e.target.value })}
+                  placeholder="Enter tag..."
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: 'var(--font-sm)',
+                  color: 'var(--text-secondary)',
+                  marginBottom: 'var(--space-sm)',
+                  fontWeight: 'var(--font-weight-medium)'
+                }}>
+                  Tone
+                </label>
+                <select
+                  className="ds-select"
+                  value={formData.tone}
+                  onChange={(e) => updateFormData({ tone: e.target.value })}
+                >
+                  <option value="Friendly and Casual">Friendly and Casual</option>
+                  <option value="Professional">Professional</option>
+                  <option value="Enthusiastic">Enthusiastic</option>
+                  <option value="Formal">Formal</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Prompt Section with Build My Prompt Button */}
+            <div className="ds-spacer-2xl">
+              <div className="ds-section-header">
+                <h2 style={{
+                  fontSize: 'var(--font-xl)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  color: 'var(--text-primary)',
+                  margin: 0
+                }}>
+                  Prompt
+                </h2>
+                <button className="ds-btn ds-btn-primary">
+                  Build My Prompt
                 </button>
-              }
-            >
+              </div>
+
               <MonacoPromptEditor
                 value={formData.brief}
                 onChange={(value) => updateFormData({ brief: value })}
                 placeholder="Enter your AI prompt instructions here..."
                 height="400px"
               />
-            </StrategySection>
+            </div>
 
-            <StrategySection title="Adjustments" icon="🎛">
-              <ModernSlider
-                label="Initial Msg Delay"
-                value={formData.messageDelayInitial}
-                onChange={(value) => updateFormData({ messageDelayInitial: value })}
-                min={0}
-                max={30}
-                step={0.5}
-                formatValue={(v) => `${v}s`}
-                description="Delay before sending the first message"
-              />
+            {/* Adjustments Section */}
+            <div className="ds-spacer-2xl">
+              <h2 style={{
+                fontSize: 'var(--font-xl)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--space-2xl)'
+              }}>
+                Adjustments
+              </h2>
 
-              <ModernSlider
-                label="Response Delay"
-                value={formData.messageDelayStandard}
-                onChange={(value) => updateFormData({ messageDelayStandard: value })}
-                min={0}
-                max={10}
-                step={0.5}
-                formatValue={(v) => `${v}s`}
-                description="Delay before responding to messages"
-              />
+              {/* Time Pickers Row */}
+              <div className="ds-grid-2 ds-spacer-2xl">
+                <TimePickerGroup
+                  label="Initial Message Delay"
+                  value={{
+                    hours: Math.floor(formData.messageDelayInitial / 3600),
+                    minutes: Math.floor((formData.messageDelayInitial % 3600) / 60),
+                    seconds: formData.messageDelayInitial % 60
+                  }}
+                  onChange={(time) => updateFormData({
+                    messageDelayInitial: (time.hours * 3600) + (time.minutes * 60) + time.seconds
+                  })}
+                />
 
-              <ModernSlider
+                <TimePickerGroup
+                  label="Response Delay"
+                  value={{
+                    hours: Math.floor(formData.messageDelayStandard / 3600),
+                    minutes: Math.floor((formData.messageDelayStandard % 3600) / 60),
+                    seconds: formData.messageDelayStandard % 60
+                  }}
+                  onChange={(time) => updateFormData({
+                    messageDelayStandard: (time.hours * 3600) + (time.minutes * 60) + time.seconds
+                  })}
+                />
+              </div>
+
+              {/* Sliders */}
+              <LabeledSlider
+                icon="🎯"
                 label="Objection Handling"
                 value={formData.objectionHandling}
                 onChange={(value) => updateFormData({ objectionHandling: value })}
                 min={0}
                 max={10}
                 step={1}
-                formatValue={(v) => `${v}/10`}
+                valueFormatter={(v) => `${v}/10`}
                 description="How aggressive to handle objections"
               />
 
-              <ModernSlider
+              <LabeledSlider
+                icon="❓"
                 label="Qualification Priority"
                 value={formData.qualificationPriority}
                 onChange={(value) => updateFormData({ qualificationPriority: value })}
                 min={0}
                 max={10}
                 step={1}
-                formatValue={(v) => `${v}/10`}
+                valueFormatter={(v) => `${v}/10`}
                 description="Priority of asking qualification questions"
               />
 
-              <ModernSlider
+              <LabeledSlider
+                icon="🎨"
                 label="Creativity (Temperature)"
                 value={formData.bot_temperature}
                 onChange={(value) => updateFormData({ bot_temperature: value })}
                 min={0}
                 max={1}
                 step={0.1}
-                formatValue={(v) => v.toFixed(1)}
+                valueFormatter={(v) => v.toFixed(1)}
                 description="Lower = more consistent, Higher = more creative"
               />
-            </StrategySection>
+            </div>
           </div>
         )}
 
-        {/* TAB 2: CONVERSATION */}
+        {/* TAB 2: CONVERSATION - PIXEL PERFECT */}
         {activeTab === 2 && (
-          <div>
-            <StrategySection title="💬 Initial Message" icon="💬">
-              <StrategyInput
-                label="Initial Message"
+          <div style={{ maxWidth: '900px' }}>
+            {/* Initial Message */}
+            <div className="ds-spacer-2xl">
+              <div className="ds-section-header">
+                <h2 style={{
+                  fontSize: 'var(--font-xl)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  color: 'var(--text-primary)',
+                  margin: 0
+                }}>
+                  Initial Message
+                </h2>
+                <button className="ds-btn ds-btn-primary">
+                  + Add Template
+                </button>
+              </div>
+              <textarea
+                className="ds-input ds-textarea"
                 value={formData.initialMessage}
                 onChange={(e) => updateFormData({ initialMessage: e.target.value })}
                 placeholder="Hey! Thanks for reaching out..."
-                multiline
-                rows={3}
-                maxLength={500}
-                showCharCount
+                rows={4}
               />
-            </StrategySection>
+            </div>
 
-            <StrategySection
-              title="❓ Qualification Questions"
-              icon="❓"
-              actions={
-                <button className="strategy-btn strategy-btn-primary strategy-btn-sm" onClick={addQuestion}>
-                  + Add Question
-                </button>
-              }
-            >
+            {/* Qualification Questions */}
+            <div className="ds-spacer-2xl">
+              <div className="ds-section-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+                  <h2 style={{
+                    fontSize: 'var(--font-xl)',
+                    fontWeight: 'var(--font-weight-semibold)',
+                    color: 'var(--text-primary)',
+                    margin: 0
+                  }}>
+                    Qualification Questions
+                  </h2>
+                  <label className="ds-toggle">
+                    <input
+                      type="checkbox"
+                      checked={qualificationQuestions.length > 0}
+                      onChange={() => {}}
+                    />
+                    <span className="ds-toggle-slider"></span>
+                  </label>
+                  <span style={{
+                    fontSize: 'var(--font-sm)',
+                    color: 'var(--text-tertiary)',
+                    fontWeight: 'var(--font-weight-medium)'
+                  }}>
+                    {qualificationQuestions.length > 0 ? 'ON' : 'OFF'}
+                  </span>
+                </div>
+              </div>
+
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -480,21 +607,34 @@ function StrategyEditorNew() {
               </DndContext>
 
               {qualificationQuestions.length === 0 && (
-                <p style={{ color: 'var(--strategy-text-tertiary)', textAlign: 'center', padding: '40px 0' }}>
+                <p style={{
+                  color: 'var(--text-tertiary)',
+                  textAlign: 'center',
+                  padding: '40px 0',
+                  fontSize: 'var(--font-base)'
+                }}>
                   No qualification questions yet. Click "Add Question" to get started.
                 </p>
               )}
-            </StrategySection>
 
-            <StrategySection
-              title="📬 Follow-up Messages"
-              icon="📬"
-              actions={
-                <button className="strategy-btn strategy-btn-primary strategy-btn-sm" onClick={addFollowUp}>
-                  + Add Follow-up
-                </button>
-              }
-            >
+              <button className="ds-btn-add" onClick={addQuestion}>
+                + Add Question
+              </button>
+            </div>
+
+            {/* Follow-up Messages */}
+            <div className="ds-spacer-2xl">
+              <div className="ds-section-header">
+                <h2 style={{
+                  fontSize: 'var(--font-xl)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  color: 'var(--text-primary)',
+                  margin: 0
+                }}>
+                  Follow-up Messages
+                </h2>
+              </div>
+
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -519,11 +659,20 @@ function StrategyEditorNew() {
               </DndContext>
 
               {followUps.length === 0 && (
-                <p style={{ color: 'var(--strategy-text-tertiary)', textAlign: 'center', padding: '40px 0' }}>
+                <p style={{
+                  color: 'var(--text-tertiary)',
+                  textAlign: 'center',
+                  padding: '40px 0',
+                  fontSize: 'var(--font-base)'
+                }}>
                   No follow-ups configured. Add follow-ups to re-engage leads.
                 </p>
               )}
-            </StrategySection>
+
+              <button className="ds-btn-add" onClick={addFollowUp}>
+                + Add Follow Up
+              </button>
+            </div>
           </div>
         )}
 
@@ -676,44 +825,129 @@ function StrategyEditorNew() {
           </div>
         )}
 
-        {/* TAB 5: CUSTOM TASKS */}
+        {/* TAB 5: TASKS - PIXEL PERFECT */}
         {activeTab === 5 && (
-          <div>
-            <SearchBar
-              value={searchTerm}
-              onChange={setSearchTerm}
-              onClear={() => setSearchTerm('')}
-              placeholder="Search integrations..."
-            />
-
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-              {['All', 'CRM', 'Marketing', 'Email', 'Communication'].map(filter => (
-                <button
-                  key={filter}
-                  className={`strategy-btn ${integrationFilter === filter ? 'strategy-btn-primary' : 'strategy-btn-ghost'} strategy-btn-sm`}
-                  onClick={() => setIntegrationFilter(filter)}
-                >
-                  {filter}
-                </button>
-              ))}
+          <div style={{ maxWidth: '900px' }}>
+            {/* Header */}
+            <div className="ds-section-header" style={{ marginBottom: 'var(--space-2xl)' }}>
+              <h2 style={{
+                fontSize: 'var(--font-xl)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--text-primary)',
+                margin: 0
+              }}>
+                AI Tasks
+              </h2>
+              <button className="ds-btn ds-btn-primary">
+                + Add New Task
+              </button>
             </div>
 
-            <StrategySection title="📊 CRM & Sales" icon="📊">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-                <IntegrationCard name="GHL" icon="📈" description="GoHighLevel CRM" connected category="CRM" />
-                <IntegrationCard name="Pipedrive" icon="🎯" description="Sales CRM" category="CRM" />
-                <IntegrationCard name="ActiveCampaign" icon="📧" description="Marketing automation" category="CRM" />
-                <IntegrationCard name="Close" icon="📞" description="Sales CRM" category="CRM" />
+            {/* DEFAULT AI TASKS Section */}
+            <div className="ds-spacer-2xl">
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-md)',
+                marginBottom: 'var(--space-xl)'
+              }}>
+                <h3 style={{
+                  fontSize: 'var(--font-md)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  color: 'var(--text-secondary)',
+                  margin: 0,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  DEFAULT AI TASKS
+                </h3>
+                <span className="ds-section-count">5</span>
               </div>
-            </StrategySection>
 
-            <StrategySection title="📢 Marketing & Communication" icon="📢">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-                <IntegrationCard name="Mailchimp" icon="✉️" description="Email marketing" category="Marketing" />
-                <IntegrationCard name="Intercom" icon="💬" description="Customer messaging" category="Marketing" />
-                <IntegrationCard name="Twilio" icon="📱" description="SMS & Voice" category="Communication" />
+              {/* Task List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+                <TaskCard
+                  icon="🎯"
+                  title="Lead Qualification"
+                  description="Automatically qualify leads based on conversation data and predefined criteria"
+                  badges={[
+                    { text: '3 WORKFLOWS', variant: 'default' },
+                    { text: '5 STEPS', variant: 'default' }
+                  ]}
+                />
+
+                <TaskCard
+                  icon="📅"
+                  title="Appointment Scheduling"
+                  description="Schedule appointments with qualified leads using calendar integration"
+                  badges={[
+                    { text: '2 WORKFLOWS', variant: 'default' },
+                    { text: '4 STEPS', variant: 'default' }
+                  ]}
+                />
+
+                <TaskCard
+                  icon="📧"
+                  title="Follow-up Automation"
+                  description="Send automated follow-up messages to leads who haven't responded"
+                  badges={[
+                    { text: '1 WORKFLOW', variant: 'default' },
+                    { text: '3 STEPS', variant: 'default' }
+                  ]}
+                />
+
+                <TaskCard
+                  icon="📊"
+                  title="Lead Scoring"
+                  description="Automatically score leads based on engagement and qualification responses"
+                  badges={[
+                    { text: '2 WORKFLOWS', variant: 'default' },
+                    { text: '6 STEPS', variant: 'default' }
+                  ]}
+                />
+
+                <TaskCard
+                  icon="🔔"
+                  title="Notification Triggers"
+                  description="Send notifications to team members when specific events occur"
+                  badges={[
+                    { text: '4 WORKFLOWS', variant: 'default' },
+                    { text: '2 STEPS', variant: 'default' }
+                  ]}
+                />
               </div>
-            </StrategySection>
+            </div>
+
+            {/* CUSTOM TASKS Section */}
+            <div className="ds-spacer-2xl">
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-md)',
+                marginBottom: 'var(--space-xl)'
+              }}>
+                <h3 style={{
+                  fontSize: 'var(--font-md)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  color: 'var(--text-secondary)',
+                  margin: 0,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  CUSTOM TASKS
+                </h3>
+                <span className="ds-section-count">0</span>
+              </div>
+
+              <p style={{
+                color: 'var(--text-tertiary)',
+                textAlign: 'center',
+                padding: '40px 0',
+                fontSize: 'var(--font-base)'
+              }}>
+                No custom tasks yet. Click "Add New Task" to create your first custom automation.
+              </p>
+            </div>
           </div>
         )}
       </div>

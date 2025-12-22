@@ -35,6 +35,7 @@ import { ToastProvider } from './components/ToastContainer';
 import './fonts.css';
 import './App.css';
 import './styles/strategy.css';
+import './styles/design-system.css';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
