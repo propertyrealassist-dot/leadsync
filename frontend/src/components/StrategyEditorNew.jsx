@@ -676,87 +676,210 @@ function StrategyEditorNew() {
           </div>
         )}
 
-        {/* TAB 3: BOOKING */}
+        {/* TAB 3: CONFIGURATIONS - PIXEL PERFECT */}
         {activeTab === 3 && (
-          <div>
-            <StrategySection title="📅 Calendar Integration" icon="📅">
-              <StrategyCard>
-                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📅</div>
-                  <div style={{ fontSize: '0.9375rem', color: 'var(--strategy-text-primary)', marginBottom: '8px' }}>
-                    Status: <span style={{ color: 'var(--strategy-success)' }}>Connected ✓</span>
-                  </div>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--strategy-text-secondary)', marginBottom: '16px' }}>
-                    Calendar: LeadSync Cal
-                  </div>
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                    <button className="strategy-btn strategy-btn-secondary strategy-btn-sm">
-                      Change Calendar
-                    </button>
-                    <button className="strategy-btn strategy-btn-ghost strategy-btn-sm">
-                      Disconnect
-                    </button>
-                  </div>
-                </div>
-              </StrategyCard>
-            </StrategySection>
+          <div style={{ maxWidth: '900px' }}>
+            {/* Calendar Integration */}
+            <div className="ds-spacer-2xl">
+              <h2 style={{
+                fontSize: 'var(--font-xl)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--space-xl)'
+              }}>
+                Calendar Integration
+              </h2>
 
-            <StrategySection title="🤖 Calendar Readiness Detection" icon="🤖">
-              <StrategyToggle
-                label="Enable automatic booking detection"
-                checked={false}
-                onChange={() => {}}
-                description="AI will detect when leads are ready to book"
+              <ToggleSection
+                icon="📅"
+                title="Calendar Connection"
+                description="Connect your calendar for automatic appointment scheduling"
+                type="dropdown"
+                value={formData.ghlCalendarId || "none"}
+                onChange={(value) => updateFormData({ ghlCalendarId: value })}
+                options={[
+                  { value: "none", label: "No Calendar Connected" },
+                  { value: "cal_1", label: "LeadSync Calendar" },
+                  { value: "cal_2", label: "Sales Team Calendar" },
+                  { value: "cal_3", label: "Main Business Calendar" }
+                ]}
               />
-              <StrategyToggle
-                label="Only offer booking after qualification"
-                checked={true}
-                onChange={() => {}}
-                description="Complete qualification questions before offering calendar"
-              />
-              <StrategyToggle
-                label="Include calendar link in CTA"
-                checked={true}
-                onChange={() => {}}
-                description="Automatically include booking link in call-to-action"
-              />
-            </StrategySection>
+            </div>
 
-            <StrategySection title="📍 Call-to-Action Message" icon="📍">
-              <StrategyInput
-                label="CTA Message"
+            {/* Booking Behavior */}
+            <div className="ds-spacer-2xl">
+              <h2 style={{
+                fontSize: 'var(--font-xl)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--space-xl)'
+              }}>
+                Booking Behavior
+              </h2>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+                <ToggleSection
+                  icon="🤖"
+                  title="Automatic Booking Detection"
+                  description="AI will automatically detect when leads are ready to book an appointment"
+                  type="toggle"
+                  value={false}
+                  onChange={() => {}}
+                />
+
+                <ToggleSection
+                  icon="✅"
+                  title="Qualification First"
+                  description="Only offer booking after all qualification questions are answered"
+                  type="toggle"
+                  value={true}
+                  onChange={() => {}}
+                />
+
+                <ToggleSection
+                  icon="🔗"
+                  title="Include Link in CTA"
+                  description="Automatically include the booking link in your call-to-action message"
+                  type="toggle"
+                  value={true}
+                  onChange={() => {}}
+                />
+              </div>
+            </div>
+
+            {/* Call-to-Action Message */}
+            <div className="ds-spacer-2xl">
+              <h2 style={{
+                fontSize: 'var(--font-xl)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--space-xl)'
+              }}>
+                Custom CTA Message
+              </h2>
+
+              <textarea
+                className="ds-input ds-textarea"
                 value={formData.cta}
                 onChange={(e) => updateFormData({ cta: e.target.value })}
                 placeholder="Would you like to book a call to discuss?"
-                multiline
-                rows={3}
+                rows={4}
               />
-              <div style={{ fontSize: '0.8125rem', color: 'var(--strategy-text-tertiary)', marginTop: '8px' }}>
-                Available variables: {'{'}name{'}'} {'{'}calendar_link{'}'}
+
+              <div style={{
+                fontSize: 'var(--font-sm)',
+                color: 'var(--text-tertiary)',
+                marginTop: 'var(--space-md)'
+              }}>
+                Available variables: <code style={{
+                  background: 'var(--bg-input)',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontFamily: 'monospace'
+                }}>{'{name}'}</code> <code style={{
+                  background: 'var(--bg-input)',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontFamily: 'monospace'
+                }}>{'{calendar_link}'}</code>
               </div>
-            </StrategySection>
+            </div>
+
+            {/* Disqualification Criteria */}
+            <div className="ds-spacer-2xl">
+              <h2 style={{
+                fontSize: 'var(--font-xl)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--space-xl)'
+              }}>
+                Disqualification Criteria
+              </h2>
+
+              <ToggleSection
+                icon="⚠️"
+                title="Auto-Disqualify Based on Responses"
+                description="Automatically end conversation if lead doesn't meet criteria"
+                type="dropdown"
+                value="disabled"
+                onChange={() => {}}
+                options={[
+                  { value: "disabled", label: "Disabled" },
+                  { value: "soft", label: "Soft Disqualification (Continue conversation)" },
+                  { value: "hard", label: "Hard Disqualification (End conversation)" }
+                ]}
+              />
+            </div>
           </div>
         )}
 
-        {/* TAB 4: KNOWLEDGE */}
+        {/* TAB 4: KNOWLEDGE - PIXEL PERFECT */}
         {activeTab === 4 && (
-          <div>
-            <StrategySection
-              title="Frequently Asked Questions"
-              icon="❓"
-              actions={
-                <button className="strategy-btn strategy-btn-primary strategy-btn-sm" onClick={addFAQ}>
-                  + New FAQ
+          <div style={{ maxWidth: '900px' }}>
+            {/* FAQs Section */}
+            <div className="ds-spacer-2xl">
+              <div className="ds-section-header">
+                <h2 style={{
+                  fontSize: 'var(--font-xl)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  color: 'var(--text-primary)',
+                  margin: 0
+                }}>
+                  Frequently Asked Questions
+                </h2>
+                <button className="ds-btn ds-btn-primary" onClick={addFAQ}>
+                  + Add FAQ
                 </button>
-              }
-            >
-              <SearchBar
-                value={searchTerm}
-                onChange={setSearchTerm}
-                onClear={() => setSearchTerm('')}
-                placeholder="Search FAQs..."
-              />
+              </div>
 
+              {/* Search Bar */}
+              <div style={{ marginBottom: 'var(--space-lg)' }}>
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: '1.1rem',
+                    color: 'var(--text-tertiary)',
+                    pointerEvents: 'none'
+                  }}>
+                    🔍
+                  </div>
+                  <input
+                    type="text"
+                    className="ds-input"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search FAQs..."
+                    style={{ paddingLeft: '40px', paddingRight: searchTerm ? '40px' : '12px' }}
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-tertiary)',
+                        cursor: 'pointer',
+                        fontSize: '1.2rem',
+                        padding: '4px 8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* FAQ List */}
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -787,41 +910,82 @@ function StrategyEditorNew() {
               </DndContext>
 
               {faqs.length === 0 && (
-                <p style={{ color: 'var(--strategy-text-tertiary)', textAlign: 'center', padding: '40px 0' }}>
-                  No FAQs yet. Click "New FAQ" to add one.
+                <p style={{
+                  color: 'var(--text-tertiary)',
+                  textAlign: 'center',
+                  padding: '40px 0',
+                  fontSize: 'var(--font-base)'
+                }}>
+                  No FAQs yet. Click "Add FAQ" to create your first one.
                 </p>
               )}
-            </StrategySection>
+            </div>
 
-            <StrategySection title="📄 Company Information" icon="📄">
-              <StrategyInput
-                label="Company Info"
+            {/* Company Information */}
+            <div className="ds-spacer-2xl">
+              <h2 style={{
+                fontSize: 'var(--font-xl)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--space-xl)'
+              }}>
+                Company Information
+              </h2>
+
+              <textarea
+                className="ds-input ds-textarea"
                 value={formData.companyInformation}
                 onChange={(e) => updateFormData({ companyInformation: e.target.value })}
-                placeholder="Enter your company information..."
-                multiline
-                rows={5}
+                placeholder="Enter your company information, key details, mission, values, etc..."
+                rows={6}
               />
-            </StrategySection>
+            </div>
 
-            <StrategySection title="📚 Knowledge Base (Coming Soon)" icon="📚">
-              <StrategyCard>
-                <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📚</div>
-                  <div style={{ fontSize: '0.9375rem', color: 'var(--strategy-text-secondary)', marginBottom: '16px' }}>
-                    Upload documents, PDFs, and website URLs to train your AI
-                  </div>
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                    <button className="strategy-btn strategy-btn-secondary" disabled>
-                      Upload Document
-                    </button>
-                    <button className="strategy-btn strategy-btn-secondary" disabled>
-                      Add URL
-                    </button>
-                  </div>
+            {/* Knowledge Base */}
+            <div className="ds-spacer-2xl">
+              <h2 style={{
+                fontSize: 'var(--font-xl)',
+                fontWeight: 'var(--font-weight-semibold)',
+                color: 'var(--text-primary)',
+                marginBottom: 'var(--space-xl)'
+              }}>
+                Knowledge Base
+              </h2>
+
+              <div className="ds-card" style={{ textAlign: 'center', padding: 'var(--space-2xl)' }}>
+                <div style={{ fontSize: '3rem', marginBottom: 'var(--space-lg)' }}>📚</div>
+                <div style={{
+                  fontSize: 'var(--font-md)',
+                  color: 'var(--text-secondary)',
+                  marginBottom: 'var(--space-sm)'
+                }}>
+                  Upload Documents & URLs
                 </div>
-              </StrategyCard>
-            </StrategySection>
+                <div style={{
+                  fontSize: 'var(--font-sm)',
+                  color: 'var(--text-tertiary)',
+                  marginBottom: 'var(--space-xl)',
+                  lineHeight: 1.5
+                }}>
+                  Train your AI with documents, PDFs, and website URLs to provide more accurate and detailed responses
+                </div>
+                <div style={{ display: 'flex', gap: 'var(--space-md)', justifyContent: 'center' }}>
+                  <button className="ds-btn ds-btn-secondary" disabled>
+                    📄 Upload Document
+                  </button>
+                  <button className="ds-btn ds-btn-secondary" disabled>
+                    🔗 Add URL
+                  </button>
+                </div>
+                <div style={{
+                  fontSize: 'var(--font-xs)',
+                  color: 'var(--text-muted)',
+                  marginTop: 'var(--space-lg)'
+                }}>
+                  Coming soon
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
