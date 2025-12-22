@@ -98,7 +98,9 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
 
     // Now store the incoming message (after we've checked if it's the first one)
     await storeMessage({
-      conversationId: conversation.id,
+      conversationId: messageData.conversationId,
+      contactId: messageData.contactId,
+      locationId: messageData.locationId,
       sender: 'contact',
       content: messageData.message,
       messageType: messageData.messageType
@@ -133,10 +135,12 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
 
     // Store AI response
     await storeMessage({
-      conversationId: conversation.id,
+      conversationId: messageData.conversationId,
+      contactId: messageData.contactId,
+      locationId: messageData.locationId,
       sender: 'bot',
       content: aiResponse,
-      messageType: 'SMS'
+      messageType: messageData.messageType
     });
 
     // Send response back to GHL
@@ -227,6 +231,7 @@ function extractMessageData(payload) {
     const contactName = payload.contact?.name || payload.contactName || 'Unknown';
     const contactPhone = payload.contact?.phone || payload.phone || '';
     const tags = payload.contact?.tags || payload.tags || [];
+    const locationId = payload.locationId || payload.location?.id || '';
 
     // IMPORTANT: GHL puts messageType directly on payload (not nested in payload.message)
     // messageType can be "SMS", "FB" (Facebook), "WhatsApp", etc.
@@ -236,6 +241,7 @@ function extractMessageData(payload) {
     console.log('   Contact ID:', contactId);
     console.log('   Conversation ID:', conversationId);
     console.log('   Message Type:', messageType);
+    console.log('   Location ID:', locationId);
 
     if (!message) {
       console.log('   ❌ No message body found, returning null');
@@ -249,7 +255,8 @@ function extractMessageData(payload) {
       contactName,
       contactPhone,
       tags,
-      messageType
+      messageType,
+      locationId
     };
   } catch (error) {
     console.error('Error extracting message data:', error);
@@ -356,49 +363,66 @@ async function createConversation({ userId, templateId, contactName, contactPhon
 
 /**
  * Store message in database
+ * Uses Postgres conversation_messages table schema
  */
-async function storeMessage({ conversationId, sender, content, messageType = 'SMS' }) {
+async function storeMessage({ conversationId, contactId, locationId, sender, content, messageType = 'SMS' }) {
   try {
-    // Generate valid UUID if missing to prevent crashes
-    const finalConversationId = conversationId || crypto.randomUUID();
+    console.log('💾 Storing message in database...');
+    console.log('   Conversation ID:', conversationId);
+    console.log('   Contact ID:', contactId);
+    console.log('   Location ID:', locationId);
+    console.log('   Direction:', sender === 'contact' ? 'inbound' : 'outbound');
+
+    // Map sender to direction (contact = inbound, bot = outbound)
+    const direction = sender === 'contact' ? 'inbound' : 'outbound';
 
     await db.run(`
-      INSERT INTO messages (conversation_id, sender, content, timestamp)
-      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-    `, [finalConversationId, sender, content]);
+      INSERT INTO conversation_messages (
+        ghl_conversation_id,
+        ghl_contact_id,
+        ghl_location_id,
+        message_body,
+        message_type,
+        direction,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `, [conversationId, contactId, locationId, content, messageType, direction]);
 
-    // Update conversation's last_message_at (only if conversation exists)
-    if (conversationId) {
-      await db.run(`
-        UPDATE conversations
-        SET last_message_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `, [conversationId]);
-    }
+    console.log('✅ Message stored successfully');
 
   } catch (error) {
-    console.error('Error storing message:', error);
+    console.error('❌ Error storing message:', error);
+    console.error('   Error details:', error.message);
+    console.error('   Stack:', error.stack);
     throw error;
   }
 }
 
 /**
  * Get conversation history
+ * Uses Postgres conversation_messages table schema
  */
 async function getConversationHistory(conversationId, limit = 10) {
   try {
     const rows = await db.all(`
-      SELECT sender, content, timestamp
-      FROM messages
-      WHERE conversation_id = ?
-      ORDER BY timestamp DESC
+      SELECT
+        direction,
+        message_body as content,
+        created_at as timestamp,
+        CASE WHEN direction = 'inbound' THEN 'contact' ELSE 'bot' END as sender
+      FROM conversation_messages
+      WHERE ghl_conversation_id = ?
+      ORDER BY created_at DESC
       LIMIT ?
     `, [conversationId, limit]);
+
+    console.log('📜 Loaded conversation history:', rows?.length || 0, 'messages');
 
     // Reverse to get chronological order
     return rows ? rows.reverse() : [];
   } catch (error) {
-    console.error('Error getting conversation history:', error);
+    console.error('❌ Error getting conversation history:', error);
+    console.error('   Error details:', error.message);
     return [];
   }
 }
