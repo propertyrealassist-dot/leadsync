@@ -475,20 +475,41 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
     `, [strategy.id]);
 
     if (questions && questions.length > 0) {
-      // CRITICAL: Track which questions have been asked by analyzing conversation history
-      // Count bot messages that contain parts of qualification questions
-      const botMessages = conversationHistory.filter(msg => msg.sender === 'bot').map(m => m.content.toLowerCase());
+      // CRITICAL: Track which questions have been asked using FUZZY MATCHING
+      // AI paraphrases questions, so we can't use exact string matching
 
-      questionsAsked = questions.filter(q => {
-        const questionPreview = q.text.toLowerCase().substring(0, 30);
-        return botMessages.some(msg => msg.includes(questionPreview));
-      }).length;
+      // Helper: Check if a message contains the essence of a question
+      const isQuestionAsked = (botMessage, questionText) => {
+        // Extract key words from the question (ignore filler words)
+        const fillerWords = ['what', 'is', 'your', 'the', 'do', 'you', 'how', 'many', 'are', 'can', 'a', 'an', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by'];
+        const questionWords = questionText.toLowerCase()
+          .replace(/[?.,!]/g, '') // Remove punctuation
+          .split(/\s+/)
+          .filter(word => word.length > 3 && !fillerWords.includes(word));
 
+        // Check if bot message contains at least 2 key words from the question
+        const botMessageLower = botMessage.toLowerCase();
+        const matchCount = questionWords.filter(word => botMessageLower.includes(word)).length;
+
+        return matchCount >= 2;
+      };
+
+      const botMessages = conversationHistory.filter(msg => msg.sender === 'bot').map(m => m.content);
+
+      // Track which specific questions have been asked
+      const questionsAskedFlags = questions.map((question, index) => {
+        const wasAsked = botMessages.some(msg => isQuestionAsked(msg, question.text));
+        console.log(`   Q${index + 1} asked? ${wasAsked ? '✅' : '❌'} - "${question.text}"`);
+        return wasAsked;
+      });
+
+      questionsAsked = questionsAskedFlags.filter(Boolean).length;
       allQuestionsAsked = questionsAsked >= questions.length;
 
       console.log('📊 Qualification Progress:');
       console.log('   Total questions:', questions.length);
       console.log('   Questions asked:', questionsAsked);
+      console.log('   Questions remaining:', questions.length - questionsAsked);
       console.log('   All questions asked?', allQuestionsAsked);
       console.log('   Should send CTA?', allQuestionsAsked);
 
