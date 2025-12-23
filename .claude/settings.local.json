@@ -44,7 +44,8 @@
       "Bash(cmd.exe //c taskkill //F //PID 10500)",
       "Bash(git push:*)",
       "Bash(vercel:*)",
-      "WebFetch(domain:api.realassistagents.com)"
+      "WebFetch(domain:api.realassistagents.com)",
+      "Bash(npx vercel:*)"
     ],
     "deny": [],
     "ask": []
