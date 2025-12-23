@@ -1,6 +1,6 @@
 /*
 ================================================================================
-AppointWise CSS Reference - EXACT Styling
+AppointWise CSS Reference - Slender & Refined
 ================================================================================
 */
 
@@ -16,19 +16,24 @@ AppointWise CSS Reference - EXACT Styling
   --text-muted: #718096;
   --border-color: #3d4556;
   --border-hover: #4a5568;
+  --success: #48bb78;
+  --danger: #f56565;
+  --warning: #ed8936;
+  --info: #4299e1;
 }
 
-/* Form Controls */
+/* Form Controls - Slender */
 .form-control {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 0.875rem;
   background-color: var(--tertiary-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-primary);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   transition: all 0.2s ease;
   outline: none;
+  line-height: 1.4;
 }
 
 .form-control:focus {
@@ -40,28 +45,40 @@ AppointWise CSS Reference - EXACT Styling
   border-color: var(--border-hover);
 }
 
+.form-control::placeholder {
+  color: var(--text-muted);
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .form-label {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
-/* Buttons */
+/* Buttons - Slender */
 .btn {
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1.25rem;
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
   outline: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .btn-primary {
@@ -72,24 +89,34 @@ AppointWise CSS Reference - EXACT Styling
 .btn-primary:hover {
   background-color: var(--accent-mint-light);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(127, 255, 212, 0.3);
 }
 
-/* Time Input Grid */
+.btn-secondary {
+  background-color: var(--tertiary-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-bg);
+  border-color: var(--border-hover);
+}
+
+/* Time Input Grid - More Compact */
 .time-input-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .time-input {
   background-color: var(--tertiary-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.5rem 0.375rem;
   text-align: center;
   color: var(--text-primary);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   outline: none;
   transition: all 0.2s ease;
@@ -112,13 +139,14 @@ AppointWise CSS Reference - EXACT Styling
   margin-top: 0.25rem;
   text-transform: uppercase;
   font-weight: 600;
+  letter-spacing: 0.025em;
 }
 
-/* Range Sliders */
+/* Range Sliders - Thinner */
 .range-slider {
   width: 100%;
-  height: 6px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 2px;
   background: var(--tertiary-bg);
   outline: none;
   -webkit-appearance: none;
@@ -128,8 +156,8 @@ AppointWise CSS Reference - EXACT Styling
 .range-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--accent-mint);
   cursor: pointer;
@@ -138,13 +166,13 @@ AppointWise CSS Reference - EXACT Styling
 }
 
 .range-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 0 4px rgba(127, 255, 212, 0.2);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px rgba(127, 255, 212, 0.15);
 }
 
 .range-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--accent-mint);
   cursor: pointer;
@@ -153,27 +181,27 @@ AppointWise CSS Reference - EXACT Styling
 }
 
 .range-slider::-moz-range-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 0 4px rgba(127, 255, 212, 0.2);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px rgba(127, 255, 212, 0.15);
 }
 
-/* Adjustment Controls */
+/* Adjustment Controls - More Compact */
 .adjustment-item {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .adjustment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .adjustment-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -182,17 +210,18 @@ AppointWise CSS Reference - EXACT Styling
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 .adjustment-badge {
   background-color: var(--tertiary-bg);
-  padding: 0.25rem 0.5rem;
+  padding: 0.1875rem 0.4375rem;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--accent-mint);
   border: 1px solid var(--border-color);
+  line-height: 1;
 }
 
 /* Text Utilities */

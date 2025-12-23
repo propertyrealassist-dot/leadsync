@@ -90,7 +90,7 @@ export default function EditStrategyNew() {
                   value={template.brief || ''}
                   onChange={(e) => setTemplate({...template, brief: e.target.value})}
                   className="form-control font-mono"
-                  style={{ minHeight: '500px', resize: 'vertical' }}
+                  style={{ minHeight: '450px', resize: 'vertical', fontSize: '0.8125rem', lineHeight: '1.5' }}
                   placeholder="Enter your AI prompt here..."
                 />
 
@@ -102,7 +102,7 @@ export default function EditStrategyNew() {
 
               {/* RIGHT COLUMN: Adjustments */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Adjustments</h3>
+                <h3 className="text-base font-semibold" style={{ marginBottom: '1rem' }}>Adjustments</h3>
 
                 {/* Initial Message Delay */}
                 <div>
