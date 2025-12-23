@@ -8,31 +8,144 @@ export default function EditStrategyNew() {
     name: '',
     tag: '',
     tone: 'Friendly and Casual',
-    brief: ''
+    brief: '',
+    initialMessage: '',
+    calendarProvider: 'Google Calendar',
+    calendarUrl: '',
+    meetingDuration: { hours: 0, minutes: 30, seconds: 0 },
+    bufferTime: { hours: 0, minutes: 15, seconds: 0 },
+    confirmationMessage: '',
+    companyName: '',
+    industry: '',
+    companyDescription: ''
   });
+  const [qualificationQuestions, setQualificationQuestions] = useState([
+    { id: 1, question: 'What is your biggest challenge?', condition: 'None' }
+  ]);
+  const [followUps, setFollowUps] = useState([
+    { id: 1, text: 'Vuoi iniziare il percorso insieme a me o preferisci che blocchi tutto?', delay: '1d' }
+  ]);
+  const [faqs, setFaqs] = useState([
+    { id: 1, question: 'What is your pricing?', answer: 'Our pricing starts at $99/month for the basic plan...' },
+    { id: 2, question: 'How does it work?', answer: 'Our AI agents connect to your CRM and automatically qualify leads...' },
+    { id: 3, question: 'Can I try it for free?', answer: 'Yes! We offer a 14-day free trial with full features...' }
+  ]);
+
+  // Button handlers
+  const handleBuildPrompt = () => {
+    console.log('Building AI prompt...');
+    // TODO: Integrate with AI prompt builder
+  };
+
+  const addQualificationQuestion = () => {
+    const newId = Math.max(...qualificationQuestions.map(q => q.id), 0) + 1;
+    setQualificationQuestions([...qualificationQuestions, {
+      id: newId,
+      question: '',
+      condition: 'None'
+    }]);
+  };
+
+  const removeQualificationQuestion = (id) => {
+    setQualificationQuestions(qualificationQuestions.filter(q => q.id !== id));
+  };
+
+  const addFollowUp = () => {
+    const newId = Math.max(...followUps.map(f => f.id), 0) + 1;
+    setFollowUps([...followUps, {
+      id: newId,
+      text: '',
+      delay: '1d'
+    }]);
+  };
+
+  const removeFollowUp = (id) => {
+    setFollowUps(followUps.filter(f => f.id !== id));
+  };
+
+  const addFAQ = () => {
+    const newId = Math.max(...faqs.map(f => f.id), 0) + 1;
+    setFaqs([...faqs, {
+      id: newId,
+      question: '',
+      answer: ''
+    }]);
+  };
+
+  const removeFAQ = (id) => {
+    setFaqs(faqs.filter(f => f.id !== id));
+  };
+
+  const connectCalendar = () => {
+    console.log('Connecting calendar...', template.calendarProvider, template.calendarUrl);
+    // TODO: Integrate calendar connection
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0e1a] text-white p-8" style={{
       background: 'radial-gradient(circle at 50% 0%, rgba(127, 255, 212, 0.03) 0%, #0a0e1a 50%)'
     }}>
-      {/* Tab Navigation */}
+      {/* Tab Navigation - STUNNING */}
       <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex gap-1 border-b border-white/10" style={{
-          background: 'linear-gradient(90deg, rgba(127, 255, 212, 0.05) 0%, transparent 50%, rgba(127, 255, 212, 0.05) 100%)',
-          borderRadius: '12px 12px 0 0',
-          padding: '0.25rem 0.5rem'
+        <div style={{
+          display: 'flex',
+          gap: '0.5rem',
+          padding: '0.5rem',
+          background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
+          borderRadius: '12px',
+          border: '1px solid var(--border-color)',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)'
         }}>
-          {['instructions', 'conversation', 'booking', 'knowledge', 'tasks'].map((tab) => (
+          {[
+            { id: 'instructions', icon: '📝', label: 'Instructions' },
+            { id: 'conversation', icon: '💬', label: 'Conversation' },
+            { id: 'booking', icon: '📅', label: 'Booking' },
+            { id: 'knowledge', icon: '📚', label: 'Knowledge' },
+            { id: 'tasks', icon: '✅', label: 'Tasks' }
+          ].map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-3 text-sm font-medium capitalize transition-colors ${
-                activeTab === tab
-                  ? 'border-b-2 border-[var(--accent-mint)] text-[var(--accent-mint)]'
-                  : 'text-gray-400 hover:text-white'
-              }`}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                flex: 1,
+                padding: '0.75rem 1rem',
+                borderRadius: '8px',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                background: activeTab === tab.id
+                  ? 'var(--gradient-mint)'
+                  : 'transparent',
+                color: activeTab === tab.id
+                  ? 'var(--primary-bg)'
+                  : 'var(--text-secondary)',
+                boxShadow: activeTab === tab.id
+                  ? '0 4px 12px rgba(127, 255, 212, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                  : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
+              }}
+              onMouseEnter={(e) => {
+                if (activeTab !== tab.id) {
+                  e.currentTarget.style.background = 'rgba(127, 255, 212, 0.1)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== tab.id) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
+              }}
             >
-              {tab}
+              <span style={{ fontSize: '1.125rem' }}>{tab.icon}</span>
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
@@ -87,8 +200,8 @@ export default function EditStrategyNew() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="form-label">Prompt Editor</label>
-                  <button className="btn btn-primary">
-                    Build My Prompt
+                  <button className="btn btn-primary" onClick={handleBuildPrompt}>
+                    ✨ Build My Prompt
                   </button>
                 </div>
 
@@ -308,54 +421,70 @@ export default function EditStrategyNew() {
 
               {qualificationEnabled && (
                 <div className="space-y-3">
-                  {/* Example Question Card */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '0.75rem',
-                    padding: '1rem',
-                    background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '10px',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.3)';
-                    e.currentTarget.style.transform = 'translateX(4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--border-color)';
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }}>
-                    <div style={{ color: 'var(--text-muted)', cursor: 'move', fontSize: '1rem' }}>⋮⋮</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                        Q1: What is your biggest challenge?
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Condition: None
-                      </div>
-                    </div>
-                    <button style={{
-                      color: 'var(--danger)',
-                      background: 'transparent',
-                      border: 'none',
-                      fontSize: '1.25rem',
-                      cursor: 'pointer',
-                      padding: '0',
-                      transition: 'transform 0.2s ease'
+                  {/* Dynamic Question Cards */}
+                  {qualificationQuestions.map((q, index) => (
+                    <div key={q.id} style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '0.75rem',
+                      padding: '1rem',
+                      background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '10px',
+                      transition: 'all 0.3s ease'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-                      ×
-                    </button>
-                  </div>
-                  <button className="btn btn-secondary" style={{
-                    width: '100%',
-                    justifyContent: 'center',
-                    fontSize: '0.8125rem',
-                    marginTop: '0.75rem'
-                  }}>
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.3)';
+                      e.currentTarget.style.transform = 'translateX(4px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                      e.currentTarget.style.transform = 'translateX(0)';
+                    }}>
+                      <div style={{ color: 'var(--text-muted)', cursor: 'move', fontSize: '1rem' }}>⋮⋮</div>
+                      <div style={{ flex: 1 }}>
+                        <input
+                          type="text"
+                          className="form-control"
+                          style={{ marginBottom: '0.5rem' }}
+                          value={q.question}
+                          onChange={(e) => {
+                            const updated = [...qualificationQuestions];
+                            updated[index].question = e.target.value;
+                            setQualificationQuestions(updated);
+                          }}
+                          placeholder={`Q${index + 1}: Enter question...`}
+                        />
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          Condition: {q.condition}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeQualificationQuestion(q.id)}
+                        style={{
+                          color: 'var(--danger)',
+                          background: 'transparent',
+                          border: 'none',
+                          fontSize: '1.25rem',
+                          cursor: 'pointer',
+                          padding: '0',
+                          transition: 'transform 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={addQualificationQuestion}
+                    className="btn btn-secondary"
+                    style={{
+                      width: '100%',
+                      justifyContent: 'center',
+                      fontSize: '0.8125rem',
+                      marginTop: '0.75rem'
+                    }}>
                     + Add Question
                   </button>
                 </div>
@@ -374,83 +503,100 @@ export default function EditStrategyNew() {
                   <h3 className="text-base font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span style={{ fontSize: '1.25rem' }}>📬</span> Follow Ups
                   </h3>
-                  <span className="adjustment-badge">1</span>
+                  <span className="adjustment-badge">{followUps.length}</span>
                 </div>
-                <button className="btn btn-secondary" style={{ fontSize: '0.8125rem' }}>
-                  + Add Template
-                </button>
               </div>
 
-              {/* Follow Up Card */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '1rem',
-                background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '10px',
-                marginBottom: '0.75rem',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.3)';
-                e.currentTarget.style.transform = 'translateX(4px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'var(--border-color)';
-                e.currentTarget.style.transform = 'translateX(0)';
-              }}>
-                <div style={{ color: 'var(--text-muted)', cursor: 'move', fontSize: '1rem' }}>⋮⋮</div>
-                <div className="adjustment-badge" style={{ minWidth: '32px', textAlign: 'center' }}>F1</div>
-                <div style={{ flex: 1, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                  Vuoi iniziare il percorso insieme a me o preferisci che blocchi tutto?
-                </div>
-                <div className="flex items-center gap-2">
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Delay:</span>
+              {/* Dynamic Follow Up Cards */}
+              {followUps.map((f, index) => (
+                <div key={f.id} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '1rem',
+                  background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
+                  marginBottom: '0.75rem',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.3)';
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                }}>
+                  <div style={{ color: 'var(--text-muted)', cursor: 'move', fontSize: '1rem' }}>⋮⋮</div>
+                  <div className="adjustment-badge" style={{ minWidth: '32px', textAlign: 'center' }}>F{index + 1}</div>
                   <input
                     type="text"
-                    defaultValue="1d"
-                    className="time-input"
-                    style={{ width: '60px' }}
+                    className="form-control"
+                    style={{ flex: 1, fontSize: '0.8125rem' }}
+                    value={f.text}
+                    onChange={(e) => {
+                      const updated = [...followUps];
+                      updated[index].text = e.target.value;
+                      setFollowUps(updated);
+                    }}
+                    placeholder="Enter follow-up message..."
                   />
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Delay:</span>
+                    <input
+                      type="text"
+                      value={f.delay}
+                      onChange={(e) => {
+                        const updated = [...followUps];
+                        updated[index].delay = e.target.value;
+                        setFollowUps(updated);
+                      }}
+                      className="time-input"
+                      style={{ width: '60px' }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => removeFollowUp(f.id)}
+                    style={{
+                      color: 'var(--danger)',
+                      background: 'transparent',
+                      border: 'none',
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      padding: '0',
+                      transition: 'transform 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                    ×
+                  </button>
                 </div>
-                <button style={{
-                  color: 'var(--danger)',
-                  background: 'transparent',
-                  border: 'none',
-                  fontSize: '1.25rem',
-                  cursor: 'pointer',
-                  padding: '0',
-                  transition: 'transform 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-                  ×
-                </button>
-              </div>
+              ))}
 
               {/* Add Follow Up Button */}
-              <button style={{
-                width: '100%',
-                border: '2px dashed rgba(127, 255, 212, 0.2)',
-                borderRadius: '10px',
-                padding: '1rem',
-                background: 'transparent',
-                color: 'var(--accent-mint)',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.5)';
-                e.currentTarget.style.background = 'rgba(127, 255, 212, 0.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.2)';
-                e.currentTarget.style.background = 'transparent';
-              }}>
+              <button
+                onClick={addFollowUp}
+                style={{
+                  width: '100%',
+                  border: '2px dashed rgba(127, 255, 212, 0.2)',
+                  borderRadius: '10px',
+                  padding: '1rem',
+                  background: 'transparent',
+                  color: 'var(--accent-mint)',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.5)';
+                  e.currentTarget.style.background = 'rgba(127, 255, 212, 0.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.2)';
+                  e.currentTarget.style.background = 'transparent';
+                }}>
                 + Add Follow Up
               </button>
             </div>
@@ -473,7 +619,11 @@ export default function EditStrategyNew() {
 
               <div className="form-group mb-4">
                 <label className="form-label">Calendar Provider</label>
-                <select className="form-control">
+                <select
+                  className="form-control"
+                  value={template.calendarProvider}
+                  onChange={(e) => setTemplate({...template, calendarProvider: e.target.value})}
+                >
                   <option>Google Calendar</option>
                   <option>Outlook Calendar</option>
                   <option>Apple Calendar</option>
@@ -486,12 +636,14 @@ export default function EditStrategyNew() {
                 <input
                   type="text"
                   className="form-control"
+                  value={template.calendarUrl}
+                  onChange={(e) => setTemplate({...template, calendarUrl: e.target.value})}
                   placeholder="https://calendar.google.com/..."
                 />
               </div>
 
-              <button className="btn btn-primary">
-                Connect Calendar
+              <button className="btn btn-primary" onClick={connectCalendar}>
+                🔗 Connect Calendar
               </button>
             </div>
 
@@ -598,16 +750,16 @@ export default function EditStrategyNew() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ fontSize: '1.25rem' }}>❓</span> FAQs
-                  <span className="adjustment-badge">3</span>
+                  <span className="adjustment-badge">{faqs.length}</span>
                 </h3>
-                <button className="btn btn-secondary" style={{ fontSize: '0.8125rem' }}>
+                <button className="btn btn-secondary" style={{ fontSize: '0.8125rem' }} onClick={addFAQ}>
                   + Add FAQ
                 </button>
               </div>
 
-              {/* FAQ Item */}
-              {[1, 2, 3].map((i) => (
-                <div key={i} style={{
+              {/* Dynamic FAQ Items */}
+              {faqs.map((faq, index) => (
+                <div key={faq.id} style={{
                   padding: '1rem',
                   background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
                   border: '1px solid var(--border-color)',
@@ -622,7 +774,13 @@ export default function EditStrategyNew() {
                     <input
                       type="text"
                       className="form-control"
-                      defaultValue={`What is your pricing for FAQ ${i}?`}
+                      value={faq.question}
+                      onChange={(e) => {
+                        const updated = [...faqs];
+                        updated[index].question = e.target.value;
+                        setFaqs(updated);
+                      }}
+                      placeholder="Enter FAQ question..."
                     />
                   </div>
                   <div className="form-group">
@@ -630,22 +788,30 @@ export default function EditStrategyNew() {
                     <textarea
                       className="form-control"
                       style={{ minHeight: '80px', resize: 'vertical' }}
-                      defaultValue={`Our pricing starts at $99/month for the basic plan...`}
+                      value={faq.answer}
+                      onChange={(e) => {
+                        const updated = [...faqs];
+                        updated[index].answer = e.target.value;
+                        setFaqs(updated);
+                      }}
+                      placeholder="Enter FAQ answer..."
                     />
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                    <button style={{
-                      color: 'var(--danger)',
-                      background: 'transparent',
-                      border: 'none',
-                      fontSize: '0.8125rem',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-                      Remove FAQ
+                    <button
+                      onClick={() => removeFAQ(faq.id)}
+                      style={{
+                        color: 'var(--danger)',
+                        background: 'transparent',
+                        border: 'none',
+                        fontSize: '0.8125rem',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                      🗑️ Remove FAQ
                     </button>
                   </div>
                 </div>
