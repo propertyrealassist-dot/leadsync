@@ -557,15 +557,22 @@ function StrategyEditorNew() {
             {/* Qualification Questions */}
             <div className="ds-spacer-2xl">
               <div className="ds-section-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
-                  <h2 style={{
-                    fontSize: 'var(--font-xl)',
-                    fontWeight: 'var(--font-weight-semibold)',
-                    color: 'var(--text-primary)',
-                    margin: 0
+                <h2 style={{
+                  fontSize: 'var(--font-xl)',
+                  fontWeight: 'var(--font-weight-semibold)',
+                  color: 'var(--text-primary)',
+                  margin: 0
+                }}>
+                  Qualification Questions ({qualificationQuestions.length > 0 ? 'ON' : 'OFF'})
+                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+                  <span style={{
+                    fontSize: 'var(--font-sm)',
+                    color: 'var(--text-tertiary)',
+                    fontWeight: 'var(--font-weight-medium)'
                   }}>
-                    Qualification Questions
-                  </h2>
+                    Turn on qualifications
+                  </span>
                   <label className="ds-toggle">
                     <input
                       type="checkbox"
@@ -574,13 +581,6 @@ function StrategyEditorNew() {
                     />
                     <span className="ds-toggle-slider"></span>
                   </label>
-                  <span style={{
-                    fontSize: 'var(--font-sm)',
-                    color: 'var(--text-tertiary)',
-                    fontWeight: 'var(--font-weight-medium)'
-                  }}>
-                    {qualificationQuestions.length > 0 ? 'ON' : 'OFF'}
-                  </span>
                 </div>
               </div>
 
@@ -625,14 +625,20 @@ function StrategyEditorNew() {
             {/* Follow-up Messages */}
             <div className="ds-spacer-2xl">
               <div className="ds-section-header">
-                <h2 style={{
-                  fontSize: 'var(--font-xl)',
-                  fontWeight: 'var(--font-weight-semibold)',
-                  color: 'var(--text-primary)',
-                  margin: 0
-                }}>
-                  Follow-up Messages
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+                  <h2 style={{
+                    fontSize: 'var(--font-xl)',
+                    fontWeight: 'var(--font-weight-semibold)',
+                    color: 'var(--text-primary)',
+                    margin: 0
+                  }}>
+                    Follow Ups
+                  </h2>
+                  <span className="ds-section-count">{followUps.length}</span>
+                </div>
+                <button className="ds-btn ds-btn-secondary">
+                  + Add Template
+                </button>
               </div>
 
               <DndContext
