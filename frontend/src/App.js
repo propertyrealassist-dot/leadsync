@@ -7,6 +7,7 @@ import TopNav from './components/TopNav';
 import DashboardModern from './components/Dashboard-Modern';
 import AIAgents from './components/AIAgents';
 import StrategyEditorNew from './components/StrategyEditorNew';
+import EditStrategyNew from './pages/EditStrategyNew';
 import ConversationViewer from './components/ConversationViewer';
 import ConversationTest from './components/ConversationTest';
 import Conversations from './components/Conversations';
@@ -122,10 +123,10 @@ function AppContent() {
           <Route path="/dashboard" element={<DashboardModern />} />
           <Route path="/dashboard-modern" element={<DashboardModern />} />
           <Route path="/strategies" element={<AIAgents />} />
-          <Route path="/strategy/new" element={<StrategyEditorNew />} />
-          <Route path="/strategy/edit/:id" element={<StrategyEditorNew />} />
-          <Route path="/strategy/:id" element={<StrategyEditorNew />} />
-          <Route path="/ai-agents/edit/:id" element={<StrategyEditorNew />} />
+          <Route path="/strategy/new" element={<EditStrategyNew />} />
+          <Route path="/strategy/edit/:id" element={<EditStrategyNew />} />
+          <Route path="/strategy/:id" element={<EditStrategyNew />} />
+          <Route path="/ai-agents/edit/:id" element={<EditStrategyNew />} />
           <Route path="/conversation/:id" element={<ConversationViewer />} />
           <Route path="/conversations" element={<Conversations />} />
           <Route path="/appointments" element={<Appointments />} />
