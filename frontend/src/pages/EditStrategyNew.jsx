@@ -12,10 +12,16 @@ export default function EditStrategyNew() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-white p-8">
+    <div className="min-h-screen bg-[#0a0e1a] text-white p-8" style={{
+      background: 'radial-gradient(circle at 50% 0%, rgba(127, 255, 212, 0.03) 0%, #0a0e1a 50%)'
+    }}>
       {/* Tab Navigation */}
       <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex gap-1 border-b border-white/10">
+        <div className="flex gap-1 border-b border-white/10" style={{
+          background: 'linear-gradient(90deg, rgba(127, 255, 212, 0.05) 0%, transparent 50%, rgba(127, 255, 212, 0.05) 100%)',
+          borderRadius: '12px 12px 0 0',
+          padding: '0.25rem 0.5rem'
+        }}>
           {['instructions', 'conversation', 'booking', 'knowledge', 'tasks'].map((tab) => (
             <button
               key={tab}
