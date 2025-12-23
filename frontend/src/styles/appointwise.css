@@ -300,6 +300,25 @@ LeadSync Theme - Premium & Beautiful 💎
   letter-spacing: 0.025em;
 }
 
+/* Toggle Switch */
+.toggle-switch-input::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary-bg);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch-input:checked::after {
+  left: 22px;
+  background: var(--primary-bg);
+}
+
 /* Text Utilities */
 .text-muted {
   color: var(--text-muted);

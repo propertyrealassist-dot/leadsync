@@ -234,97 +234,529 @@ export default function EditStrategyNew() {
 
         {/* TAB 2: CONVERSATION */}
         {activeTab === 'conversation' && (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Initial Message Section */}
-            <div className="bg-[#1a1f2e] border border-white/10 rounded-xl p-6">
+            <div style={{
+              background: 'var(--gradient-overlay)',
+              border: '1px solid rgba(127, 255, 212, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem'
+            }}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">💬 Initial Message</h3>
-                <button className="text-[#34d399] hover:text-[#10b981] text-sm font-medium">
+                <h3 className="text-base font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.25rem' }}>💬</span> Initial Message
+                </h3>
+                <button className="btn btn-secondary" style={{ fontSize: '0.8125rem' }}>
                   + Add Template
                 </button>
               </div>
               <textarea
-                className="w-full h-24 bg-[#0a0e1a] border border-white/10 rounded-lg p-4 text-white resize-none focus:outline-none focus:border-[#34d399]/50"
+                className="form-control"
+                style={{ minHeight: '100px', resize: 'vertical', fontSize: '0.8125rem' }}
                 placeholder="Enter your initial message..."
               />
             </div>
 
             {/* Qualification Questions Section */}
-            <div className="bg-[#1a1f2e] border border-white/10 rounded-xl p-6">
+            <div style={{
+              background: 'var(--gradient-overlay)',
+              border: '1px solid rgba(127, 255, 212, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem'
+            }}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">
-                  ❓ Qualification Questions {qualificationEnabled ? '(ON)' : '(OFF)'}
+                <h3 className="text-base font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.25rem' }}>❓</span> Qualification Questions
+                  <span className="adjustment-badge" style={{ marginLeft: '0.5rem' }}>
+                    {qualificationEnabled ? 'ON' : 'OFF'}
+                  </span>
                 </h3>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-sm text-gray-400">Turn on qualifications</span>
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Enable qualifications</span>
                   <input
                     type="checkbox"
                     checked={qualificationEnabled}
                     onChange={(e) => setQualificationEnabled(e.target.checked)}
-                    className="w-10 h-6 bg-gray-600 rounded-full appearance-none cursor-pointer relative
-                      checked:bg-[#34d399] transition-colors
-                      after:content-[''] after:absolute after:top-1 after:left-1
-                      after:w-4 after:h-4 after:bg-white after:rounded-full after:transition-transform
-                      checked:after:translate-x-4"
+                    style={{
+                      width: '44px',
+                      height: '24px',
+                      backgroundColor: qualificationEnabled ? 'var(--accent-mint)' : 'var(--tertiary-bg)',
+                      borderRadius: '24px',
+                      border: '1px solid var(--border-color)',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      appearance: 'none',
+                      outline: 'none'
+                    }}
+                    className="toggle-switch-input"
                   />
                 </label>
               </div>
 
               {!qualificationEnabled && (
-                <p className="text-center text-gray-500 italic py-8">
-                  Qualification disabled
+                <p style={{
+                  textAlign: 'center',
+                  color: 'var(--text-muted)',
+                  fontStyle: 'italic',
+                  padding: '2rem 0',
+                  fontSize: '0.875rem'
+                }}>
+                  Qualification questions disabled
                 </p>
               )}
 
               {qualificationEnabled && (
                 <div className="space-y-3">
                   {/* Example Question Card */}
-                  <div className="flex items-start gap-3 p-4 bg-[#0a0e1a] rounded-lg">
-                    <div className="text-gray-500 cursor-move">⋮⋮</div>
-                    <div className="flex-1">
-                      <div className="font-medium">Q1: What is your biggest challenge?</div>
-                      <div className="text-sm text-gray-400 mt-1">Condition: None</div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '0.75rem',
+                    padding: '1rem',
+                    background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '10px',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.3)';
+                    e.currentTarget.style.transform = 'translateX(4px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                    e.currentTarget.style.transform = 'translateX(0)';
+                  }}>
+                    <div style={{ color: 'var(--text-muted)', cursor: 'move', fontSize: '1rem' }}>⋮⋮</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+                        Q1: What is your biggest challenge?
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Condition: None
+                      </div>
                     </div>
-                    <button className="text-red-400 hover:text-red-300">×</button>
+                    <button style={{
+                      color: 'var(--danger)',
+                      background: 'transparent',
+                      border: 'none',
+                      fontSize: '1.25rem',
+                      cursor: 'pointer',
+                      padding: '0',
+                      transition: 'transform 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                      ×
+                    </button>
                   </div>
+                  <button className="btn btn-secondary" style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    fontSize: '0.8125rem',
+                    marginTop: '0.75rem'
+                  }}>
+                    + Add Question
+                  </button>
                 </div>
               )}
             </div>
 
             {/* Follow Ups Section */}
-            <div className="bg-[#1a1f2e] border border-white/10 rounded-xl p-6">
+            <div style={{
+              background: 'var(--gradient-overlay)',
+              border: '1px solid rgba(127, 255, 212, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem'
+            }}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold">📬 Follow Ups</h3>
-                  <span className="px-2 py-1 text-xs font-semibold bg-white/10 rounded-full">1</span>
+                  <h3 className="text-base font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.25rem' }}>📬</span> Follow Ups
+                  </h3>
+                  <span className="adjustment-badge">1</span>
                 </div>
-                <button className="text-[#34d399] hover:text-[#10b981] text-sm font-medium">
+                <button className="btn btn-secondary" style={{ fontSize: '0.8125rem' }}>
                   + Add Template
                 </button>
               </div>
 
               {/* Follow Up Card */}
-              <div className="flex items-center gap-3 p-4 bg-[#0a0e1a] rounded-lg mb-3">
-                <div className="text-gray-500 cursor-move">⋮⋮</div>
-                <div className="font-bold text-gray-400">F1</div>
-                <div className="flex-1 text-sm">
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                padding: '1rem',
+                background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                marginBottom: '0.75rem',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.3)';
+                e.currentTarget.style.transform = 'translateX(4px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }}>
+                <div style={{ color: 'var(--text-muted)', cursor: 'move', fontSize: '1rem' }}>⋮⋮</div>
+                <div className="adjustment-badge" style={{ minWidth: '32px', textAlign: 'center' }}>F1</div>
+                <div style={{ flex: 1, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
                   Vuoi iniziare il percorso insieme a me o preferisci che blocchi tutto?
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-400">Delay:</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Delay:</span>
                   <input
                     type="text"
                     defaultValue="1d"
-                    className="w-16 px-2 py-1 bg-[#1a1f2e] border border-white/10 rounded text-center text-sm"
+                    className="time-input"
+                    style={{ width: '60px' }}
                   />
                 </div>
-                <button className="text-red-400 hover:text-red-300">×</button>
+                <button style={{
+                  color: 'var(--danger)',
+                  background: 'transparent',
+                  border: 'none',
+                  fontSize: '1.25rem',
+                  cursor: 'pointer',
+                  padding: '0',
+                  transition: 'transform 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                  ×
+                </button>
               </div>
 
               {/* Add Follow Up Button */}
-              <button className="w-full border-2 border-dashed border-white/20 rounded-lg py-4 text-[#34d399] hover:border-[#34d399]/50 hover:bg-[#34d399]/5 transition-colors">
+              <button style={{
+                width: '100%',
+                border: '2px dashed rgba(127, 255, 212, 0.2)',
+                borderRadius: '10px',
+                padding: '1rem',
+                background: 'transparent',
+                color: 'var(--accent-mint)',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.5)';
+                e.currentTarget.style.background = 'rgba(127, 255, 212, 0.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.2)';
+                e.currentTarget.style.background = 'transparent';
+              }}>
                 + Add Follow Up
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: BOOKING */}
+        {activeTab === 'booking' && (
+          <div className="space-y-6">
+            {/* Calendar Integration */}
+            <div style={{
+              background: 'var(--gradient-overlay)',
+              border: '1px solid rgba(127, 255, 212, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem'
+            }}>
+              <h3 className="text-base font-semibold mb-4" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>📅</span> Calendar Integration
+              </h3>
+
+              <div className="form-group mb-4">
+                <label className="form-label">Calendar Provider</label>
+                <select className="form-control">
+                  <option>Google Calendar</option>
+                  <option>Outlook Calendar</option>
+                  <option>Apple Calendar</option>
+                  <option>Custom CalDAV</option>
+                </select>
+              </div>
+
+              <div className="form-group mb-4">
+                <label className="form-label">Calendar URL</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="https://calendar.google.com/..."
+                />
+              </div>
+
+              <button className="btn btn-primary">
+                Connect Calendar
+              </button>
+            </div>
+
+            {/* Booking Settings */}
+            <div style={{
+              background: 'var(--gradient-overlay)',
+              border: '1px solid rgba(127, 255, 212, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem'
+            }}>
+              <h3 className="text-base font-semibold mb-4" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>⚙️</span> Booking Settings
+              </h3>
+
+              <div className="form-group mb-4">
+                <label className="form-label">Meeting Duration</label>
+                <div className="time-input-grid">
+                  <div className="text-center">
+                    <input type="number" min="0" max="5" defaultValue="0" className="time-input" />
+                    <span className="time-input-label">hr</span>
+                  </div>
+                  <div className="text-center">
+                    <input type="number" min="0" max="59" defaultValue="30" className="time-input" />
+                    <span className="time-input-label">min</span>
+                  </div>
+                  <div className="text-center">
+                    <input type="number" min="0" max="59" defaultValue="00" className="time-input" />
+                    <span className="time-input-label">sec</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-group mb-4">
+                <label className="form-label">Buffer Time (Between Meetings)</label>
+                <div className="time-input-grid">
+                  <div className="text-center">
+                    <input type="number" min="0" max="2" defaultValue="0" className="time-input" />
+                    <span className="time-input-label">hr</span>
+                  </div>
+                  <div className="text-center">
+                    <input type="number" min="0" max="59" defaultValue="15" className="time-input" />
+                    <span className="time-input-label">min</span>
+                  </div>
+                  <div className="text-center">
+                    <input type="number" min="0" max="59" defaultValue="00" className="time-input" />
+                    <span className="time-input-label">sec</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Confirmation Message</label>
+                <textarea
+                  className="form-control"
+                  style={{ minHeight: '100px', resize: 'vertical' }}
+                  placeholder="Your meeting has been scheduled! Looking forward to speaking with you..."
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: KNOWLEDGE */}
+        {activeTab === 'knowledge' && (
+          <div className="space-y-6">
+            {/* Company Information */}
+            <div style={{
+              background: 'var(--gradient-overlay)',
+              border: '1px solid rgba(127, 255, 212, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem'
+            }}>
+              <h3 className="text-base font-semibold mb-4" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>🏢</span> Company Information
+              </h3>
+
+              <div className="form-group mb-4">
+                <label className="form-label">Company Name</label>
+                <input type="text" className="form-control" placeholder="LeadSync AI" />
+              </div>
+
+              <div className="form-group mb-4">
+                <label className="form-label">Industry</label>
+                <input type="text" className="form-control" placeholder="AI-Powered Sales Automation" />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Company Description</label>
+                <textarea
+                  className="form-control"
+                  style={{ minHeight: '120px', resize: 'vertical' }}
+                  placeholder="We help businesses automate their lead generation and qualification process..."
+                />
+              </div>
+            </div>
+
+            {/* FAQs */}
+            <div style={{
+              background: 'var(--gradient-overlay)',
+              border: '1px solid rgba(127, 255, 212, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem'
+            }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.25rem' }}>❓</span> FAQs
+                  <span className="adjustment-badge">3</span>
+                </h3>
+                <button className="btn btn-secondary" style={{ fontSize: '0.8125rem' }}>
+                  + Add FAQ
+                </button>
+              </div>
+
+              {/* FAQ Item */}
+              {[1, 2, 3].map((i) => (
+                <div key={i} style={{
+                  padding: '1rem',
+                  background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
+                  marginBottom: '0.75rem',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.3)'}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}>
+                  <div className="form-group mb-3">
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Question</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      defaultValue={`What is your pricing for FAQ ${i}?`}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Answer</label>
+                    <textarea
+                      className="form-control"
+                      style={{ minHeight: '80px', resize: 'vertical' }}
+                      defaultValue={`Our pricing starts at $99/month for the basic plan...`}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+                    <button style={{
+                      color: 'var(--danger)',
+                      background: 'transparent',
+                      border: 'none',
+                      fontSize: '0.8125rem',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                      Remove FAQ
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: TASKS */}
+        {activeTab === 'tasks' && (
+          <div className="space-y-6">
+            {/* Task Workflows */}
+            <div style={{
+              background: 'var(--gradient-overlay)',
+              border: '1px solid rgba(127, 255, 212, 0.1)',
+              borderRadius: '12px',
+              padding: '1.5rem'
+            }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.25rem' }}>✅</span> Task Workflows
+                  <span className="adjustment-badge">4</span>
+                </h3>
+                <button className="btn btn-primary" style={{ fontSize: '0.8125rem' }}>
+                  + Add Task
+                </button>
+              </div>
+
+              {/* Task Cards */}
+              {[
+                { icon: '📧', title: 'Send Welcome Email', description: 'Triggered when lead is qualified' },
+                { icon: '🔔', title: 'Notify Sales Team', description: 'Alert team members via Slack' },
+                { icon: '📊', title: 'Update CRM', description: 'Sync lead data to Salesforce' },
+                { icon: '📝', title: 'Create Follow-up Task', description: 'Schedule follow-up in 3 days' }
+              ].map((task, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  gap: '1rem',
+                  padding: '1.25rem',
+                  background: 'linear-gradient(135deg, var(--tertiary-bg) 0%, var(--card-bg) 100%)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
+                  marginBottom: '0.75rem',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(127, 255, 212, 0.3)';
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '10px',
+                    background: 'var(--gradient-overlay)',
+                    border: '1px solid rgba(127, 255, 212, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.5rem',
+                    flexShrink: 0
+                  }}>
+                    {task.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9375rem', marginBottom: '0.25rem' }}>
+                      {task.title}
+                    </div>
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                      {task.description}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                      <span className="adjustment-badge" style={{ fontSize: '0.625rem' }}>Active</span>
+                      <span style={{
+                        padding: '0.1875rem 0.4375rem',
+                        borderRadius: '6px',
+                        fontSize: '0.625rem',
+                        fontWeight: 600,
+                        background: 'rgba(66, 153, 225, 0.2)',
+                        color: 'var(--info)',
+                        border: '1px solid rgba(66, 153, 225, 0.3)'
+                      }}>
+                        Step {i + 1}
+                      </span>
+                    </div>
+                  </div>
+                  <button style={{
+                    color: 'var(--text-muted)',
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '1.25rem',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.transform = 'rotate(90deg)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.transform = 'rotate(0deg)';
+                  }}>
+                    ⚙️
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         )}
