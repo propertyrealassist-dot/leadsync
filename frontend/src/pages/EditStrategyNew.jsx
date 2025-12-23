@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import '../styles/appointwise.css';
 
 export default function EditStrategyNew() {
+  const { id } = useParams();
+  const { getToken } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('instructions');
   const [qualificationEnabled, setQualificationEnabled] = useState(false);
   const [template, setTemplate] = useState({
@@ -81,10 +86,171 @@ export default function EditStrategyNew() {
     // TODO: Integrate calendar connection
   };
 
+  // Load strategy data from API
+  useEffect(() => {
+    const loadStrategy = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const token = getToken();
+        const response = await fetch(`/api/strategies/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Loaded strategy:', data);
+
+          // Map API data to state
+          setTemplate({
+            name: data.name || '',
+            tag: data.tag || '',
+            tone: data.tone || 'Friendly and Casual',
+            brief: data.brief || data.prompt || '',
+            initialMessage: data.initial_message || '',
+            calendarProvider: data.calendar_provider || 'Google Calendar',
+            calendarUrl: data.calendar_url || '',
+            meetingDuration: data.meeting_duration || { hours: 0, minutes: 30, seconds: 0 },
+            bufferTime: data.buffer_time || { hours: 0, minutes: 15, seconds: 0 },
+            confirmationMessage: data.confirmation_message || '',
+            companyName: data.company_name || '',
+            industry: data.industry || '',
+            companyDescription: data.company_description || ''
+          });
+
+          // Load qualification questions
+          if (data.qualification_questions && data.qualification_questions.length > 0) {
+            setQualificationEnabled(true);
+            setQualificationQuestions(data.qualification_questions.map((q, i) => ({
+              id: i + 1,
+              question: q.question || q,
+              condition: q.condition || 'None'
+            })));
+          }
+
+          // Load follow-ups
+          if (data.follow_ups && data.follow_ups.length > 0) {
+            setFollowUps(data.follow_ups.map((f, i) => ({
+              id: i + 1,
+              text: f.text || f.message || f,
+              delay: f.delay || '1d'
+            })));
+          }
+
+          // Load FAQs
+          if (data.faqs && data.faqs.length > 0) {
+            setFaqs(data.faqs.map((f, i) => ({
+              id: i + 1,
+              question: f.question || '',
+              answer: f.answer || ''
+            })));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading strategy:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStrategy();
+  }, [id, getToken]);
+
+  // Save strategy
+  const saveStrategy = async () => {
+    try {
+      const token = getToken();
+      const payload = {
+        name: template.name,
+        tag: template.tag,
+        tone: template.tone,
+        prompt: template.brief,
+        brief: template.brief,
+        initial_message: template.initialMessage,
+        calendar_provider: template.calendarProvider,
+        calendar_url: template.calendarUrl,
+        meeting_duration: template.meetingDuration,
+        buffer_time: template.bufferTime,
+        confirmation_message: template.confirmationMessage,
+        company_name: template.companyName,
+        industry: template.industry,
+        company_description: template.companyDescription,
+        qualification_questions: qualificationQuestions.map(q => ({
+          question: q.question,
+          condition: q.condition
+        })),
+        follow_ups: followUps.map(f => ({
+          text: f.text,
+          delay: f.delay
+        })),
+        faqs: faqs.map(f => ({
+          question: f.question,
+          answer: f.answer
+        }))
+      };
+
+      const url = id ? `/api/strategies/${id}` : '/api/strategies';
+      const method = id ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        console.log('Strategy saved successfully');
+        // TODO: Show success toast
+      } else {
+        console.error('Failed to save strategy');
+        // TODO: Show error toast
+      }
+    } catch (error) {
+      console.error('Error saving strategy:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0e1a] text-white flex items-center justify-center">
+        <div style={{
+          textAlign: 'center',
+          padding: '2rem'
+        }}>
+          <div className="adjustment-badge" style={{ fontSize: '1rem', padding: '1rem 2rem', marginBottom: '1rem' }}>
+            Loading strategy...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0e1a] text-white p-8" style={{
       background: 'radial-gradient(circle at 50% 0%, rgba(127, 255, 212, 0.03) 0%, #0a0e1a 50%)'
     }}>
+      {/* Top Bar with Save Button */}
+      <div className="max-w-6xl mx-auto mb-6 flex justify-between items-center">
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          {id ? 'Edit Strategy' : 'Create Strategy'}
+        </h1>
+        <button
+          onClick={saveStrategy}
+          className="btn btn-primary"
+          style={{ fontSize: '0.875rem', padding: '0.75rem 2rem' }}
+        >
+          💾 Save Strategy
+        </button>
+      </div>
+
       {/* Tab Navigation - STUNNING */}
       <div className="max-w-6xl mx-auto mb-8">
         <div style={{
