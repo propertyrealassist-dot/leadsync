@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Icons from './Icons';
@@ -32,20 +32,25 @@ function CoPilot() {
     benefits: '',
     pricing: ''
   });
+  const isCreatingStrategy = useRef(false);
 
   // Generate strategy
   const generateStrategy = async () => {
     setGenerating(true);
     setStep('generating');
+    isCreatingStrategy.current = false; // Reset flag
 
     // Simulate progress
     const progressInterval = setInterval(() => {
       setProgress(p => {
         if (p >= 100) {
           clearInterval(progressInterval);
-          setTimeout(() => {
-            createActualStrategy();
-          }, 500);
+          if (!isCreatingStrategy.current) {
+            isCreatingStrategy.current = true;
+            setTimeout(() => {
+              createActualStrategy();
+            }, 500);
+          }
           return 100;
         }
         return p + 2;

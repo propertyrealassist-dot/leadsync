@@ -17,6 +17,7 @@ const downloadRoutes = require('./routes/download');
 const calendarRoutes = require('./routes/calendar');
 const teamRoutes = require('./routes/team');
 const copilotRoutes = require('./routes/copilot');
+const strategiesRoutes = require('./routes/strategies');
 const snapshotsRoutes = require('./routes/snapshots');
 const testAIRoutes = require('./routes/test-ai');
 const leadsRoutes = require('./routes/leads');
@@ -121,6 +122,7 @@ app.use('/api/download', downloadRoutes); // File downloads
 app.use('/api/calendar', calendarRoutes); // Calendar booking system
 app.use('/api/team', teamRoutes); // Team management
 app.use('/api/copilot', copilotRoutes); // Co-Pilot website scanning
+app.use('/api/strategies', strategiesRoutes); // AI Strategies
 app.use('/api/snapshots', snapshotsRoutes); // Snapshot management
 app.use('/api/test-ai', testAIRoutes); // Test AI conversations
 app.use('/api/leads', leadsRoutes); // Lead management

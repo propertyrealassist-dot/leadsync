@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import '../styles/appointwise.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 export default function EditStrategyNew() {
   const { id } = useParams();
-  const { getToken } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('instructions');
   const [qualificationEnabled, setQualificationEnabled] = useState(false);
@@ -95,16 +98,15 @@ export default function EditStrategyNew() {
       }
 
       try {
-        const token = getToken();
-        const response = await fetch(`/api/strategies/${id}`, {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/api/strategies/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Loaded strategy:', data);
+        const data = response.data;
+        console.log('Loaded strategy:', data);
 
           // Map API data to state
           setTemplate({
@@ -150,7 +152,6 @@ export default function EditStrategyNew() {
               answer: f.answer || ''
             })));
           }
-        }
       } catch (error) {
         console.error('Error loading strategy:', error);
       } finally {
@@ -159,12 +160,12 @@ export default function EditStrategyNew() {
     };
 
     loadStrategy();
-  }, [id, getToken]);
+  }, [id]);
 
   // Save strategy
   const saveStrategy = async () => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem('token');
       const payload = {
         name: template.name,
         tag: template.tag,
@@ -194,25 +195,20 @@ export default function EditStrategyNew() {
         }))
       };
 
-      const url = id ? `/api/strategies/${id}` : '/api/strategies';
-      const method = id ? 'PUT' : 'POST';
+      const url = `${API_URL}/api/strategies${id ? `/${id}` : ''}`;
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        console.log('Strategy saved successfully');
-        // TODO: Show success toast
+      if (id) {
+        await axios.put(url, payload, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
       } else {
-        console.error('Failed to save strategy');
-        // TODO: Show error toast
+        await axios.post(url, payload, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
       }
+
+      console.log('Strategy saved successfully');
+      // TODO: Show success toast
     } catch (error) {
       console.error('Error saving strategy:', error);
     }
@@ -532,6 +528,8 @@ export default function EditStrategyNew() {
               <textarea
                 className="form-control"
                 style={{ minHeight: '100px', resize: 'vertical', fontSize: '0.8125rem' }}
+                value={template.initialMessage}
+                onChange={(e) => setTemplate({...template, initialMessage: e.target.value})}
                 placeholder="Enter your initial message..."
               />
             </div>
@@ -865,6 +863,8 @@ export default function EditStrategyNew() {
                 <textarea
                   className="form-control"
                   style={{ minHeight: '100px', resize: 'vertical' }}
+                  value={template.confirmationMessage}
+                  onChange={(e) => setTemplate({...template, confirmationMessage: e.target.value})}
                   placeholder="Your meeting has been scheduled! Looking forward to speaking with you..."
                 />
               </div>
@@ -888,12 +888,24 @@ export default function EditStrategyNew() {
 
               <div className="form-group mb-4">
                 <label className="form-label">Company Name</label>
-                <input type="text" className="form-control" placeholder="LeadSync AI" />
+                <input
+                  type="text"
+                  className="form-control"
+                  value={template.companyName}
+                  onChange={(e) => setTemplate({...template, companyName: e.target.value})}
+                  placeholder="LeadSync AI"
+                />
               </div>
 
               <div className="form-group mb-4">
                 <label className="form-label">Industry</label>
-                <input type="text" className="form-control" placeholder="AI-Powered Sales Automation" />
+                <input
+                  type="text"
+                  className="form-control"
+                  value={template.industry}
+                  onChange={(e) => setTemplate({...template, industry: e.target.value})}
+                  placeholder="AI-Powered Sales Automation"
+                />
               </div>
 
               <div className="form-group">
@@ -901,6 +913,8 @@ export default function EditStrategyNew() {
                 <textarea
                   className="form-control"
                   style={{ minHeight: '120px', resize: 'vertical' }}
+                  value={template.companyDescription}
+                  onChange={(e) => setTemplate({...template, companyDescription: e.target.value})}
                   placeholder="We help businesses automate their lead generation and qualification process..."
                 />
               </div>
