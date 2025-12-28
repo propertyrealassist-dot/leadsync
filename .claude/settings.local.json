@@ -53,7 +53,13 @@
       "Bash(cmd.exe //c \"npx vercel --prod --yes\")",
       "WebSearch",
       "Bash(tasklist:*)",
-      "Bash(cmd.exe //c taskkill //F //PID 32572)"
+      "Bash(cmd.exe //c taskkill //F //PID 32572)",
+      "Bash(cmd.exe /c \"dir /s /b *.ts 2>nul | findstr /v node_modules | findstr /v .next\")",
+      "Bash(ls:*)",
+      "Bash(git pull:*)",
+      "Bash(cmd.exe //c taskkill //F //PID 5572)",
+      "Bash(cmd.exe //c taskkill //F //PID 23464)",
+      "Bash(cmd.exe //c \"taskkill //F //PID 10532 && taskkill //F //PID 13780 && taskkill //F //PID 27224 && taskkill //F //PID 31420 && taskkill //F //PID 36564 && taskkill //F //PID 2492 && taskkill //F //PID 20464 && taskkill //F //PID 39340\")"
     ],
     "deny": [],
     "ask": []

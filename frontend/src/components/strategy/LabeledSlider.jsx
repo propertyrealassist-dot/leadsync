@@ -1,22 +1,6 @@
 import React from 'react';
 import '../../styles/design-system.css';
 
-/**
- * LabeledSlider - Slider with icon, label, value display, and optional description
- *
- * Props:
- * - icon: Emoji or icon
- * - label: Label text on the left
- * - value: Current value
- * - onChange: Change handler
- * - min: Minimum value (default 0)
- * - max: Maximum value (default 100)
- * - step: Step increment (default 1)
- * - description: Optional description below slider
- * - showValue: Show value on right (default true)
- * - valueFormatter: Function to format displayed value
- * - labels: Array of label strings that map to values (e.g., ["Low", "Medium", "High"])
- */
 const LabeledSlider = ({
   icon,
   label,
@@ -30,7 +14,6 @@ const LabeledSlider = ({
   valueFormatter = (v) => v,
   labels = null
 }) => {
-  // Calculate label dynamically for each render
   const getLabelForValue = (val) => {
     if (!labels || labels.length === 0) return null;
     const range = max - min;
@@ -39,9 +22,11 @@ const LabeledSlider = ({
     return labels[index];
   };
 
+  const currentLabel = getLabelForValue(value);
+  const formattedValue = valueFormatter(value);
+
   return (
     <div className="ds-spacer-lg">
-      {/* Header with icon, label, and value */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -49,9 +34,7 @@ const LabeledSlider = ({
         marginBottom: 'var(--space-md)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-          {icon && (
-            <span style={{ fontSize: 'var(--font-lg)' }}>{icon}</span>
-          )}
+          {icon && <span style={{ fontSize: 'var(--font-lg)' }}>{icon}</span>}
           <span style={{
             fontSize: 'var(--font-base)',
             fontWeight: 'var(--font-weight-medium)',
@@ -62,14 +45,14 @@ const LabeledSlider = ({
         </div>
         {showValue && (
           <div style={{ textAlign: 'right' }}>
-            {getLabelForValue(value) && (
+            {currentLabel && (
               <div style={{
                 fontSize: 'var(--font-sm)',
                 fontWeight: 'var(--font-weight-medium)',
                 color: 'var(--text-secondary)',
                 marginBottom: '4px'
               }}>
-                {getLabelForValue(value)}
+                {currentLabel}
               </div>
             )}
             <span style={{
@@ -79,13 +62,12 @@ const LabeledSlider = ({
               minWidth: '48px',
               display: 'inline-block'
             }}>
-              {valueFormatter(value)}
+              {formattedValue}
             </span>
           </div>
         )}
       </div>
 
-      {/* Slider */}
       <input
         type="range"
         className="ds-slider"
@@ -96,7 +78,6 @@ const LabeledSlider = ({
         step={step}
       />
 
-      {/* Description */}
       {description && (
         <div style={{
           fontSize: 'var(--font-sm)',

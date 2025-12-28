@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/ToastContainer';
 import axios from 'axios';
 import '../styles/appointwise.css';
 
@@ -9,7 +10,9 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 export default function EditStrategyNew() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('instructions');
   const [qualificationEnabled, setQualificationEnabled] = useState(false);
   const [ghlCalendars, setGhlCalendars] = useState([]);
@@ -28,7 +31,10 @@ export default function EditStrategyNew() {
     confirmationMessage: '',
     companyName: '',
     industry: '',
-    companyDescription: ''
+    companyDescription: '',
+    objectionHandling: 8,
+    qualificationPriority: 6,
+    creativity: 0.4
   });
   const [qualificationQuestions, setQualificationQuestions] = useState([
     { id: 1, question: 'What is your biggest challenge?', condition: 'None' }
@@ -145,7 +151,10 @@ export default function EditStrategyNew() {
             confirmationMessage: data.confirmation_message || '',
             companyName: data.company_name || '',
             industry: data.industry || '',
-            companyDescription: data.company_description || ''
+            companyDescription: data.company_description || '',
+            objectionHandling: data.objection_handling || 8,
+            qualificationPriority: data.qualification_priority || 6,
+            creativity: data.bot_temperature || 0.4
           });
 
           // Load qualification questions
@@ -187,6 +196,8 @@ export default function EditStrategyNew() {
 
   // Save strategy
   const saveStrategy = async () => {
+    setSaving(true);
+    showToast('Saving strategy...', 'info', 1000);
     try {
       const token = localStorage.getItem('token');
       const payload = {
@@ -204,6 +215,9 @@ export default function EditStrategyNew() {
         company_name: template.companyName,
         industry: template.industry,
         company_description: template.companyDescription,
+        objection_handling: template.objectionHandling,
+        qualification_priority: template.qualificationPriority,
+        bot_temperature: template.creativity,
         qualification_questions: qualificationQuestions.map(q => ({
           question: q.question,
           condition: q.condition
@@ -220,20 +234,34 @@ export default function EditStrategyNew() {
 
       const url = `${API_URL}/api/strategies${id ? `/${id}` : ''}`;
 
+      console.log('💾 Saving strategy with payload:', payload);
+
+      let response;
       if (id) {
-        await axios.put(url, payload, {
+        console.log(`🔄 Sending PUT request to ${url}`);
+        response = await axios.put(url, payload, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
       } else {
-        await axios.post(url, payload, {
+        console.log(`🔄 Sending POST request to ${url}`);
+        response = await axios.post(url, payload, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
       }
 
-      console.log('Strategy saved successfully');
-      // TODO: Show success toast
+      console.log('✅ Strategy saved successfully! Response:', response.data);
+      console.log('📊 Response status:', response.status);
+
+      if (response.status === 200 || response.status === 201) {
+        showToast('Strategy saved successfully!', 'success');
+      } else {
+        showToast('Unexpected response: ' + response.status, 'warning');
+      }
     } catch (error) {
       console.error('Error saving strategy:', error);
+      showToast('Error saving strategy: ' + (error.response?.data?.message || error.message), 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -263,10 +291,16 @@ export default function EditStrategyNew() {
         </h1>
         <button
           onClick={saveStrategy}
+          disabled={saving}
           className="btn btn-primary"
-          style={{ fontSize: '0.875rem', padding: '0.75rem 2rem' }}
+          style={{
+            fontSize: '0.875rem',
+            padding: '0.75rem 2rem',
+            opacity: saving ? 0.6 : 1,
+            cursor: saving ? 'not-allowed' : 'pointer'
+          }}
         >
-          💾 Save Strategy
+          {saving ? '⏳ Saving...' : '💾 Save Strategy'}
         </button>
       </div>
 
@@ -471,15 +505,20 @@ export default function EditStrategyNew() {
                       🛡️ Objection Handling
                     </label>
                     <div className="adjustment-value">
-                      <span className="text-muted">The Persuader</span>
-                      <span className="adjustment-badge">8/10</span>
+                      <span className="text-muted">
+                        {template.objectionHandling <= 2 ? 'The Avoider' :
+                         template.objectionHandling <= 5 ? 'The Listener' :
+                         template.objectionHandling <= 8 ? 'The Persuader' : 'The Closer'}
+                      </span>
+                      <span className="adjustment-badge">{template.objectionHandling || 8}/10</span>
                     </div>
                   </div>
                   <input
                     type="range"
                     min="0"
                     max="10"
-                    defaultValue="8"
+                    value={template.objectionHandling || 8}
+                    onChange={(e) => setTemplate({...template, objectionHandling: parseInt(e.target.value)})}
                     className="range-slider w-full"
                   />
                 </div>
@@ -491,15 +530,20 @@ export default function EditStrategyNew() {
                       ❓ Qualification Priority
                     </label>
                     <div className="adjustment-value">
-                      <span className="text-muted">Balanced</span>
-                      <span className="adjustment-badge">6/10</span>
+                      <span className="text-muted">
+                        {template.qualificationPriority <= 2 ? 'No Questions' :
+                         template.qualificationPriority <= 5 ? 'Balanced' :
+                         template.qualificationPriority <= 8 ? 'Priority Focus' : 'Qualification First'}
+                      </span>
+                      <span className="adjustment-badge">{template.qualificationPriority || 6}/10</span>
                     </div>
                   </div>
                   <input
                     type="range"
                     min="0"
                     max="10"
-                    defaultValue="6"
+                    value={template.qualificationPriority || 6}
+                    onChange={(e) => setTemplate({...template, qualificationPriority: parseInt(e.target.value)})}
                     className="range-slider w-full"
                   />
                 </div>
@@ -511,8 +555,13 @@ export default function EditStrategyNew() {
                       🎨 Creativity
                     </label>
                     <div className="adjustment-value">
-                      <span className="text-muted">Stick to the Script</span>
-                      <span className="adjustment-badge">0.4</span>
+                      <span className="text-muted">
+                        {template.creativity <= 0.2 ? 'Stick to the Script' :
+                         template.creativity <= 0.4 ? 'Slightly Flexible' :
+                         template.creativity <= 0.6 ? 'Balanced' :
+                         template.creativity <= 0.8 ? 'Creative' : 'Very Creative'}
+                      </span>
+                      <span className="adjustment-badge">{(template.creativity || 0.4).toFixed(1)}</span>
                     </div>
                   </div>
                   <input
@@ -520,7 +569,8 @@ export default function EditStrategyNew() {
                     min="0"
                     max="1"
                     step="0.1"
-                    defaultValue="0.4"
+                    value={template.creativity || 0.4}
+                    onChange={(e) => setTemplate({...template, creativity: parseFloat(e.target.value)})}
                     className="range-slider w-full"
                   />
                 </div>

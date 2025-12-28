@@ -86,6 +86,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
     strategy.buffer_time = { hours: 0, minutes: 15, seconds: 0 };
     strategy.ghlLocationId = strategy.ghl_location_id || null;  // For frontend camelCase
 
+    // Map slider database fields to frontend field names
+    strategy.objection_handling = strategy.resiliancy || 3;
+    strategy.qualification_priority = strategy.booking_readiness || 2;
+    // bot_temperature stays the same
+
     console.log('  ✅ Returning strategy with nested data');
     console.log('  📊 Data check:');
     console.log('    - brief length:', strategy.brief?.length || 0);
@@ -94,6 +99,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
     console.log('    - qualification_questions:', strategy.qualification_questions?.length || 0);
     console.log('    - follow_ups:', strategy.follow_ups?.length || 0);
     console.log('    - faqs:', strategy.faqs?.length || 0);
+    console.log('  🎚️ Slider values:', {
+      objection_handling: strategy.objection_handling,
+      qualification_priority: strategy.qualification_priority,
+      bot_temperature: strategy.bot_temperature
+    });
     res.json(strategy);
   } catch (error) {
     console.error('❌ Error fetching strategy:', error);
@@ -221,7 +231,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       qualification_questions, qualificationQuestions,
       follow_ups, followUps,
       faqs,
-      ghl_location_id, ghlLocationId, location_id, locationId
+      ghl_location_id, ghlLocationId, location_id, locationId,
+      objection_handling, qualification_priority, bot_temperature
     } = req.body;
 
     // Map fields
@@ -234,57 +245,84 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const mappedFaqs = faqs;
     const mappedLocationId = ghl_location_id || ghlLocationId || location_id || locationId || null;
 
+    // Map slider values to database columns
+    const mappedResiliancy = objection_handling !== undefined ? objection_handling : 3;
+    const mappedBookingReadiness = qualification_priority !== undefined ? qualification_priority : 2;
+    const mappedBotTemperature = bot_temperature !== undefined ? bot_temperature : 0.4;
+
     console.log('📍 Updating GHL Location ID to:', mappedLocationId || 'Not specified (will match any location)');
+    console.log('🎚️ Updating slider values:', {
+      objection_handling: mappedResiliancy,
+      qualification_priority: mappedBookingReadiness,
+      bot_temperature: mappedBotTemperature
+    });
 
     // Update main strategy fields
     await db.run(`
       UPDATE templates
       SET name = ?, brief = ?, tone = ?, initial_message = ?, tag = ?,
-          company_information = ?, cta = ?, ghl_location_id = ?, updated_at = CURRENT_TIMESTAMP
+          company_information = ?, cta = ?, ghl_location_id = ?,
+          resiliancy = ?, booking_readiness = ?, bot_temperature = ?,
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND user_id = ?
-    `, [name, mappedBrief, tone, mappedInitialMessage, tag, mappedCompanyInfo, mappedCta, mappedLocationId, req.params.id, req.user.id]);
+    `, [name, mappedBrief, tone, mappedInitialMessage, tag, mappedCompanyInfo, mappedCta, mappedLocationId,
+        mappedResiliancy, mappedBookingReadiness, mappedBotTemperature,
+        req.params.id, req.user.id]);
     console.log('  ✅ Strategy fields updated');
 
-    // Update qualification questions if provided
-    if (mappedQualificationQuestions !== undefined) {
-      console.log('  Updating', mappedQualificationQuestions.length, 'questions...');
+    // Batch update qualification questions if provided
+    if (mappedQualificationQuestions !== undefined && mappedQualificationQuestions.length > 0) {
+      console.log('  Batch updating', mappedQualificationQuestions.length, 'questions...');
+
+      // Build batch INSERT query
+      const questionValues = mappedQualificationQuestions.map(q => {
+        const text = q.question || q.text || '';
+        return `('${req.params.id}', '${text.replace(/'/g, "''")}', '[]', 1)`;
+      }).join(',');
+
       await db.run('DELETE FROM qualification_questions WHERE template_id = ?', [req.params.id]);
-      if (mappedQualificationQuestions.length > 0) {
-        for (const q of mappedQualificationQuestions) {
-          const text = q.question || q.text || '';
-          await db.run('INSERT INTO qualification_questions (template_id, text, conditions, delay) VALUES (?, ?, ?, ?)',
-            [req.params.id, text, JSON.stringify([]), 1]);
-        }
-      }
-      console.log('  ✅ Questions updated');
+      await db.run(`INSERT INTO qualification_questions (template_id, text, conditions, delay) VALUES ${questionValues}`);
+      console.log('  ✅ Questions batch updated');
+    } else if (mappedQualificationQuestions !== undefined) {
+      await db.run('DELETE FROM qualification_questions WHERE template_id = ?', [req.params.id]);
+      console.log('  ✅ Questions cleared');
     }
 
-    // Update follow-ups if provided
-    if (mappedFollowUps !== undefined) {
-      console.log('  Updating', mappedFollowUps.length, 'follow-ups...');
+    // Batch update follow-ups if provided
+    if (mappedFollowUps !== undefined && mappedFollowUps.length > 0) {
+      console.log('  Batch updating', mappedFollowUps.length, 'follow-ups...');
+
+      const followUpValues = mappedFollowUps.map(f => {
+        const body = (f.text || f.message || '').replace(/'/g, "''");
+        const delay = f.delay || 180;
+        return `('${req.params.id}', '${body}', ${delay})`;
+      }).join(',');
+
       await db.run('DELETE FROM follow_ups WHERE template_id = ?', [req.params.id]);
-      if (mappedFollowUps.length > 0) {
-        for (const f of mappedFollowUps) {
-          const body = f.text || f.message || '';
-          const delay = f.delay || 180;
-          await db.run('INSERT INTO follow_ups (template_id, body, delay) VALUES (?, ?, ?)',
-            [req.params.id, body, delay]);
-        }
-      }
-      console.log('  ✅ Follow-ups updated');
+      await db.run(`INSERT INTO follow_ups (template_id, body, delay) VALUES ${followUpValues}`);
+      console.log('  ✅ Follow-ups batch updated');
+    } else if (mappedFollowUps !== undefined) {
+      await db.run('DELETE FROM follow_ups WHERE template_id = ?', [req.params.id]);
+      console.log('  ✅ Follow-ups cleared');
     }
 
-    // Update FAQs if provided
-    if (mappedFaqs !== undefined) {
-      console.log('  Updating', mappedFaqs.length, 'FAQs...');
+    // Batch update FAQs if provided
+    if (mappedFaqs !== undefined && mappedFaqs.length > 0) {
+      console.log('  Batch updating', mappedFaqs.length, 'FAQs...');
+
+      const faqValues = mappedFaqs.map(faq => {
+        const question = (faq.question || '').replace(/'/g, "''");
+        const answer = (faq.answer || '').replace(/'/g, "''");
+        const delay = faq.delay || 1;
+        return `('${req.params.id}', '${question}', '${answer}', ${delay})`;
+      }).join(',');
+
       await db.run('DELETE FROM faqs WHERE template_id = ?', [req.params.id]);
-      if (mappedFaqs.length > 0) {
-        for (const faq of mappedFaqs) {
-          await db.run('INSERT INTO faqs (template_id, question, answer, delay) VALUES (?, ?, ?, ?)',
-            [req.params.id, faq.question, faq.answer, faq.delay || 1]);
-        }
-      }
-      console.log('  ✅ FAQs updated');
+      await db.run(`INSERT INTO faqs (template_id, question, answer, delay) VALUES ${faqValues}`);
+      console.log('  ✅ FAQs batch updated');
+    } else if (mappedFaqs !== undefined) {
+      await db.run('DELETE FROM faqs WHERE template_id = ?', [req.params.id]);
+      console.log('  ✅ FAQs cleared');
     }
 
     console.log('✅ Strategy updated successfully');
