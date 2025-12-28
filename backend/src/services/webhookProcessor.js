@@ -20,10 +20,32 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
 
     console.log('📋 Message data:', messageData);
 
+    // CRITICAL: Fetch contact's CURRENT tags from GHL API instead of relying on webhook payload
+    // This ensures we always have the most up-to-date tags
+    let contactTags = messageData.tags || [];
+
+    if (messageData.contactId) {
+      try {
+        console.log('🔍 Fetching contact details from GHL to get current tags...');
+        const ghlService = require('./ghlService');
+        const contactDetails = await ghlService.getContact(user.id, messageData.contactId);
+
+        if (contactDetails && contactDetails.tags) {
+          contactTags = contactDetails.tags;
+          console.log('✅ Retrieved tags from GHL:', contactTags);
+        } else {
+          console.log('⚠️  No tags found in GHL contact details');
+        }
+      } catch (fetchError) {
+        console.error('⚠️  Could not fetch contact from GHL, using payload tags:', fetchError.message);
+        // Fall back to payload tags if fetch fails
+      }
+    }
+
     // Find matching strategy by tag
-    console.log('🏷️  Contact tags:', messageData.tags);
+    console.log('🏷️  Contact tags:', contactTags);
     console.log('🔍 Looking for strategy matching tags...');
-    const strategy = await findStrategyByTag(user.id, messageData.tags);
+    const strategy = await findStrategyByTag(user.id, contactTags);
 
     console.log('📋 Strategy loaded:', {
       found: !!strategy,
