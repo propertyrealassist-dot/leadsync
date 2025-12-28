@@ -211,9 +211,9 @@ function StrategyEditorNew() {
     }
   }, [hasUnsavedChanges, formData, qualificationQuestions, followUps, faqs]);
 
-  // Track changes
+  // Track changes - Use functional form to avoid stale closure
   const updateFormData = (updates) => {
-    setFormData({ ...formData, ...updates });
+    setFormData(prev => ({ ...prev, ...updates }));
     setHasUnsavedChanges(true);
   };
 
