@@ -30,11 +30,15 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
         const ghlService = require('./ghlService');
         const contactDetails = await ghlService.getContact(user.id, messageData.contactId);
 
-        if (contactDetails && contactDetails.tags) {
-          contactTags = contactDetails.tags;
+        // GHL API returns contact data nested in .contact property
+        const contact = contactDetails?.contact || contactDetails;
+
+        if (contact && contact.tags) {
+          contactTags = contact.tags;
           console.log('✅ Retrieved tags from GHL:', contactTags);
         } else {
           console.log('⚠️  No tags found in GHL contact details');
+          console.log('   Contact structure:', Object.keys(contactDetails || {}));
         }
       } catch (fetchError) {
         console.error('⚠️  Could not fetch contact from GHL, using payload tags:', fetchError.message);
