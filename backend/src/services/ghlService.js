@@ -177,6 +177,13 @@ class GHLService {
     // Try ghl_integrations table first (new approach)
     try {
       credentials = await db.get('SELECT * FROM ghl_integrations WHERE user_id = ? AND is_active = ? LIMIT 1', [userId, true]);
+      if (credentials) {
+        console.log('🔍 Retrieved credentials from ghl_integrations:');
+        console.log('   User ID:', userId);
+        console.log('   Location ID:', credentials.location_id);
+        console.log('   Token expires:', credentials.expires_at);
+        console.log('   Granted scopes:', credentials.scope);
+      }
     } catch (error) {
       console.log('Could not get credentials from ghl_integrations:', error.message);
     }
@@ -185,6 +192,9 @@ class GHLService {
     if (!credentials) {
       try {
         credentials = await db.get('SELECT * FROM ghl_credentials WHERE user_id = ?', [userId]);
+        if (credentials) {
+          console.log('🔍 Retrieved credentials from ghl_credentials (no scope info available)');
+        }
       } catch (error) {
         console.log('Could not get credentials from ghl_credentials:', error.message);
       }
@@ -263,8 +273,17 @@ class GHLService {
       const response = await axios(config);
       return response.data;
     } catch (error) {
-      console.error('GHL API Error:', error.response?.data || error.message);
-      throw new Error(`GHL API request failed: ${error.message}`);
+      const errorData = error.response?.data;
+      console.error('❌ GHL API Error:', errorData || error.message);
+
+      // If it's a scope error, provide detailed information
+      if (errorData && errorData.message && errorData.message.includes('scope')) {
+        console.error('🔐 SCOPE ERROR DETECTED!');
+        console.error('   This means the access token does not have the required permissions.');
+        console.error('   The GHL OAuth flow may not be granting the calendar scopes.');
+      }
+
+      throw new Error(`GHL API request failed: ${errorData?.message || error.message}`);
     }
   }
 
@@ -274,8 +293,19 @@ class GHLService {
    * Get all calendars for location
    */
   async getCalendars(userId) {
+    console.log('📅 Getting calendars for user:', userId);
     const locationId = await this.getLocationId(userId);
-    return await this.makeRequest(userId, 'GET', `/calendars/?locationId=${locationId}`);
+    console.log('   Location ID:', locationId);
+    console.log('   Endpoint: /calendars/?locationId=' + locationId);
+
+    try {
+      const result = await this.makeRequest(userId, 'GET', `/calendars/?locationId=${locationId}`);
+      console.log('✅ Successfully retrieved calendars');
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to get calendars:', error.message);
+      throw error;
+    }
   }
 
   /**
