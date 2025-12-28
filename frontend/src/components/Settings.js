@@ -82,9 +82,9 @@ function Settings() {
   const handleConnectLeadConnector = () => {
     // Use the marketplace install link directly with CORRECT version_id
     // This redirects to LeadConnector marketplace for OAuth authorization
-    // IMPORTANT: calendars.readonly and calendars.write are needed to LIST calendars
-    // calendars/events scopes are only for reading/writing events, not listing calendars
-    const marketplaceUrl = 'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&client_id=69218dacd101d3222ff1708c-mic4vq7j&scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+calendars.readonly+calendars.write+calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+opportunities.write+locations.readonly&version_id=69218dacd101d3222ff1708c';
+    // NOTE: calendars.readonly/calendars.write are INVALID scopes in GHL
+    // Using locations.readonly + locations.write + calendars/events scopes instead
+    const marketplaceUrl = 'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&client_id=69218dacd101d3222ff1708c-mic4vq7j&scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+calendars%2Fevents.readonly+calendars%2Fevents.write+opportunities.readonly+opportunities.write+locations.readonly+locations.write+conversations%2Fmessage.readonly+conversations%2Fmessage.write&version_id=69218dacd101d3222ff1708c';
 
     // Store current user in session for callback (optional)
     if (user?.id) {
