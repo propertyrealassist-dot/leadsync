@@ -1,5 +1,6 @@
 const { db } = require('../config/database');
 const claudeAI = require('./claudeAI');
+const calendarAI = require('./calendarAI');
 const ghlService = require('./ghlSender');
 const crypto = require('crypto');
 
@@ -122,15 +123,45 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
 
       console.log('📝 Full prompt length:', aiPrompt.length);
       console.log('📝 Prompt preview (first 300 chars):', aiPrompt.substring(0, 300));
-      console.log('🤖 Sending to Groq AI...');
 
-      // Process with Claude AI
-      aiResponse = await claudeAI.processMessage(aiPrompt, {
-        temperature: strategy.bot_temperature || 0.7,
-        conversationId: conversation.id
-      });
+      // Detect if this is a booking-related conversation
+      const bookingKeywords = [
+        'book', 'schedule', 'appointment', 'calendar', 'available',
+        'free time', 'meeting', 'call', 'when can', 'what time',
+        'availability', 'slot', 'time', 'meet'
+      ];
 
-      console.log('✅ AI Response:', aiResponse.substring(0, 100) + '...');
+      const isBookingRelated = bookingKeywords.some(keyword =>
+        messageData.message.toLowerCase().includes(keyword) ||
+        conversationHistory.some(msg => msg.content.toLowerCase().includes(keyword))
+      );
+
+      if (isBookingRelated) {
+        console.log('🗓️  Booking-related conversation detected - using Calendar AI');
+
+        // Use Calendar AI with booking capabilities
+        aiResponse = await calendarAI.processMessageWithCalendar(aiPrompt, {
+          userId: user.id,
+          contactId: messageData.contactId,
+          contactName: messageData.contactName,
+          contactPhone: messageData.contactPhone,
+          contactEmail: messageData.contactEmail,
+          temperature: strategy.bot_temperature || 0.7,
+          conversationHistory: conversationHistory
+        });
+
+        console.log('✅ Calendar AI Response:', aiResponse.substring(0, 100) + '...');
+      } else {
+        console.log('🤖 Using regular AI...');
+
+        // Process with regular Claude AI
+        aiResponse = await claudeAI.processMessage(aiPrompt, {
+          temperature: strategy.bot_temperature || 0.7,
+          conversationId: conversation.id
+        });
+
+        console.log('✅ AI Response:', aiResponse.substring(0, 100) + '...');
+      }
     }
 
     // Store AI response
@@ -590,6 +621,20 @@ async function buildAIPrompt(strategy, messageData, conversationHistory) {
   }
 
   prompt += `6. Build rapport and trust naturally\n`;
+
+  // Add calendar capabilities reminder
+  prompt += `\n${'='.repeat(80)}\n`;
+  prompt += `📅 CALENDAR CAPABILITIES\n`;
+  prompt += `${'='.repeat(80)}\n`;
+  prompt += `You have access to the calendar and can:\n`;
+  prompt += `1. VIEW AVAILABILITY - Check what time slots are available for booking\n`;
+  prompt += `2. BOOK APPOINTMENTS - Schedule the lead into a confirmed time slot\n\n`;
+  prompt += `When to use these:\n`;
+  prompt += `- If they ask "when are you available?" or "what times do you have?" → VIEW calendar\n`;
+  prompt += `- If they confirm a specific date/time → BOOK the appointment\n`;
+  prompt += `- Always check availability before suggesting times\n`;
+  prompt += `- Always confirm the time with them before booking\n`;
+  prompt += `${'='.repeat(80)}\n\n`;
 
   prompt += `\nYOUR RESPONSE (respond naturally and conversationally):`;
 
