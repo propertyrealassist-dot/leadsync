@@ -530,6 +530,7 @@ async function initializeDatabase(retries = 3) {
       await client.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS lead_score INTEGER DEFAULT 0`);
       await client.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id)`);
       await client.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS last_contacted_at TIMESTAMP`);
+      await client.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS message_count INTEGER DEFAULT 0`);
       await client.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE`);
       console.log('✅ Migrated leads table with all columns');
     } catch (err) {
@@ -700,3 +701,4 @@ module.exports = {
   dbHost,
   hostName
 };
+
