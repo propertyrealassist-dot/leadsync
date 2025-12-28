@@ -15,6 +15,7 @@ import '../../styles/design-system.css';
  * - description: Optional description below slider
  * - showValue: Show value on right (default true)
  * - valueFormatter: Function to format displayed value
+ * - labels: Array of label strings that map to values (e.g., ["Low", "Medium", "High"])
  */
 const LabeledSlider = ({
   icon,
@@ -26,8 +27,21 @@ const LabeledSlider = ({
   step = 1,
   description,
   showValue = true,
-  valueFormatter = (v) => v
+  valueFormatter = (v) => v,
+  labels = null
 }) => {
+  // Get the label for the current value
+  const getLabel = () => {
+    if (!labels || labels.length === 0) return null;
+
+    // Map value to label index
+    const range = max - min;
+    const segmentSize = range / labels.length;
+    const index = Math.min(Math.floor((value - min) / segmentSize), labels.length - 1);
+    return labels[index];
+  };
+
+  const currentLabel = getLabel();
   return (
     <div className="ds-spacer-lg">
       {/* Header with icon, label, and value */}
@@ -50,15 +64,27 @@ const LabeledSlider = ({
           </span>
         </div>
         {showValue && (
-          <span style={{
-            fontSize: 'var(--font-base)',
-            fontWeight: 'var(--font-weight-semibold)',
-            color: 'var(--accent-green)',
-            minWidth: '48px',
-            textAlign: 'right'
-          }}>
-            {valueFormatter(value)}
-          </span>
+          <div style={{ textAlign: 'right' }}>
+            {currentLabel && (
+              <div style={{
+                fontSize: 'var(--font-sm)',
+                fontWeight: 'var(--font-weight-medium)',
+                color: 'var(--text-secondary)',
+                marginBottom: '4px'
+              }}>
+                {currentLabel}
+              </div>
+            )}
+            <span style={{
+              fontSize: 'var(--font-base)',
+              fontWeight: 'var(--font-weight-semibold)',
+              color: 'var(--leadsync-purple)',
+              minWidth: '48px',
+              display: 'inline-block'
+            }}>
+              {valueFormatter(value)}
+            </span>
+          </div>
         )}
       </div>
 

@@ -489,7 +489,7 @@ function StrategyEditorNew() {
 
               {/* Sliders */}
               <LabeledSlider
-                icon="🎯"
+                icon="🛡️"
                 label="Objection Handling"
                 value={formData.objectionHandling}
                 onChange={(value) => updateFormData({ objectionHandling: value })}
@@ -497,6 +497,12 @@ function StrategyEditorNew() {
                 max={10}
                 step={1}
                 valueFormatter={(v) => `${v}/10`}
+                labels={[
+                  "The Avoider",      // 0-2
+                  "The Listener",     // 3-5
+                  "The Persuader",    // 6-8
+                  "The Closer"        // 9-10
+                ]}
                 description="How aggressive to handle objections"
               />
 
@@ -509,18 +515,31 @@ function StrategyEditorNew() {
                 max={10}
                 step={1}
                 valueFormatter={(v) => `${v}/10`}
+                labels={[
+                  "No Questions",         // 0-2
+                  "Balanced",             // 3-5
+                  "Priority Focus",       // 6-8
+                  "Qualification First"   // 9-10
+                ]}
                 description="Priority of asking qualification questions"
               />
 
               <LabeledSlider
                 icon="🎨"
-                label="Creativity (Temperature)"
+                label="Creativity"
                 value={formData.bot_temperature}
                 onChange={(value) => updateFormData({ bot_temperature: value })}
                 min={0}
                 max={1}
                 step={0.1}
                 valueFormatter={(v) => v.toFixed(1)}
+                labels={[
+                  "Stick to the Script",  // 0-0.2
+                  "Slightly Flexible",    // 0.3-0.4
+                  "Balanced",             // 0.5-0.6
+                  "Creative",             // 0.7-0.8
+                  "Very Creative"         // 0.9-1.0
+                ]}
                 description="Lower = more consistent, Higher = more creative"
               />
             </div>
