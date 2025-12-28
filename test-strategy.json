@@ -1,0 +1,53 @@
+{
+  "name": "Test Strategy with Full Data",
+  "tag": "test-full",
+  "brief": "This is a comprehensive test strategy with a detailed prompt brief that explains exactly how the AI should behave. It includes conversation rules, objection handling, and personality traits. The AI agent should be friendly, professional, and helpful while guiding leads through the qualification process.",
+  "tone": "Professional and Friendly",
+  "initialMessage": "Hey! Thanks for reaching out to us. Can you confirm this is {{contact.first_name}}?",
+  "companyInformation": "We are a professional AI automation company that helps businesses grow through intelligent lead qualification and appointment booking. Our solutions have helped over 500 businesses increase their conversion rates by an average of 35%.",
+  "cta": "Let me get you scheduled for a quick call. What time works best for you?",
+  "faqs": [
+    {
+      "question": "What services do you offer?",
+      "answer": "We provide AI-powered automation solutions for lead qualification, appointment booking, and customer engagement.",
+      "delay": 1
+    },
+    {
+      "question": "How much does it cost?",
+      "answer": "Our pricing starts at $99/month for the basic plan, with custom enterprise solutions available.",
+      "delay": 1
+    },
+    {
+      "question": "How long does setup take?",
+      "answer": "Most clients are up and running within 24-48 hours.",
+      "delay": 1
+    }
+  ],
+  "qualificationQuestions": [
+    {
+      "text": "What brings you to us today?",
+      "conditions": [],
+      "delay": 1
+    },
+    {
+      "text": "What's your biggest challenge right now?",
+      "conditions": [],
+      "delay": 1
+    },
+    {
+      "text": "When are you looking to get started?",
+      "conditions": [],
+      "delay": 1
+    }
+  ],
+  "followUps": [
+    {
+      "message": "Just checking in - still interested in learning more?",
+      "delay": 180
+    },
+    {
+      "message": "We have some availability this week if you'd like to chat!",
+      "delay": 1440
+    }
+  ]
+}

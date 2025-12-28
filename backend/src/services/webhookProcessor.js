@@ -138,6 +138,7 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
 
       if (isBookingRelated) {
         console.log('🗓️  Booking-related conversation detected - using Calendar AI');
+        console.log('   Strategy calendar ID:', strategy.ghl_calendar_id || 'Not set (will use first calendar)');
 
         // Use Calendar AI with booking capabilities
         aiResponse = await calendarAI.processMessageWithCalendar(aiPrompt, {
@@ -147,7 +148,8 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
           contactPhone: messageData.contactPhone,
           contactEmail: messageData.contactEmail,
           temperature: strategy.bot_temperature || 0.7,
-          conversationHistory: conversationHistory
+          conversationHistory: conversationHistory,
+          calendarId: strategy.ghl_calendar_id || null
         });
 
         console.log('✅ Calendar AI Response:', aiResponse.substring(0, 100) + '...');

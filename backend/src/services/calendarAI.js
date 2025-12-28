@@ -20,7 +20,7 @@ class CalendarAI {
    */
   async processMessageWithCalendar(prompt, context = {}) {
     try {
-      const { userId, contactId, contactName, contactPhone, contactEmail, temperature = 0.7 } = context;
+      const { userId, contactId, contactName, contactPhone, contactEmail, temperature = 0.7, calendarId = null } = context;
 
       console.log('🤖 Processing message with Calendar AI...');
       console.log('   User ID:', userId);
@@ -123,9 +123,9 @@ class CalendarAI {
 
         // Execute the requested tool
         if (toolUse.name === 'view_calendar_availability') {
-          toolResult = await this.viewCalendarAvailability(userId, toolUse.input);
+          toolResult = await this.viewCalendarAvailability(userId, toolUse.input, calendarId);
         } else if (toolUse.name === 'book_appointment') {
-          toolResult = await this.bookAppointment(userId, contactId, contactName, contactPhone, contactEmail, toolUse.input);
+          toolResult = await this.bookAppointment(userId, contactId, contactName, contactPhone, contactEmail, toolUse.input, calendarId);
         } else {
           toolResult = { error: 'Unknown tool requested' };
         }
@@ -182,9 +182,10 @@ class CalendarAI {
    * View calendar availability
    * Returns available time slots for booking
    */
-  async viewCalendarAvailability(userId, input) {
+  async viewCalendarAvailability(userId, input, calendarId = null) {
     try {
       console.log('📅 Viewing calendar availability for user:', userId);
+      console.log('   Requested calendar ID:', calendarId);
 
       const daysAhead = Math.min(input.date_range_days || 7, 14);
 
@@ -198,9 +199,18 @@ class CalendarAI {
         };
       }
 
-      // Use first calendar (or you could make this configurable)
-      const calendar = calendarsResponse.calendars[0];
-      console.log('   Using calendar:', calendar.name);
+      // Use specified calendar ID, or fall back to first calendar
+      let calendar;
+      if (calendarId) {
+        calendar = calendarsResponse.calendars.find(cal => cal.id === calendarId);
+        if (!calendar) {
+          console.log('⚠️  Specified calendar not found, using first calendar');
+          calendar = calendarsResponse.calendars[0];
+        }
+      } else {
+        calendar = calendarsResponse.calendars[0];
+      }
+      console.log('   Using calendar:', calendar.name, '(ID:', calendar.id + ')');
 
       // Calculate date range
       const startTime = moment().format();
@@ -246,19 +256,20 @@ class CalendarAI {
   /**
    * Book an appointment
    */
-  async bookAppointment(userId, contactId, contactName, contactPhone, contactEmail, input) {
+  async bookAppointment(userId, contactId, contactName, contactPhone, contactEmail, input, calendarId = null) {
     try {
       console.log('📅 Booking appointment for user:', userId);
       console.log('   Contact:', contactName);
       console.log('   Start time:', input.start_time);
       console.log('   Duration:', input.duration_minutes || 30, 'minutes');
+      console.log('   Requested calendar ID:', calendarId);
 
       const startTime = moment(input.start_time);
       const endTime = moment(input.start_time).add(input.duration_minutes || 30, 'minutes');
 
       // Prepare appointment data
       const appointmentData = {
-        calendarId: null, // Will be fetched
+        calendarId: null, // Will be set below
         startTime: startTime.format(),
         endTime: endTime.format(),
         title: input.title || 'Consultation Call',
@@ -279,7 +290,18 @@ class CalendarAI {
         };
       }
 
-      appointmentData.calendarId = calendarsResponse.calendars[0].id;
+      // Use specified calendar ID, or fall back to first calendar
+      if (calendarId) {
+        const selectedCalendar = calendarsResponse.calendars.find(cal => cal.id === calendarId);
+        if (selectedCalendar) {
+          appointmentData.calendarId = selectedCalendar.id;
+        } else {
+          console.log('⚠️  Specified calendar not found, using first calendar');
+          appointmentData.calendarId = calendarsResponse.calendars[0].id;
+        }
+      } else {
+        appointmentData.calendarId = calendarsResponse.calendars[0].id;
+      }
 
       console.log('   Using calendar ID:', appointmentData.calendarId);
 

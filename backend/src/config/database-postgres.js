@@ -295,6 +295,14 @@ async function initializeDatabase(retries = 3) {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_templates_user_id ON templates(user_id)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_templates_tag ON templates(tag)`);
 
+    // Add GHL calendar ID column if it doesn't exist
+    try {
+      await client.query(`ALTER TABLE templates ADD COLUMN IF NOT EXISTS ghl_calendar_id VARCHAR(255)`);
+      console.log('✅ Added ghl_calendar_id column to templates table');
+    } catch (err) {
+      console.log('ℹ️ GHL calendar column migration:', err.message);
+    }
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS faqs (
         id SERIAL PRIMARY KEY,

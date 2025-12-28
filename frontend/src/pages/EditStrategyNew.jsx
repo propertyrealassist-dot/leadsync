@@ -12,6 +12,8 @@ export default function EditStrategyNew() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('instructions');
   const [qualificationEnabled, setQualificationEnabled] = useState(false);
+  const [ghlCalendars, setGhlCalendars] = useState([]);
+  const [loadingCalendars, setLoadingCalendars] = useState(false);
   const [template, setTemplate] = useState({
     name: '',
     tag: '',
@@ -20,6 +22,7 @@ export default function EditStrategyNew() {
     initialMessage: '',
     calendarProvider: 'Google Calendar',
     calendarUrl: '',
+    ghl_calendar_id: '',
     meetingDuration: { hours: 0, minutes: 30, seconds: 0 },
     bufferTime: { hours: 0, minutes: 15, seconds: 0 },
     confirmationMessage: '',
@@ -87,6 +90,26 @@ export default function EditStrategyNew() {
   const connectCalendar = () => {
     console.log('Connecting calendar...', template.calendarProvider, template.calendarUrl);
     // TODO: Integrate calendar connection
+  };
+
+  const fetchGHLCalendars = async () => {
+    setLoadingCalendars(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/ghl/calendars`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.calendars) {
+        setGhlCalendars(response.data.calendars);
+        console.log('Fetched GHL calendars:', response.data.calendars);
+      }
+    } catch (error) {
+      console.error('Error fetching GHL calendars:', error);
+      alert('Failed to fetch calendars. Make sure your GHL account is connected.');
+    } finally {
+      setLoadingCalendars(false);
+    }
   };
 
   // Load strategy data from API
@@ -868,6 +891,70 @@ export default function EditStrategyNew() {
                     <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Calendar Source:</span>
                     <div style={{ color: '#7fffd4' }}>GoHighLevel</div>
                   </div>
+                </div>
+              </div>
+
+              {/* Calendar Selection */}
+              <div style={{
+                background: 'rgba(127, 255, 212, 0.05)',
+                border: '1px solid rgba(127, 255, 212, 0.1)',
+                borderRadius: '8px',
+                padding: '1rem',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ fontWeight: '500', marginBottom: '0.75rem', fontSize: '0.875rem' }}>
+                  Select Calendar:
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'start' }}>
+                  <div style={{ flex: 1 }}>
+                    <select
+                      className="form-control"
+                      value={template.ghl_calendar_id || ''}
+                      onChange={(e) => setTemplate({...template, ghl_calendar_id: e.target.value})}
+                      disabled={ghlCalendars.length === 0}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(127, 255, 212, 0.2)',
+                        color: '#fff',
+                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      <option value="">
+                        {ghlCalendars.length === 0 ? 'No calendars loaded' : 'Select a calendar...'}
+                      </option>
+                      {ghlCalendars.map((cal) => (
+                        <option key={cal.id} value={cal.id}>
+                          {cal.name}
+                        </option>
+                      ))}
+                    </select>
+                    {template.ghl_calendar_id && (
+                      <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'rgba(127, 255, 212, 0.8)' }}>
+                        ✓ Calendar selected - AI will use this for booking
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    className="btn btn-primary"
+                    onClick={fetchGHLCalendars}
+                    disabled={loadingCalendars}
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(127, 255, 212, 0.2), rgba(127, 255, 212, 0.1))',
+                      border: '1px solid rgba(127, 255, 212, 0.3)',
+                      padding: '0.75rem 1.25rem',
+                      borderRadius: '8px',
+                      color: '#7fffd4',
+                      fontSize: '0.875rem',
+                      whiteSpace: 'nowrap',
+                      cursor: loadingCalendars ? 'wait' : 'pointer'
+                    }}
+                  >
+                    {loadingCalendars ? '⏳ Loading...' : '🔄 Fetch Calendars'}
+                  </button>
                 </div>
               </div>
 
