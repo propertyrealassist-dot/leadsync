@@ -346,15 +346,27 @@ async function findStrategyByTag(userId, tags) {
     }
 
     if (matches.length > 0) {
-      // CRITICAL: If multiple matches, prefer the LONGEST/MOST SPECIFIC tag
-      // This prevents "ai" from matching before "leadsync-ai"
-      matches.sort((a, b) => b.tag.length - a.tag.length);
+      if (matches.length === 1) {
+        console.log(`\n✅ Single match found: "${matches[0].strategy.name}" (tag: "${matches[0].tag}")`);
+        return matches[0].strategy;
+      }
+
+      // CRITICAL: If multiple matches, prefer the NEWEST strategy (most recently created)
+      // This ensures the latest AI configuration is used
+      matches.sort((a, b) => {
+        const dateA = new Date(a.strategy.created_at || 0);
+        const dateB = new Date(b.strategy.created_at || 0);
+        return dateB - dateA; // Newest first
+      });
 
       const selected = matches[0];
-      console.log(`\n🎯 MULTIPLE MATCHES FOUND! Using longest tag:`);
-      console.log(`   Selected: "${selected.strategy.name}" (tag: "${selected.tag}" - ${selected.tag.length} chars)`);
+      console.log(`\n🎯 MULTIPLE MATCHES FOUND! Using NEWEST strategy:`);
+      console.log(`   Selected: "${selected.strategy.name}" (tag: "${selected.tag}", created: ${selected.strategy.created_at})`);
       if (matches.length > 1) {
-        console.log(`   Skipped: ${matches.slice(1).map(m => `"${m.strategy.name}" (${m.tag})`).join(', ')}`);
+        console.log(`   Skipped older strategies:`);
+        matches.slice(1).forEach(m => {
+          console.log(`      - "${m.strategy.name}" (${m.tag}, created: ${m.strategy.created_at})`);
+        });
       }
 
       return selected.strategy;
