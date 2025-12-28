@@ -42,10 +42,11 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
       }
     }
 
-    // Find matching strategy by tag
+    // Find matching strategy by tag AND location
     console.log('🏷️  Contact tags:', contactTags);
-    console.log('🔍 Looking for strategy matching tags...');
-    const strategy = await findStrategyByTag(user.id, contactTags);
+    console.log('📍 Location ID:', messageData.locationId);
+    console.log('🔍 Looking for strategy matching tags AND location...');
+    const strategy = await findStrategyByTag(user.id, contactTags, messageData.locationId);
 
     console.log('📋 Strategy loaded:', {
       found: !!strategy,
@@ -320,13 +321,17 @@ function extractMessageData(payload) {
 }
 
 /**
- * Find strategy by tag
+ * Find strategy by tag AND location
+ * PRIORITY MATCHING:
+ * 1. Match by tag + location_id (most specific)
+ * 2. Match by tag only (fallback)
+ * 3. Default to most recent strategy
  */
-async function findStrategyByTag(userId, tags) {
+async function findStrategyByTag(userId, tags, locationId = null) {
   try {
     // Get ALL user strategies first for debugging
     const allStrategies = await db.all(`
-      SELECT id, name, tag FROM templates
+      SELECT id, name, tag, ghl_location_id FROM templates
       WHERE user_id = ?
       ORDER BY created_at DESC
     `, [userId]);
@@ -334,7 +339,7 @@ async function findStrategyByTag(userId, tags) {
     console.log(`\n🎯 STRATEGY MATCHING DEBUG`);
     console.log(`📚 User has ${allStrategies.length} total strategies:`);
     allStrategies.forEach((s, i) => {
-      console.log(`   ${i + 1}. "${s.name}" → tag: "${s.tag || 'NO TAG'}"`);
+      console.log(`   ${i + 1}. "${s.name}" → tag: "${s.tag || 'NO TAG'}" | location: "${s.ghl_location_id || 'ANY'}"`);
     });
 
     if (!tags || tags.length === 0) {
@@ -350,9 +355,48 @@ async function findStrategyByTag(userId, tags) {
     }
 
     console.log(`\n🏷️  Contact has ${tags.length} tag(s): ${tags.join(', ')}`);
+    console.log(`📍 Location ID: ${locationId || 'Not specified'}`);
 
-    // Find ALL matching strategies
-    const matches = [];
+    // PRIORITY 1: Find strategies matching BOTH tag AND location_id (most specific)
+    const locationMatches = [];
+    if (locationId) {
+      console.log('\n🔍 PRIORITY 1: Looking for tag + location matches...');
+      for (const tag of tags) {
+        const strategy = await db.get(`
+          SELECT * FROM templates
+          WHERE user_id = ? AND LOWER(tag) = LOWER(?) AND ghl_location_id = ?
+        `, [userId, tag, locationId]);
+
+        if (strategy) {
+          locationMatches.push({ tag, strategy, matchType: 'tag+location' });
+          console.log(`   ✅ EXACT MATCH: "${strategy.name}" ← tag: "${tag}" + location: "${locationId}"`);
+        }
+      }
+    }
+
+    // If we found location-specific matches, use those
+    if (locationMatches.length > 0) {
+      if (locationMatches.length === 1) {
+        console.log(`\n✅ Single location-specific match found: "${locationMatches[0].strategy.name}"`);
+        return locationMatches[0].strategy;
+      }
+
+      // Multiple location matches - use newest
+      locationMatches.sort((a, b) => {
+        const dateA = new Date(a.strategy.created_at || 0);
+        const dateB = new Date(b.strategy.created_at || 0);
+        return dateB - dateA; // Newest first
+      });
+
+      const selected = locationMatches[0];
+      console.log(`\n🎯 MULTIPLE LOCATION MATCHES! Using NEWEST:`);
+      console.log(`   Selected: "${selected.strategy.name}" (created: ${selected.strategy.created_at})`);
+      return selected.strategy;
+    }
+
+    // PRIORITY 2: Fall back to tag-only matching (for backward compatibility)
+    console.log('\n🔍 PRIORITY 2: No location match, trying tag-only...');
+    const tagMatches = [];
     for (const tag of tags) {
       const strategy = await db.get(`
         SELECT * FROM templates
@@ -360,41 +404,33 @@ async function findStrategyByTag(userId, tags) {
       `, [userId, tag]);
 
       if (strategy) {
-        matches.push({ tag, strategy });
-        console.log(`   ✅ Match: "${strategy.name}" ← tag: "${tag}"`);
+        tagMatches.push({ tag, strategy, matchType: 'tag-only' });
+        console.log(`   ✅ Tag match: "${strategy.name}" ← tag: "${tag}"`);
       } else {
         console.log(`   ❌ No match for tag: "${tag}"`);
       }
     }
 
-    if (matches.length > 0) {
-      if (matches.length === 1) {
-        console.log(`\n✅ Single match found: "${matches[0].strategy.name}" (tag: "${matches[0].tag}")`);
-        return matches[0].strategy;
+    if (tagMatches.length > 0) {
+      if (tagMatches.length === 1) {
+        console.log(`\n✅ Single tag match found: "${tagMatches[0].strategy.name}"`);
+        return tagMatches[0].strategy;
       }
 
-      // CRITICAL: If multiple matches, prefer the NEWEST strategy (most recently created)
-      // This ensures the latest AI configuration is used
-      matches.sort((a, b) => {
+      // Multiple tag matches - use newest
+      tagMatches.sort((a, b) => {
         const dateA = new Date(a.strategy.created_at || 0);
         const dateB = new Date(b.strategy.created_at || 0);
         return dateB - dateA; // Newest first
       });
 
-      const selected = matches[0];
-      console.log(`\n🎯 MULTIPLE MATCHES FOUND! Using NEWEST strategy:`);
-      console.log(`   Selected: "${selected.strategy.name}" (tag: "${selected.tag}", created: ${selected.strategy.created_at})`);
-      if (matches.length > 1) {
-        console.log(`   Skipped older strategies:`);
-        matches.slice(1).forEach(m => {
-          console.log(`      - "${m.strategy.name}" (${m.tag}, created: ${m.strategy.created_at})`);
-        });
-      }
-
+      const selected = tagMatches[0];
+      console.log(`\n🎯 MULTIPLE TAG MATCHES! Using NEWEST:`);
+      console.log(`   Selected: "${selected.strategy.name}" (created: ${selected.strategy.created_at})`);
       return selected.strategy;
     }
 
-    // If no match, return first strategy as default
+    // PRIORITY 3: No matches at all, use default (most recent)
     console.log('\n⚠️  No tag matches found, using default strategy');
     const defaultStrategy = allStrategies[0];
     if (defaultStrategy) {

@@ -84,6 +84,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     strategy.calendar_url = '';
     strategy.meeting_duration = { hours: 0, minutes: 30, seconds: 0 };
     strategy.buffer_time = { hours: 0, minutes: 15, seconds: 0 };
+    strategy.ghlLocationId = strategy.ghl_location_id || null;  // For frontend camelCase
 
     console.log('  ✅ Returning strategy with nested data');
     console.log('  📊 Data check:');
@@ -128,7 +129,8 @@ router.post('/', authenticateToken, async (req, res) => {
       buffer_time, bufferTime,
       qualification_questions, qualificationQuestions,
       follow_ups, followUps,
-      faqs
+      faqs,
+      ghl_location_id, ghlLocationId, location_id, locationId
     } = req.body;
 
     // Map fields to database schema
@@ -140,20 +142,23 @@ router.post('/', authenticateToken, async (req, res) => {
     const mappedQualificationQuestions = qualification_questions || qualificationQuestions || [];
     const mappedFollowUps = follow_ups || followUps || [];
     const mappedFaqs = faqs || [];
+    const mappedLocationId = ghl_location_id || ghlLocationId || location_id || locationId || null;
 
     const orgId = req.user.currentOrganizationId;
     console.log('🏢 Creating strategy with organization_id:', orgId);
+    console.log('📍 GHL Location ID:', mappedLocationId || 'Not specified (will match any location)');
 
     await db.run(`
       INSERT INTO templates (
         id, user_id, organization_id, name, tag, bot_temperature, brief,
         resiliancy, booking_readiness, tone, initial_message, objective,
-        company_information, message_delay_initial, message_delay_standard, cta
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        company_information, message_delay_initial, message_delay_standard, cta,
+        ghl_location_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       id, req.user.id, orgId, name, mappedTag, 0.4, mappedBrief,
       3, 2, tone || 'Friendly and Casual', mappedInitialMessage, '',
-      mappedCompanyInfo, 30, 5, mappedCta
+      mappedCompanyInfo, 30, 5, mappedCta, mappedLocationId
     ]);
     console.log('✅ Strategy record inserted');
 
@@ -215,7 +220,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       confirmation_message, confirmationMessage,
       qualification_questions, qualificationQuestions,
       follow_ups, followUps,
-      faqs
+      faqs,
+      ghl_location_id, ghlLocationId, location_id, locationId
     } = req.body;
 
     // Map fields
@@ -226,14 +232,17 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const mappedQualificationQuestions = qualification_questions || qualificationQuestions;
     const mappedFollowUps = follow_ups || followUps;
     const mappedFaqs = faqs;
+    const mappedLocationId = ghl_location_id || ghlLocationId || location_id || locationId || null;
+
+    console.log('📍 Updating GHL Location ID to:', mappedLocationId || 'Not specified (will match any location)');
 
     // Update main strategy fields
     await db.run(`
       UPDATE templates
       SET name = ?, brief = ?, tone = ?, initial_message = ?, tag = ?,
-          company_information = ?, cta = ?, updated_at = CURRENT_TIMESTAMP
+          company_information = ?, cta = ?, ghl_location_id = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND user_id = ?
-    `, [name, mappedBrief, tone, mappedInitialMessage, tag, mappedCompanyInfo, mappedCta, req.params.id, req.user.id]);
+    `, [name, mappedBrief, tone, mappedInitialMessage, tag, mappedCompanyInfo, mappedCta, mappedLocationId, req.params.id, req.user.id]);
     console.log('  ✅ Strategy fields updated');
 
     // Update qualification questions if provided
