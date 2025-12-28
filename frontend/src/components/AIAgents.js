@@ -936,7 +936,7 @@ function AIAgents() {
                             // Show temporary feedback
                             const btn = e.currentTarget;
                             const originalHTML = btn.innerHTML;
-                            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
                             setTimeout(() => {
                               btn.innerHTML = originalHTML;
                             }, 1000);

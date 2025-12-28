@@ -25,7 +25,7 @@
   /* === GRADIENTS === */
   --gradient-primary: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
   --gradient-secondary: linear-gradient(135deg, #06b6d4 0%, #a855f7 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-success: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
 
   /* === SPACING === */
   --spacing-xs: 4px;
@@ -207,9 +207,9 @@ span[class*="badge"] {
 }
 
 .badge.success {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+  border-color: rgba(168, 85, 247, 0.3);
 }
 
 .badge.cyan {
@@ -240,7 +240,7 @@ span[class*="badge"] {
 }
 
 .stat-change.positive {
-  color: #10b981;
+  color: #a855f7;
 }
 
 .stat-change.negative {

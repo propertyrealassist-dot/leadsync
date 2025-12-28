@@ -15,12 +15,12 @@
   --strategy-text-secondary: #a1a1aa;
   --strategy-text-tertiary: #71717a;
 
-  --strategy-accent: #34d399;
-  --strategy-accent-hover: #10b981;
-  --strategy-accent-light: rgba(52, 211, 153, 0.1);
+  --strategy-accent: #a855f7;
+  --strategy-accent-hover: #a855f7;
+  --strategy-accent-light: rgba(168, 85, 247, 0.1);
 
-  --strategy-success: #34d399;
-  --strategy-success-light: rgba(52, 211, 153, 0.1);
+  --strategy-success: #a855f7;
+  --strategy-success-light: rgba(168, 85, 247, 0.1);
   --strategy-warning: #f59e0b;
   --strategy-warning-light: rgba(245, 158, 11, 0.1);
   --strategy-error: #ef4444;

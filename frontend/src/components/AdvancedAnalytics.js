@@ -219,7 +219,7 @@ function AdvancedAnalytics() {
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #10B981, #3B82F6)' }}>
+          <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #a855f7, #3B82F6)' }}>
             <Icons.Calendar size={32} color="#ffffff" />
           </div>
           <div className="kpi-content">
@@ -259,7 +259,7 @@ function AdvancedAnalytics() {
         <div className="insights-grid">
           {aiInsights.map((insight, idx) => {
             const IconComponent = Icons[insight.icon];
-            const iconColor = insight.type === 'success' ? '#10b981' :
+            const iconColor = insight.type === 'success' ? '#a855f7' :
                             insight.type === 'warning' ? '#f59e0b' : '#3b82f6';
             return (
               <div key={idx} className={`insight-card insight-${insight.type}`}>

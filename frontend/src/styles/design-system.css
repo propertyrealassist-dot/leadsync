@@ -11,12 +11,12 @@
   --bg-active: rgba(255, 255, 255, 0.08);
 
   --border-default: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(52, 211, 153, 0.3);
+  --border-focus: rgba(168, 85, 247, 0.3);
   --border-hover: rgba(255, 255, 255, 0.12);
 
-  --accent-green: #34d399;
+  --accent-green: #a855f7;
   --accent-green-hover: #2bc489;
-  --accent-green-bg: rgba(52, 211, 153, 0.1);
+  --accent-green-bg: rgba(168, 85, 247, 0.1);
 
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;

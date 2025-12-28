@@ -203,15 +203,15 @@ function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
           {mode === 'login' && (
             <div className="auth-modal-features">
               <div className="feature-item">
-                <Icons.CheckCircle size={16} color="#10b981" />
+                <Icons.CheckCircle size={16} color="#a855f7" />
                 <span>AI Lead Management</span>
               </div>
               <div className="feature-item">
-                <Icons.CheckCircle size={16} color="#10b981" />
+                <Icons.CheckCircle size={16} color="#a855f7" />
                 <span>Automated Conversations</span>
               </div>
               <div className="feature-item">
-                <Icons.CheckCircle size={16} color="#10b981" />
+                <Icons.CheckCircle size={16} color="#a855f7" />
                 <span>LeadConnector Integration</span>
               </div>
             </div>

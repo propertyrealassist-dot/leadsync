@@ -78,7 +78,7 @@ function Leads() {
       new: '#3b82f6',
       contacted: '#f59e0b',
       qualified: '#8b5cf6',
-      interested: '#10b981',
+      interested: '#a855f7',
       won: '#22c55e',
       lost: '#ef4444'
     };
@@ -158,7 +158,7 @@ function Leads() {
             </div>
           </div>
           <div className="stat-card" onClick={() => setFilter('won')}>
-            <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.2)' }}>✅</div>
+            <div className="stat-icon" style={{ background: 'rgba(168, 85, 247, 0.2)' }}>✅</div>
             <div className="stat-content">
               <div className="stat-value">{stats.won || 0}</div>
               <div className="stat-label">Won</div>

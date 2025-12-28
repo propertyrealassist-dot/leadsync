@@ -348,7 +348,7 @@ function CoPilot() {
             <p>Pre-built strategies for various industries</p>
           </div>
           <div className="feature-card">
-            <Icons.Settings size={40} color="#10b981" />
+            <Icons.Settings size={40} color="#a855f7" />
             <h3>Step-by-Step Wizard</h3>
             <p>Guided process to build complete strategies</p>
           </div>
@@ -417,19 +417,19 @@ function CoPilot() {
 
             <div className="scanning-steps">
               <div className={scanProgress >= 25 ? 'step active' : 'step'}>
-                <Icons.CheckCircle size={20} color={scanProgress >= 25 ? '#10b981' : '#666'} />
+                <Icons.CheckCircle size={20} color={scanProgress >= 25 ? '#a855f7' : '#666'} />
                 <span>Fetching content</span>
               </div>
               <div className={scanProgress >= 50 ? 'step active' : 'step'}>
-                <Icons.CheckCircle size={20} color={scanProgress >= 50 ? '#10b981' : '#666'} />
+                <Icons.CheckCircle size={20} color={scanProgress >= 50 ? '#a855f7' : '#666'} />
                 <span>Extracting info</span>
               </div>
               <div className={scanProgress >= 75 ? 'step active' : 'step'}>
-                <Icons.CheckCircle size={20} color={scanProgress >= 75 ? '#10b981' : '#666'} />
+                <Icons.CheckCircle size={20} color={scanProgress >= 75 ? '#a855f7' : '#666'} />
                 <span>Analyzing services</span>
               </div>
               <div className={scanProgress >= 100 ? 'step active' : 'step'}>
-                <Icons.CheckCircle size={20} color={scanProgress >= 100 ? '#10b981' : '#666'} />
+                <Icons.CheckCircle size={20} color={scanProgress >= 100 ? '#a855f7' : '#666'} />
                 <span>Complete</span>
               </div>
             </div>
@@ -471,7 +471,7 @@ function CoPilot() {
               setStep('manual');
             }}
           >
-            <Icons.Target size={48} color="#10b981" />
+            <Icons.Target size={48} color="#a855f7" />
             <h3>Manual Entry</h3>
             <p>Paste your business details for best results</p>
           </div>
@@ -706,7 +706,7 @@ function CoPilot() {
               setStep('postBooking');
             }}
           >
-            <Icons.Target size={48} color="#10b981" />
+            <Icons.Target size={48} color="#a855f7" />
             <h3>Custom Goal</h3>
             <p>Define your own objective</p>
           </div>
@@ -772,7 +772,7 @@ function CoPilot() {
                   <span>No follow-up messages</span>
                 </li>
                 <li>
-                  <Icons.Check size={16} color="#10b981" />
+                  <Icons.Check size={16} color="#a855f7" />
                   <span>Complete manual takeover</span>
                 </li>
               </ul>
@@ -791,17 +791,17 @@ function CoPilot() {
                 RECOMMENDED
               </span>
               <div className="card-icon-wrapper success">
-                <Icons.Check size={40} color="#10b981" />
+                <Icons.Check size={40} color="#a855f7" />
               </div>
               <h3>Turn OFF Follow-ups Only</h3>
               <p className="card-subtitle">Smart responsive mode</p>
               <ul className="feature-list">
                 <li>
-                  <Icons.Check size={16} color="#10b981" />
+                  <Icons.Check size={16} color="#a855f7" />
                   <span>Responds to incoming messages</span>
                 </li>
                 <li>
-                  <Icons.Check size={16} color="#10b981" />
+                  <Icons.Check size={16} color="#a855f7" />
                   <span>Answers questions naturally</span>
                 </li>
                 <li>
@@ -843,19 +843,19 @@ function CoPilot() {
 
         <div className="progress-steps">
           <div className={progress >= 25 ? 'step active' : 'step'}>
-            <Icons.CheckCircle size={24} color={progress >= 25 ? '#10b981' : '#666'} />
+            <Icons.CheckCircle size={24} color={progress >= 25 ? '#a855f7' : '#666'} />
             <p>Analyzing business</p>
           </div>
           <div className={progress >= 50 ? 'step active' : 'step'}>
-            <Icons.CheckCircle size={24} color={progress >= 50 ? '#10b981' : '#666'} />
+            <Icons.CheckCircle size={24} color={progress >= 50 ? '#a855f7' : '#666'} />
             <p>Crafting personality</p>
           </div>
           <div className={progress >= 75 ? 'step active' : 'step'}>
-            <Icons.CheckCircle size={24} color={progress >= 75 ? '#10b981' : '#666'} />
+            <Icons.CheckCircle size={24} color={progress >= 75 ? '#a855f7' : '#666'} />
             <p>Designing flow</p>
           </div>
           <div className={progress >= 100 ? 'step active' : 'step'}>
-            <Icons.CheckCircle size={24} color={progress >= 100 ? '#10b981' : '#666'} />
+            <Icons.CheckCircle size={24} color={progress >= 100 ? '#a855f7' : '#666'} />
             <p>Optimizing</p>
           </div>
         </div>
@@ -867,7 +867,7 @@ function CoPilot() {
   if (step === 'complete') {
     return (
       <div className="page-wrapper complete">
-        <Icons.CheckCircle size={100} color="#10b981" className="success-icon" />
+        <Icons.CheckCircle size={100} color="#a855f7" className="success-icon" />
 
         <h2>Strategy Created Successfully!</h2>
         <p>Your AI agent for {data.businessName} is ready</p>

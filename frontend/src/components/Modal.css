@@ -163,13 +163,13 @@
 
 /* Success variant */
 .modal-success .modal-btn-primary {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
 }
 
 .modal-success .modal-btn-primary:hover {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #a855f7 0%, #a855f7 100%);
+  box-shadow: 0 6px 16px rgba(168, 85, 247, 0.4);
 }
 
 /* Error variant */

@@ -56,7 +56,7 @@ function Register() {
       color = '#22c55e';
     } else {
       label = 'Strong';
-      color = '#10b981';
+      color = '#a855f7';
     }
 
     return { score, label, color };

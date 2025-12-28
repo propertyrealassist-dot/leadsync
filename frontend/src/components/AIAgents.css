@@ -233,8 +233,8 @@
 }
 
 .status-dot.active {
-  background: #34d399;
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+  background: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
 }
 
 .status-dot.inactive {
@@ -290,7 +290,7 @@
 }
 
 .stat-cell.won {
-  color: #34d399;
+  color: #a855f7;
 }
 
 .stat-cell.opt-out {
@@ -307,8 +307,8 @@
 }
 
 .response-rate.good {
-  background: rgba(52, 211, 153, 0.1);
-  color: #34d399;
+  background: rgba(168, 85, 247, 0.1);
+  color: #a855f7;
 }
 
 .response-rate.medium {

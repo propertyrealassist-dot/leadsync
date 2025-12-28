@@ -287,12 +287,12 @@
 }
 
 .goal-card.recommended {
-  border-color: rgba(16, 185, 129, 0.5);
+  border-color: rgba(168, 85, 247, 0.5);
 }
 
 .goal-card.recommended:hover {
-  border-color: #10b981;
-  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+  border-color: #a855f7;
+  box-shadow: 0 12px 32px rgba(168, 85, 247, 0.4);
 }
 
 .goal-card h3 {
@@ -333,19 +333,19 @@
 }
 
 .behavior-card.recommended {
-  border-color: #10b981;
+  border-color: #a855f7;
 }
 
 .behavior-card.recommended:hover {
-  border-color: #10b981;
-  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+  border-color: #a855f7;
+  box-shadow: 0 12px 32px rgba(168, 85, 247, 0.4);
 }
 
 .badge-recommended {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #a855f7, #ec4899);
   color: #fff;
   padding: 6px 14px;
   border-radius: 20px;
@@ -614,13 +614,13 @@ input:checked + .slider:before {
 }
 
 .behavior-card.recommended {
-  border-color: rgba(16, 185, 129, 0.5);
+  border-color: rgba(168, 85, 247, 0.5);
 }
 
 .behavior-card.recommended.selected {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.15);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+  border-color: #a855f7;
+  background: rgba(168, 85, 247, 0.15);
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.3);
 }
 
 .badge-recommended {
@@ -631,14 +631,14 @@ input:checked + .slider:before {
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #a855f7, #ec4899);
   color: white;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
 }
 
 .card-icon-wrapper {
@@ -659,8 +659,8 @@ input:checked + .slider:before {
 }
 
 .card-icon-wrapper.success {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.3);
 }
 
 .behavior-card h3 {

@@ -137,7 +137,7 @@ function TeamManagement() {
   };
 
   const getStatusColor = (status) => {
-    return status === 'active' ? '#10B981' : '#94A3B8';
+    return status === 'active' ? '#a855f7' : '#94A3B8';
   };
 
   return (
@@ -284,15 +284,15 @@ function TeamManagement() {
             </div>
             <ul className="permission-list">
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 View strategies
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 View conversations
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 View analytics
               </li>
               <li>
@@ -311,19 +311,19 @@ function TeamManagement() {
             </div>
             <ul className="permission-list">
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 All viewer permissions
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 Create strategies
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 Edit own strategies
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 Manage conversations
               </li>
             </ul>
@@ -338,19 +338,19 @@ function TeamManagement() {
             </div>
             <ul className="permission-list">
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 All member permissions
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 Edit all strategies
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 Delete strategies
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 View team analytics
               </li>
             </ul>
@@ -365,19 +365,19 @@ function TeamManagement() {
             </div>
             <ul className="permission-list">
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 All manager permissions
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 Manage team members
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 Billing & settings
               </li>
               <li>
-                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+                <Icons.Check size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
                 Full system access
               </li>
             </ul>

@@ -93,7 +93,7 @@
 }
 
 .lead-stat-card.completed .lead-stat-icon {
-  background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.2));
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.2));
 }
 
 .lead-stat-card.in-progress .lead-stat-icon {
@@ -290,9 +290,9 @@
 }
 
 .status-completed {
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  color: #34d399;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
 }
 
 .status-failed {

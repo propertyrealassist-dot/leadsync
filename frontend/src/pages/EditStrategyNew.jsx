@@ -963,8 +963,8 @@ export default function EditStrategyNew() {
                 alignItems: 'center',
                 gap: '0.5rem',
                 padding: '0.75rem',
-                background: 'rgba(52, 211, 153, 0.1)',
-                border: '1px solid rgba(52, 211, 153, 0.2)',
+                background: 'rgba(168, 85, 247, 0.1)',
+                border: '1px solid rgba(168, 85, 247, 0.2)',
                 borderRadius: '8px',
                 fontSize: '0.875rem'
               }}>

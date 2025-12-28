@@ -302,9 +302,9 @@ function Integrations() {
             <button
               className="btn-secondary full-width"
               onClick={handleTestWebhook}
-              style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+              style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', border: '1px solid rgba(168, 85, 247, 0.3)' }}
             >
-              <Icons.Check size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#10b981" />
+              <Icons.Check size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} color="#a855f7" />
               Test Webhook Connection
             </button>
           </div>

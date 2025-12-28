@@ -374,8 +374,8 @@
 
 .time-input-group input:focus {
   outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  border-color: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
   background: #374151;
 }
 
@@ -417,8 +417,8 @@
 
 .slider-badge {
   padding: 0.25rem 0.5rem;
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 600;
@@ -506,16 +506,16 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(16, 185, 129, 0.4);
-  border: 2px solid rgba(16, 185, 129, 0.6);
+  background: rgba(168, 85, 247, 0.4);
+  border: 2px solid rgba(168, 85, 247, 0.6);
   transition: all 0.2s ease;
 }
 
 .slider-marker:hover .marker-dot {
-  background: rgba(16, 185, 129, 0.8);
-  border-color: rgba(16, 185, 129, 1);
+  background: rgba(168, 85, 247, 0.8);
+  border-color: rgba(168, 85, 247, 1);
   transform: scale(1.3);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
 }
 
 .marker-label {
@@ -1124,8 +1124,8 @@
 /* CTA Highlight Card */
 .cta-highlight-card {
   padding: var(--spacing-lg);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
   border-radius: var(--radius-lg);
   text-align: left;
 }

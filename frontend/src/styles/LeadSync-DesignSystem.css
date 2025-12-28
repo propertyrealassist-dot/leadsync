@@ -5,18 +5,18 @@
 */
 
 :root {
-  /* Brand Colors - TEAL/GREEN THEME */
-  --ls-primary: #34d399;        /* Teal Green */
-  --ls-secondary: #10b981;      /* Emerald */
-  --ls-accent: #6ee7b7;         /* Light Green */
-  --ls-success: #34d399;        /* Teal Green */
+  /* Brand Colors - PURPLE/PINK THEME */
+  --ls-primary: #a855f7;        /* Purple */
+  --ls-secondary: #ec4899;      /* Pink */
+  --ls-accent: #c084fc;         /* Light Purple */
+  --ls-success: #a855f7;        /* Emerald (for success states only) */
   --ls-warning: #f59e0b;        /* Amber */
   --ls-danger: #ef4444;         /* Red */
 
   /* Gradients */
-  --ls-gradient-primary: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-  --ls-gradient-purple: linear-gradient(135deg, #34d399 0%, #6ee7b7 100%);
-  --ls-gradient-cyan: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  --ls-gradient-primary: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  --ls-gradient-purple: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+  --ls-gradient-cyan: linear-gradient(135deg, #06b6d4 0%, #a855f7 100%);
   --ls-gradient-dark: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 100%);
 
   /* Background Colors */
@@ -51,8 +51,8 @@
   --ls-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
   --ls-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
   --ls-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.4);
-  --ls-shadow-glow: 0 0 20px rgba(52, 211, 153, 0.5);
-  --ls-shadow-cyan-glow: 0 0 20px rgba(16, 185, 129, 0.5);
+  --ls-shadow-glow: 0 0 20px rgba(168, 85, 247, 0.5);
+  --ls-shadow-cyan-glow: 0 0 20px rgba(236, 72, 153, 0.5);
 
   /* Transitions */
   --ls-transition-fast: 0.15s ease;
@@ -220,9 +220,9 @@ p {
 }
 
 .ls-badge-success {
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+  border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .ls-badge-cyan {

@@ -29,8 +29,8 @@
 
 /* GHL Connect Banner */
 .ghl-connect-banner {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
-  border: 2px solid rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.05));
+  border: 2px solid rgba(168, 85, 247, 0.3);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
   margin-bottom: var(--spacing-2xl);
@@ -51,7 +51,7 @@
 .ghl-banner-icon {
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.1));
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
@@ -77,13 +77,13 @@
   align-items: center;
   gap: var(--spacing-xs);
   padding: 0.375rem 0.75rem;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
   border-radius: var(--radius-md);
   margin-top: var(--spacing-sm);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #10b981;
+  color: #a855f7;
 }
 
 .ghl-banner-actions {
@@ -92,7 +92,7 @@
 
 .btn-ghl-connect {
   padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #a855f7, #ec4899);
   border: none;
   border-radius: var(--radius-md);
   color: white;
@@ -102,12 +102,12 @@
   transition: all var(--transition-base);
   display: inline-flex;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
 }
 
 .btn-ghl-connect:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
 }
 
 .btn-ghl-disconnect {
@@ -285,7 +285,7 @@
 }
 
 .card-icon-wrapper.ghl {
-  background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.2));
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.2));
 }
 
 .card-icon-wrapper.snapshot {
@@ -460,8 +460,8 @@
 }
 
 .status-dot.connected {
-  background: #34d399;
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+  background: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
 }
 
 .status-dot.disconnected {
@@ -477,15 +477,15 @@
 
 .connection-info {
   padding: var(--spacing-sm) var(--spacing-md);
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
   border-radius: var(--radius-md);
 }
 
 .info-text {
   margin: 0;
   font-size: 0.8125rem;
-  color: #34d399;
+  color: #a855f7;
 }
 
 /* Snapshot Info */
@@ -735,11 +735,11 @@
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+    box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7);
   }
   50% {
     transform: scale(1.2);
-    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 6px rgba(168, 85, 247, 0);
   }
 }
 
@@ -836,10 +836,10 @@
 /* Success Animation for Connection Info */
 @keyframes successPulse {
   0%, 100% {
-    background: rgba(52, 211, 153, 0.1);
+    background: rgba(168, 85, 247, 0.1);
   }
   50% {
-    background: rgba(52, 211, 153, 0.2);
+    background: rgba(168, 85, 247, 0.2);
   }
 }
 

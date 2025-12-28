@@ -12,7 +12,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 const COLORS = {
   primary: '#8B5CF6',
-  success: '#10B981',
+  success: '#a855f7',
   warning: '#F59E0B',
   info: '#3B82F6',
   danger: '#EF4444',
@@ -207,7 +207,7 @@ function Analytics() {
         </div>
 
         <div className="metric-card">
-          <div className="metric-icon" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+          <div className="metric-icon" style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)' }}>
             <Icons.Check size={28} color={COLORS.success} />
           </div>
           <div className="metric-content">

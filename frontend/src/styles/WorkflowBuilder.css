@@ -414,7 +414,7 @@
 .ghl-badge {
   margin-top: 8px;
   padding: 4px 10px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
   border-radius: 6px;
   font-size: 10px;
   font-weight: 700;
@@ -422,13 +422,13 @@
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
 }
 
 .ghl-mini-badge {
   display: inline-block;
   padding: 2px 6px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
   border-radius: 4px;
   font-size: 9px;
   font-weight: 700;
@@ -444,17 +444,17 @@
 }
 
 .ghl-item .sidebar-item {
-  border-color: rgba(16, 185, 129, 0.3);
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border-color: rgba(168, 85, 247, 0.3);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
 }
 
 .ghl-item .sidebar-item:hover {
-  border-color: rgba(16, 185, 129, 0.5);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
 }
 
 .ghl-item .sidebar-item-icon {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
 }
 
 /* No Results State */
@@ -716,8 +716,8 @@
 .ghl-integration-notice {
   margin-bottom: 20px;
   padding: 14px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
   border-radius: 10px;
   display: flex;
   align-items: flex-start;
@@ -737,7 +737,7 @@
 .ghl-integration-notice-title {
   font-size: 13px;
   font-weight: 700;
-  color: #10b981;
+  color: #a855f7;
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;

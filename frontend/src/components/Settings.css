@@ -190,7 +190,7 @@
   border-radius: var(--radius-sm);
   font-family: 'Courier New', monospace;
   font-size: 0.875rem;
-  color: #34d399;
+  color: #a855f7;
   overflow-x: auto;
 }
 
@@ -346,8 +346,8 @@
 }
 
 .status-connected {
-  background: #34d399;
-  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.2);
+  background: #a855f7;
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.2);
 }
 
 .status-disconnected {

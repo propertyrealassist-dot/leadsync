@@ -125,7 +125,7 @@
 }
 
 .stat-icon.leads {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
 }
 
 .stat-icon.appointments {
@@ -254,7 +254,7 @@
 }
 
 .action-success .action-icon {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
 }
 
 .action-content {

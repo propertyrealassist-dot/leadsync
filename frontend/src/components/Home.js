@@ -535,7 +535,7 @@ function Home() {
                     <div style={{
                       fontSize: '24px',
                       fontWeight: '700',
-                      color: '#10b981'
+                      color: '#a855f7'
                     }}>
                       100%
                     </div>

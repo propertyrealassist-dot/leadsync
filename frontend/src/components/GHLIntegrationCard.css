@@ -216,8 +216,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
   border-radius: var(--radius-md, 12px);
 }
 
@@ -227,13 +227,13 @@
   gap: 8px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #10b981;
+  color: #a855f7;
 }
 
 .ghl-status-dot {
   width: 8px;
   height: 8px;
-  background: #10b981;
+  background: #a855f7;
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
 }

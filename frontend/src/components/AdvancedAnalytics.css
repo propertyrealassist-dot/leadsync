@@ -118,7 +118,7 @@
 }
 
 .kpi-change.positive {
-  color: #10B981;
+  color: #a855f7;
 }
 
 .kpi-change.negative {
@@ -159,7 +159,7 @@
 }
 
 .insight-card.insight-success {
-  border-color: rgba(16, 185, 129, 0.3);
+  border-color: rgba(168, 85, 247, 0.3);
 }
 
 .insight-card.insight-warning {

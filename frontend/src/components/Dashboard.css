@@ -83,8 +83,8 @@
 }
 
 .stat-icon-wrapper.leads {
-  background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.2));
-  color: #34d399;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.2));
+  color: #a855f7;
 }
 
 .stat-icon-wrapper.appointments {
