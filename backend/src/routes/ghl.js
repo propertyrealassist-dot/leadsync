@@ -271,7 +271,24 @@ router.post('/disconnect', authenticateToken, async (req, res) => {
       });
     }
 
-    await db.run('DELETE FROM ghl_credentials WHERE user_id = ?', [userId]);
+    console.log('🔌 Disconnecting GHL for user:', userId);
+
+    // Delete from BOTH tables to ensure complete disconnection
+    try {
+      await db.run('DELETE FROM ghl_integrations WHERE user_id = ?', [userId]);
+      console.log('   ✅ Deleted from ghl_integrations');
+    } catch (err) {
+      console.log('   ⚠️  ghl_integrations delete:', err.message);
+    }
+
+    try {
+      await db.run('DELETE FROM ghl_credentials WHERE user_id = ?', [userId]);
+      console.log('   ✅ Deleted from ghl_credentials');
+    } catch (err) {
+      console.log('   ⚠️  ghl_credentials delete:', err.message);
+    }
+
+    console.log('✅ GHL completely disconnected for user:', userId);
 
     res.json({
       success: true,
