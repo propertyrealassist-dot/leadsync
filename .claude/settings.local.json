@@ -50,7 +50,8 @@
       "Bash(cmd.exe //c \"taskkill //F //PID 28176 && taskkill //F //PID 13472 && taskkill //F //PID 15744 && taskkill //F //PID 16200\")",
       "Bash(git checkout:*)",
       "Bash(cmd.exe //c \"npx vercel --prod\")",
-      "Bash(cmd.exe //c \"npx vercel --prod --yes\")"
+      "Bash(cmd.exe //c \"npx vercel --prod --yes\")",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

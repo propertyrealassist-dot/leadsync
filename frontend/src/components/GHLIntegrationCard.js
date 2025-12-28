@@ -25,18 +25,17 @@ function GHLIntegrationCard() {
     const stateData = JSON.stringify({ userId: user.id, timestamp: Date.now() });
     const state = btoa(stateData);
 
-    // CRITICAL: Include ALL valid GHL scopes
-    // Note: calendars.readonly/calendars.write are INVALID - GHL doesn't support them
-    // The /calendars/ endpoint should work with locations.readonly + calendars/events scopes
+    // CRITICAL: Include conversations/message scopes for AI to read/send messages
+    // NOTE: calendars.readonly and calendars.write require GHL app approval
+    // Using currently approved scopes only
     return (
       'https://marketplace.leadconnectorhq.com/oauth/chooselocation?' +
       'response_type=code&' +
       'redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&' +
       'client_id=69218dacd101d3222ff1708c-mic4vq7j&' +
       'scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+' +
-      'calendars%2Fevents.readonly+calendars%2Fevents.write+' +
-      'opportunities.readonly+opportunities.write+locations.readonly+locations.write+' +
-      'conversations%2Fmessage.readonly+conversations%2Fmessage.write&' +
+      'calendars%2Fevents.readonly+opportunities.readonly+opportunities.write+locations.readonly+' +
+      'calendars%2Fevents.write+conversations%2Fmessage.readonly+conversations%2Fmessage.write&' +
       'version_id=69218dacd101d3222ff1708c&' +
       `state=${encodeURIComponent(state)}`
     );
