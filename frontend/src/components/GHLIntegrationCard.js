@@ -25,15 +25,20 @@ function GHLIntegrationCard() {
     const stateData = JSON.stringify({ userId: user.id, timestamp: Date.now() });
     const state = btoa(stateData);
 
-    // CRITICAL: Include conversations/message scopes for AI to read/send messages
+    // CRITICAL: Include ALL calendar scopes:
+    // - calendars.readonly + calendars.write: To LIST calendars
+    // - calendars/events scopes: To read/write events
+    // - conversations/message scopes: For AI to read/send messages
     return (
       'https://marketplace.leadconnectorhq.com/oauth/chooselocation?' +
       'response_type=code&' +
       'redirect_uri=https%3A%2F%2Fapi.realassistagents.com%2Fapi%2Foauth%2Fredirect&' +
       'client_id=69218dacd101d3222ff1708c-mic4vq7j&' +
       'scope=contacts.readonly+contacts.write+conversations.readonly+conversations.write+' +
-      'calendars%2Fevents.readonly+opportunities.readonly+opportunities.write+locations.readonly+' +
-      'calendars%2Fevents.write+conversations%2Fmessage.readonly+conversations%2Fmessage.write&' +
+      'calendars.readonly+calendars.write+' +
+      'calendars%2Fevents.readonly+calendars%2Fevents.write+' +
+      'opportunities.readonly+opportunities.write+locations.readonly+' +
+      'conversations%2Fmessage.readonly+conversations%2Fmessage.write&' +
       'version_id=69218dacd101d3222ff1708c&' +
       `state=${encodeURIComponent(state)}`
     );
