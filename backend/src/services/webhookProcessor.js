@@ -302,52 +302,70 @@ function extractMessageData(payload) {
  */
 async function findStrategyByTag(userId, tags) {
   try {
+    // Get ALL user strategies first for debugging
+    const allStrategies = await db.all(`
+      SELECT id, name, tag FROM templates
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+    `, [userId]);
+
+    console.log(`\n🎯 STRATEGY MATCHING DEBUG`);
+    console.log(`📚 User has ${allStrategies.length} total strategies:`);
+    allStrategies.forEach((s, i) => {
+      console.log(`   ${i + 1}. "${s.name}" → tag: "${s.tag || 'NO TAG'}"`);
+    });
+
     if (!tags || tags.length === 0) {
-      console.log('⚠️  No tags provided, using default strategy (first created)');
-      // Return first strategy for user as default
-      const defaultStrategy = await db.get(`
-        SELECT * FROM templates
-        WHERE user_id = ?
-        ORDER BY created_at DESC
-        LIMIT 1
-      `, [userId]);
+      console.log('⚠️  Contact has NO tags, using default strategy (most recent)');
+      const defaultStrategy = allStrategies[0];
 
       if (defaultStrategy) {
-        console.log(`✅ Default strategy: "${defaultStrategy.name}" (tag: ${defaultStrategy.tag || 'none'})`);
+        console.log(`✅ Selected: "${defaultStrategy.name}" (tag: ${defaultStrategy.tag || 'none'})`);
+        return await db.get(`SELECT * FROM templates WHERE id = ?`, [defaultStrategy.id]);
       }
 
-      return defaultStrategy;
+      return null;
     }
 
-    console.log(`🏷️  Contact has ${tags.length} tag(s): ${tags.join(', ')}`);
+    console.log(`\n🏷️  Contact has ${tags.length} tag(s): ${tags.join(', ')}`);
 
-    // Try to find strategy matching any of the tags
+    // Find ALL matching strategies
+    const matches = [];
     for (const tag of tags) {
-      console.log(`   Searching for strategy with tag: "${tag}"`);
       const strategy = await db.get(`
         SELECT * FROM templates
         WHERE user_id = ? AND LOWER(tag) = LOWER(?)
       `, [userId, tag]);
 
       if (strategy) {
-        console.log(`   ✅ MATCH FOUND! Strategy: "${strategy.name}" matches tag: "${tag}"`);
-        return strategy;
+        matches.push({ tag, strategy });
+        console.log(`   ✅ Match: "${strategy.name}" ← tag: "${tag}"`);
       } else {
-        console.log(`   ❌ No strategy found for tag: "${tag}"`);
+        console.log(`   ❌ No match for tag: "${tag}"`);
       }
     }
 
-    // If no match, return first strategy as default
-    console.log('⚠️  No tag match found, using default strategy');
-    const defaultStrategy = await db.get(`
-      SELECT * FROM templates
-      WHERE user_id = ?
-      ORDER BY created_at DESC
-      LIMIT 1
-    `, [userId]);
+    if (matches.length > 0) {
+      // CRITICAL: If multiple matches, prefer the LONGEST/MOST SPECIFIC tag
+      // This prevents "ai" from matching before "leadsync-ai"
+      matches.sort((a, b) => b.tag.length - a.tag.length);
 
+      const selected = matches[0];
+      console.log(`\n🎯 MULTIPLE MATCHES FOUND! Using longest tag:`);
+      console.log(`   Selected: "${selected.strategy.name}" (tag: "${selected.tag}" - ${selected.tag.length} chars)`);
+      if (matches.length > 1) {
+        console.log(`   Skipped: ${matches.slice(1).map(m => `"${m.strategy.name}" (${m.tag})`).join(', ')}`);
+      }
+
+      return selected.strategy;
+    }
+
+    // If no match, return first strategy as default
+    console.log('\n⚠️  No tag matches found, using default strategy');
+    const defaultStrategy = allStrategies[0];
     if (defaultStrategy) {
-      console.log(`✅ Default strategy: "${defaultStrategy.name}" (tag: ${defaultStrategy.tag || 'none'})`);
+      console.log(`✅ Selected default: "${defaultStrategy.name}" (tag: ${defaultStrategy.tag || 'none'})`);
+      return await db.get(`SELECT * FROM templates WHERE id = ?`, [defaultStrategy.id]);
     }
 
     return defaultStrategy;
