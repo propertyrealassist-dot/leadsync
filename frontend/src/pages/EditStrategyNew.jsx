@@ -770,6 +770,124 @@ export default function EditStrategyNew() {
         {/* TAB 3: BOOKING */}
         {activeTab === 'booking' && (
           <div className="space-y-6">
+            {/* GHL Calendar AI Integration */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(127, 255, 212, 0.05) 0%, rgba(127, 255, 212, 0.02) 100%)',
+              border: '1px solid rgba(127, 255, 212, 0.3)',
+              borderRadius: '12px',
+              padding: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <h3 className="text-base font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.25rem' }}>🤖</span> AI Calendar Assistant (GoHighLevel)
+                  <span style={{
+                    display: 'inline-block',
+                    background: 'rgba(127, 255, 212, 0.2)',
+                    color: '#7fffd4',
+                    fontSize: '0.75rem',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    marginLeft: '0.5rem'
+                  }}>
+                    ✓ ACTIVE
+                  </span>
+                </h3>
+              </div>
+
+              <p style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: '0.875rem',
+                marginBottom: '1rem',
+                lineHeight: '1.6'
+              }}>
+                Your AI agent can now natively view your GoHighLevel calendar and book appointments during conversations.
+                When a lead asks about availability or wants to schedule a meeting, the AI automatically:
+              </p>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'start',
+                  gap: '0.75rem',
+                  marginBottom: '0.75rem',
+                  padding: '0.75rem',
+                  background: 'rgba(127, 255, 212, 0.05)',
+                  borderRadius: '8px'
+                }}>
+                  <span style={{ fontSize: '1.25rem' }}>📅</span>
+                  <div>
+                    <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Views Calendar Availability</div>
+                    <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                      Checks your GHL calendar for available time slots when leads ask about scheduling
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'start',
+                  gap: '0.75rem',
+                  padding: '0.75rem',
+                  background: 'rgba(127, 255, 212, 0.05)',
+                  borderRadius: '8px'
+                }}>
+                  <span style={{ fontSize: '1.25rem' }}>✓</span>
+                  <div>
+                    <div style={{ fontWeight: '500', marginBottom: '0.25rem' }}>Books Appointments</div>
+                    <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.6)' }}>
+                      Creates appointments in GHL when leads confirm a specific date and time
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                background: 'rgba(127, 255, 212, 0.05)',
+                border: '1px solid rgba(127, 255, 212, 0.1)',
+                borderRadius: '8px',
+                padding: '1rem',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ fontWeight: '500', marginBottom: '0.75rem', fontSize: '0.875rem' }}>
+                  Current Availability Settings:
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.875rem' }}>
+                  <div>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Business Days:</span>
+                    <div style={{ color: '#7fffd4' }}>Monday - Friday</div>
+                  </div>
+                  <div>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Business Hours:</span>
+                    <div style={{ color: '#7fffd4' }}>9:00 AM - 5:00 PM</div>
+                  </div>
+                  <div>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Slot Duration:</span>
+                    <div style={{ color: '#7fffd4' }}>30 minutes</div>
+                  </div>
+                  <div>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Calendar Source:</span>
+                    <div style={{ color: '#7fffd4' }}>GoHighLevel</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.75rem',
+                background: 'rgba(52, 211, 153, 0.1)',
+                border: '1px solid rgba(52, 211, 153, 0.2)',
+                borderRadius: '8px',
+                fontSize: '0.875rem'
+              }}>
+                <span>💡</span>
+                <span style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                  Make sure your GHL account is connected in Settings to enable calendar features
+                </span>
+              </div>
+            </div>
+
             {/* Calendar Integration */}
             <div style={{
               background: 'var(--gradient-overlay)',
