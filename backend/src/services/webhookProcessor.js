@@ -62,22 +62,11 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
     });
 
     if (!strategy) {
-      console.log('⚠️  No matching strategy found, using default response');
+      console.log('🚫 NO MATCHING STRATEGY FOUND - AI WILL NOT RESPOND');
+      console.log('   Contact tags:', contactTags);
+      console.log('   ✅ This is correct - AI only responds when tags match a strategy');
 
-      // Send default response
-      const defaultMessage = "Thank you for your message! We've received it and will get back to you soon.";
-
-      if (!isTest) {
-        await ghlService.sendMessage({
-          contactId: messageData.contactId,
-          message: defaultMessage,
-          conversationId: messageData.conversationId,
-          messageType: messageData.messageType,
-          userId: user.id
-        });
-      }
-
-      // Update webhook log
+      // Update webhook log to show it was skipped
       if (webhookLogId) {
         await db.run(`
           UPDATE webhook_logs
@@ -85,16 +74,22 @@ async function processIncomingMessage({ webhookLogId, user, payload, startTime, 
               error_message = ?
           WHERE id = ?
         `, [200,
-          JSON.stringify({ message: defaultMessage }),
+          JSON.stringify({
+            skipped: true,
+            reason: 'No matching strategy tag',
+            contactTags: contactTags
+          }),
           Date.now() - startTime,
-          'No matching strategy found',
+          'No matching strategy tag - AI did not respond',
           webhookLogId
         ]);
       }
 
       return {
         success: true,
-        response: defaultMessage,
+        skipped: true,
+        reason: 'No matching strategy tag found',
+        contactTags: contactTags,
         strategy: null
       };
     }
